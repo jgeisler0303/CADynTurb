@@ -135,7 +135,7 @@ appliedForces():= (
         appliedM[i]: appliedM[i] + RMG[2],
 
     /* modal forces */
-        appliedFe[i]: matrix([modalFlapForce/3], [modalEdgeForce/3])
+        appliedFe[i]: matrix([modalFlapForce], [modalEdgeForce])
     ),
 
     M_DT: DTTorSpr*(q[6]-q[3] - TwTrans2Roll*q[2]) + DTTorDmp*(qd[6]-qd[3] - TwTrans2Roll*qd[2]),
