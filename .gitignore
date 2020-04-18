@@ -1,0 +1,44 @@
+param.mat
+octave-workspace
+*~
+*.mex*
+turbine_coll_flap_edge_pitch_aero/
+5MW_Land_DLL_WTurb_tw_sid.mac
+5MW_Land_DLL_WTurb_bd_sid.mac
+
+.directory
+.cproject
+.project
+.settings/
+
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
