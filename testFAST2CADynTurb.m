@@ -14,7 +14,6 @@ cd(old_dir)
 cd('../CADyn/gen')
 addpath(pwd)
 cd(old_dir)
-addpath(fullfile(old_dir, 'aerodynamics'));
 
 %%
 fst_file= '5MW_Baseline/5MW_Land_DLL_WTurb.fst';
