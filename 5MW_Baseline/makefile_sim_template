@@ -1,0 +1,25 @@
+FAST_DIR:=  ~/Temp/openfast/build/glue-codes/openfast
+SOURCE_DIR:= ../5MW_Baseline
+
+SIM_FILES:= \
+	5MW_Land_IMP_6_notwist.fst \
+	5MW_Land_IMP_8_notwist.fst \
+	5MW_Land_IMP_10_notwist.fst \
+	5MW_Land_IMP_12_notwist.fst \
+	5MW_Land_IMP_14_notwist.fst \
+	5MW_Land_IMP_18_notwist.fst
+	
+OUT_FILES:= $(patsubst %.fst, %.outb, $(SIM_FILES))
+
+all: $(OUT_FILES)
+
+%.outb : $(SOURCE_DIR)/%.fst
+	$(FAST_DIR)/openfast $< > $*.log
+	mv $(SOURCE_DIR)/$@ .
+	mv $(SOURCE_DIR)/$*.ech .
+	mv $(SOURCE_DIR)/$*.sum .
+	mv $(SOURCE_DIR)/$*.AD.sum .
+	mv $(SOURCE_DIR)/$*.ED.sum .
+
+
+.PHONY: clean all
