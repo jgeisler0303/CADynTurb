@@ -19,7 +19,7 @@ system('g++ -g -std=c++17 -I. -I../../../simulator -I../../../../CADyn/src -Itur
 
 %% simulate model
 cd('..')
-system('gen/TurbineSimulator -p gen/params.txt -w ../5MW_Baseline/NRELOffshrBsline5MW_InflowWind_IMP_12.dat -a 0.965 -t 150 -o simp_12.outb')
+system('gen/TurbineSimulator -p gen/params.txt  -d ../5MW_Baseline/DISCON.dll -w ../5MW_Baseline/NRELOffshrBsline5MW_InflowWind_IMP_12.dat -a 0.965 -t 150 -o simp_12.outb')
 
 
 %% plot results

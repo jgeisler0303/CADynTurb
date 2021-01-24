@@ -12,7 +12,7 @@
 
 #include "turbine_coll_flap_edge_pitch_aeroSystem2.hpp"
 
-bool simulate(turbine_coll_flap_edge_pitch_aeroSystem &system, FAST_Wind* wind, double ts, double tfinal, const std::string &out_file_name);
+bool simulate(turbine_coll_flap_edge_pitch_aeroSystem &system, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name);
 bool DISCON_Step(double t, DISCON_Interface &DISCON, turbine_coll_flap_edge_pitch_aeroSystem &system);
 
 double RotPwr;
@@ -25,36 +25,37 @@ int main(int argc, char* argv[]) {
     
     cxxopts::Options argc_options("TurbineSimulator", "A simple wind turbine simulator");
     argc_options.add_options()
-    ("i,icfile", "Initial conditions file name", cxxopts::value<std::string>()->default_value("./icfile.txt"))
+    // ("i,icfile", "Initial conditions file name", cxxopts::value<std::string>()->default_value("./icfile.txt"))
     ("p,paramfile", "Parameter file name", cxxopts::value<std::string>()->default_value("./params.txt"))
     ("t,simtime", "Simulation time", cxxopts::value<double>()->default_value("10.0"))
     ("s,simstep", "Simulation time", cxxopts::value<double>()->default_value("0.01"))
     ("w,vwind", "Inflow wind definition file name", cxxopts::value<std::string>()->default_value("Inflow.dat"))
+    ("d,discon_dll", "Path and name of the DISCON controller DLL", cxxopts::value<std::string>()->default_value("./discon.dll"))
     ("o,output", "Output file name", cxxopts::value<std::string>()->default_value("sim_output.outb"))
     ("a,adjust_wind", "Adjustment factor for wind speed", cxxopts::value<double>()->default_value("1.0"))
     ;
     
     auto argc_result = argc_options.parse(argc, argv);
 
-    {   
-        std:string ic_file_name= argc_result["icfile"].as<std::string>();
-        std::ifstream ic_file(ic_file_name);
-        
-        for(int i= 0; i<6; ++i) {
-            ic_file >> system.q(i);
-            if(ic_file.fail()) {
-                std::cout << "Not all initial conditions could be read from file \"" << ic_file_name << "\"" << std::endl;
-                exit (EXIT_FAILURE);
-            }
-        }
-        for(int i= 0; i<6; ++i) {
-            ic_file >> system.qd(i);
-            if(ic_file.fail()) {
-                std::cout << "Not all initial conditions could be read from file \"" << ic_file_name << "\"" << std::endl;
-                exit (EXIT_FAILURE);
-            }
-        }
-    }
+//     {   
+//         std:string ic_file_name= argc_result["icfile"].as<std::string>();
+//         std::ifstream ic_file(ic_file_name);
+//         
+//         for(int i= 0; i<6; ++i) {
+//             ic_file >> system.q(i);
+//             if(ic_file.fail()) {
+//                 std::cout << "Not all initial conditions could be read from file \"" << ic_file_name << "\"" << std::endl;
+//                 exit (EXIT_FAILURE);
+//             }
+//         }
+//         for(int i= 0; i<6; ++i) {
+//             ic_file >> system.qd(i);
+//             if(ic_file.fail()) {
+//                 std::cout << "Not all initial conditions could be read from file \"" << ic_file_name << "\"" << std::endl;
+//                 exit (EXIT_FAILURE);
+//             }
+//         }
+//     }
     
     try {
         system.param.setFromFile(argc_result["paramfile"].as<std::string>());
@@ -79,7 +80,12 @@ int main(int argc, char* argv[]) {
     {
         wind_adjust= argc_result["adjust_wind"].as<double>();
         std::clock_t startcputime = std::clock();
-        bool res= simulate(system, wind, argc_result["simstep"].as<double>(), argc_result["simtime"].as<double>(), argc_result["output"].as<std::string>());
+        bool res= simulate(system,
+                           wind,
+                           argc_result["simstep"].as<double>(),
+                           argc_result["simtime"].as<double>(),
+                           argc_result["discon_dll"].as<std::string>(),
+                           argc_result["output"].as<std::string>());
         double cpu_duration = (std::clock() - startcputime) / (double)CLOCKS_PER_SEC;
 
         if(!res) {
@@ -133,7 +139,7 @@ void setupOutputs(FAST_Output &out, turbine_coll_flap_edge_pitch_aeroSystem &sys
     out.addChannel("RootMyb", "-", &system.modalEdgeForce);
 }
 
-bool simulate(turbine_coll_flap_edge_pitch_aeroSystem &system, FAST_Wind* wind, double ts, double tfinal, const std::string &out_file_name) {
+bool simulate(turbine_coll_flap_edge_pitch_aeroSystem &system, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name) {
     FAST_Output out(tfinal/ts+1);
     out.setTime(0.0, ts);
     setupOutputs(out, system);
@@ -159,7 +165,7 @@ bool simulate(turbine_coll_flap_edge_pitch_aeroSystem &system, FAST_Wind* wind, 
     system.doflocked[5]= false;
     
     
-    DISCON_Interface DISCON;
+    DISCON_Interface DISCON(discon_path);
     
     DISCON.comm_interval= ts;
     DISCON.wind_speed_hub= system.u(0);
