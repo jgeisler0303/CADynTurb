@@ -1,0 +1,158 @@
+title: "Simulation of a simplified horizontal axis wind turbine";
+
+SIMPLIFY: 1;
+SMALL_ELAST: 1;
+WITH_LINEAR: 1;
+WITH_ACCELERATIONS: 0;
+INPUTS: [vwind, Tgen, theta];
+EXTERNAL: [cm(), ct(), cflp(), cedg(), theta_deg(), lam(), Trot(qd[1], qd[3], qd[4], qd[5], vwind, theta), Fthrust(qd[1], qd[3], qd[4], qd[5], vwind, theta), modalFlapForce(qd[1], qd[3], qd[4], qd[5], vwind, theta), modalEdgeForce(qd[1], qd[3], qd[4], qd[5], vwind, theta)];
+EXT_PARAM: [rho, Rrot, lambdaMin, lambdaMax, lambdaStep, thetaMin, thetaMax, thetaStep, Arot, cm_lut[25, 91], ct_lut[25, 91], cf_lut[25, 91], ce_lut[25, 91], dcm_dvf_v_lut[25, 91], dcm_dve_v_lut[25, 91], dct_dvf_v_lut[25, 91], dct_dve_v_lut[25, 91], dcf_dvf_v_lut[25, 91], dcf_dve_v_lut[25, 91], dce_dvf_v_lut[25, 91], dce_dve_v_lut[25, 91]];
+
+/* Gravity vector */
+gravity: [0, 0, -g];
+
+Trotx_lin(a):= subst([x= a], ratsimp(taytorat(taylor(Trotx(x), x, 0, 1))));
+Troty_lin(a):= subst([x= a], ratsimp(taytorat(taylor(Troty(x), x, 0, 1))));
+Trotz_lin(a):= subst([x= a], ratsimp(taytorat(taylor(Trotz(x), x, 0, 1))));
+
+
+/* 1 Tower */
+load(filename_merge(load_pathname, "tw_sid.mac"));
+elastic_dof[1]: [q[1], q[2]];
+ebody[1]: tower;
+T0G[1]: Tdisp(0, 0, 0);
+
+/* 2 Nacelle */
+mass[2]: NacMass;
+Ixx[2]: NacXIner;
+Iyy[2]: NacYIner;
+Izz[2]: NacZIner;
+BodyRef[2]: 1;
+/* TrefG[2]: Tdisp(q[1], q[2], 0).Tdisp(NacCMxn, NacCMyn, NacCMzn); */
+TrefG[2]: Telast(1, 1).Tdisp(NacCMxn, NacCMyn, NacCMzn);
+/* TrefG[2]: Tdisp(q[1], q[2], 0).Tdisp(NacCMxn, NacCMyn, NacCMzn).Troty_lin(q[1]*TwTrans2Roll).Trotx_lin(-q[2]*TwTrans2Roll); */
+
+/* 3 Hub */
+mass[3]: HubMass;
+Ixx[3]: HubIner;
+Iyy[3]: HubIner;
+Izz[3]: HubIner;
+BodyRef[3]: 2;
+TrefG[3]:  Tdisp(HubCM+OverHang-NacCMxn, -NacCMyn, Twr2Shft-NacCMzn).Trotx(q[3]);
+
+/* 4,5,6 Blades */
+load(filename_merge(load_pathname, "bd_sid.mac"));
+
+/* Blade 1 */
+elastic_dof[4]: [q[4], q[5]];
+ebody[4]: blade;
+BodyRef[4]: 3;
+TrefG[4]:  Tdisp(-HubCM, 0, 0).Trotz(theta);
+
+/* Blade 2 */
+elastic_dof[5]: [q[4], q[5]];
+ebody[5]: blade;
+BodyRef[5]: 3;
+TrefG[5]:  Tdisp(-HubCM, 0, 0).Trotx(%pi/3*2).Trotz(theta);
+
+/* Blade 3 */
+elastic_dof[6]: [q[4], q[5]];
+ebody[6]: blade;
+BodyRef[6]: 3;
+TrefG[6]:  Tdisp(-HubCM, 0, 0).Trotx(%pi/3*4).Trotz(theta);
+
+/* 7 Geno */
+BodyRef[7]: 2;
+mass[7]: 0;
+Ixx[7]: GenIner;
+Iyy[7]: 0;
+Izz[7]: 0;
+TrefG[7]:  Trotx(q[6]);
+
+
+/* Initial conditions */
+qi[1]: 0.1;
+qi[2]: 0.01;
+qdi[3]: 1;
+qdi[6]: 1.001;
+qi[4]: 1;
+qi[5]: -0.01;
+
+
+appliedForces():= (
+    /* only necessary for linearization */
+    /* gradef(Fthrust, qd[1], dthrust_dvtow),
+    gradef(Fthrust, qd[3], dthrust_domrot),
+    gradef(Fthrust, qd[4], dthrust_dflp),
+    gradef(Fthrust, qd[5], dthrust_dedg),
+    gradef(Fthrust, vwind, dthrust_dvw),
+    gradef(Fthrust, theta_, dthrust_dtheta),
+
+    gradef(Trot, qd[1], dtorque_dvtow),
+    gradef(Trot, qd[3], dtorque_domrot),
+    gradef(Trot, qd[4], dtorque_dflp),
+    gradef(Trot, qd[5], dtorque_dedg),
+    gradef(Trot, vwind, dtorque_dvw),
+    gradef(Trot, theta_, dtorque_dtheta),
+          
+    gradef(modalFlapForce, qd[1], dFmof_dvtow),
+    gradef(modalFlapForce, qd[3], dFmof_domrot),
+    gradef(modalFlapForce, qd[4], dFmof_dflp),
+    gradef(modalFlapForce, qd[5], dFmof_dedg),
+    gradef(modalFlapForce, vwind, dFmof_dvw),
+    gradef(modalFlapForce, theta_, dFmof_dtheta),
+
+    gradef(modalEdgeForce, qd[1], dFmoe_dvtow),
+    gradef(modalEdgeForce, qd[3], dFmoe_domrot),
+    gradef(modalEdgeForce, qd[4], dFmoe_dflp),
+    gradef(modalEdgeForce, qd[5], dFmoe_dedg),
+    gradef(modalEdgeForce, vwind, dFmoe_dvw),
+    gradef(modalEdgeForce, theta_, dFmoe_dtheta),*/
+	 
+	 
+    for i: 4 thru 6 do (
+    /* Thrust */
+        OoPforce: Fthrust/3,
+    /* flapwise */
+        RMG: applyForceInLocal(unitZ*thrustForceRadius, cos(theta)*unitX*OoPforce, T0G[i]),
+        appliedF[i]: RMG[1],
+        appliedM[i]: RMG[2],
+
+    /* edgewise */
+        RMG: applyForceInLocal(unitZ*thrustForceRadius, -sin(theta)*unitY*OoPforce, T0G[i]),
+        appliedF[i]: appliedF[i] + RMG[1],
+        appliedM[i]: appliedM[i] + RMG[2],
+
+
+    /* Torque */
+        IPforce: Trot/3/torqueForceRadius,
+    /* flapwise */
+        RMG: applyForceInLocal(unitZ*torqueForceRadius, -sin(theta)*unitX*IPforce, T0G[i]),
+        appliedF[i]: appliedF[i] + RMG[1],
+        appliedM[i]: appliedM[i] + RMG[2],
+
+    /* edgewise */
+        RMG: applyForceInLocal(unitZ*torqueForceRadius, -cos(theta)*unitY*IPforce, T0G[i]),
+        appliedF[i]: appliedF[i] + RMG[1],
+        appliedM[i]: appliedM[i] + RMG[2],
+
+    /* modal forces */
+        appliedFe[i]: matrix([modalFlapForce], [modalEdgeForce])
+    ),
+
+    /* M_DT: DTTorSpr*(q[6]/GBRatio-q[3]) + DTTorDmp*(qd[6]/GBRatio-qd[3]), */
+    /* M_DT: DTTorSpr*(q[6]-q[3]) + DTTorDmp*(qd[6]-qd[3]), */
+    M_DT: DTTorSpr*(q[6]/GBRatio-q[3] - TwTrans2Roll*q[2]) + DTTorDmp*(qd[6]/GBRatio-qd[3] - TwTrans2Roll*qd[2]),
+
+    appliedM[7]: matrix([-M_DT/GBRatio - Tgen], [0], [0]),
+    appliedM[3]: matrix([M_DT], [0], [0]),
+
+    appliedM[2]: matrix([-M_DT], [0], [0]),
+    /* appliedF[2]: matrix([0], [-TwTrans2Roll*u[3]], [0]), */
+    /* appliedF[2]: matrix([0], [-TwTrans2Roll*u[2]], [0]); */
+    done
+);
+
+modelOutputs():= (
+    [accelerations[1], accelerations[2], qd[6], qd[1], qd[2]]
+);
