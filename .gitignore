@@ -4,9 +4,8 @@ param.mat
 octave-workspace
 *~
 *.mex*
+*.asv
 turbine_coll_flap_edge_pitch_aero/
-5MW_Land_DLL_WTurb_tw_sid.mac
-5MW_Land_DLL_WTurb_bd_sid.mac
 
 .directory
 .cproject
