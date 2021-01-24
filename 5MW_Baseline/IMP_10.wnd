@@ -1,0 +1,10 @@
+! Wind file for sheared 10 m/s wind with 30 degree direction.
+! Time	Wind	Wind	Vert.	Horiz.	Vert.	LinV	Gust
+!			Speed	Dir	Speed	Shear		Shear	Shear	Speed
+0.0		10.0	 0.0	0.0	0.0		0.0	0.0	0.0
+50		10.0	 0.0	0.0	0.0		0.0	0.0	0.0
+50.01		11.0	 0.0	0.0	0.0		0.0	0.0	0.0
+100		11.0	 0.0	0.0	0.0		0.0	0.0	0.0
+100.01		10.0	 0.0	0.0	0.0		0.0	0.0	0.0
+150		10.0	 0.0	0.0	0.0		0.0	0.0	0.0
+
