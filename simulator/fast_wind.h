@@ -14,6 +14,7 @@
 #include <array>
 #include <vector>
 #include <tuple>
+#include <iomanip>
 
 #include "fast_parameters.h"
 
@@ -147,14 +148,18 @@ protected:
 
 class FAST_Wind_Type3 : public FAST_Wind {
 public:
-    FAST_Wind_Type3(FAST_Parameters &p) :
+    FAST_Wind_Type3(FAST_Parameters &p, double avg_exp_=3.0) :
         FAST_Wind(p),
-        wind(0)
+        wind(0),
+        TurbFilename(""),
+        avg_exp(avg_exp_)
     {
         if(p["WindType"]!=3)
             throw FAST_WindException("Trying to instantiate FAST_Wind_Type3 but parameter WindType is " + std::to_string(p["WindType"]));
         
         loadWindFile(p.getFilename(2));
+        
+        TurbFilename= p.getFilename(2);
     }
     
     virtual ~FAST_Wind_Type3() {}
@@ -221,12 +226,12 @@ public:
         
         int16_t v_grid_norm;
         float v_grid;
-        float v_avg3;
+        float v_avg;
         float z_grid;
         float y_grid;
         for(int it= 0; it<nt; ++it) {
             for(int grid_z= 0; grid_z<NumGrid_Z; ++grid_z) {
-                v_avg3= 0.0;
+                v_avg= 0.0;
                 
                 z_grid= Z_bottom + ((float)grid_z-1.0)*dz;
                 for(int grid_y= 0; grid_y<NumGrid_Y; ++grid_y) {
@@ -235,17 +240,33 @@ public:
                         infile.read((char*)&v_grid_norm, sizeof(int16_t));
                         if(uvw==0 && sqrt(pow(z_grid-HubHt, 2.0) + pow(y_grid, 2.0))<TipRad) {
                             v_grid= ((float)v_grid_norm - V_intercept[uvw]) / V_slope[uvw];
-                            v_avg3+= pow(v_grid, 3.0);
+                            v_avg+= pow(v_grid, avg_exp);
                         }
                     }
                 }
-                wind.push_back(pow(v_avg3, 1.0/3.0));
+                wind.push_back(pow(v_avg, 1.0/avg_exp));
             }
             for(int i_tower= 0; i_tower<n_tower; ++i_tower) {
                 for(int uvw= 0; uvw<3; ++uvw) {
                     infile.read((char*)&v_grid_norm, sizeof(int16_t));
                 }
             }
+        }
+    }
+    
+    void writeWind2File(const std::string& Filename) {
+        std::ofstream outfile(Filename);
+        
+        outfile << "! Averaged u-wind from file \"" << TurbFilename "\", avaerging exponent " << avg_exp << std::endl;
+        outfile << "! Time\tWind\tWind\tVert.\tHoriz.\tVert.\tLinV\tGust" << std::endl;
+        outfile << "!\t\t\tSpeed\tDir\tSpeed\tShear\tShear\tShear\tSpeed" << std::endl;
+        
+        outfile.setf( std::ios_base::scientific, std::ios_base::floatfield );
+        outfile.precision(std::numeric_limits<long double>::digits10);
+        double time= 0.0;
+        for(int i= 0; i<wind.size(); ++i) {
+            outfile << time << "\t" << wind[i] << "\t0.0\t0.0\t0.0\t0.0\t0.0\t0.0" << std::endl;
+            time+= TimeStep;
         }
     }
     
@@ -264,6 +285,8 @@ public:
 protected:
     std::vector<float> wind;
     float TimeStep;
+    std::string TurbFilename;
+    double avg_exp;
 };
 
 FAST_Wind* makeFAST_Wind(FAST_Parameters &p) {
