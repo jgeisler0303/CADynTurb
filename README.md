@@ -8,7 +8,8 @@ git clone https://github.com/OpenFAST/matlab-toolbox.git
 git clone https://github.com/jgeisler0303/FEMBeam.git
 ```
 
-Open `set_path` and edit the `setenv('maxima_path', '/usr/bin/maxima')` according to your installation of Maxima. Then run the `testFAST2CADynTurb`.
+Go to `CCBlade-M` directory and run `makeCCBlade_mex`.
+Got to  `CADynTurb/matlab` directory. Open `set_path` and edit the `setenv('maxima_path', '/usr/bin/maxima')` according to your installation of Maxima. Then run the `testFAST2CADynTurb`.
 
 It will:
 * Setup the search path to all required repositories,

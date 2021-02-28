@@ -23,5 +23,5 @@ end
 genModel(mac_file_gen, target_path)
 
 
-writeModelParams(param, target_path)
+param= writeModelParams(param, target_path);
 
