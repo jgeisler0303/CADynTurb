@@ -5,14 +5,14 @@
 #define omrot qd(2)
 #define vBFlap qd(3)
 #define vBEdge qd(4)
-#define vwind u(0)
+#define vwind q(6)
 #define theta u(2)
 
 #define LUT(tab) (thetaFact*(lambdaFact*tab(lambdaIdx, thetaIdx) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx)) + (1.0-thetaFact)*(lambdaFact*tab(lambdaIdx, thetaIdx+1) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx+1)))
 #define DLAM_LUT(tab) ((thetaFact*(tab(lambdaIdx+1, thetaIdx)-tab(lambdaIdx, thetaIdx))/param.lambdaStep) + (1.0-thetaFact)*((tab(lambdaIdx+1, thetaIdx)-tab(lambdaIdx, thetaIdx))/param.lambdaStep))
 #define DTH_LUT(tab) (( (lambdaFact*tab(lambdaIdx, thetaIdx+1) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx+1))-(lambdaFact*tab(lambdaIdx, thetaIdx) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx)) )/param.thetaStep)
 
-void turbine_coll_flap_edge_pitch_aeroSystem::calculateExternal() {
+void turbine_coll_flap_edge_pitch_aero_estSystem::calculateExternal() {
     theta_deg= -theta/M_PI*180.0;
     double vwind_eff= vwind-vTLng;
     lam= omrot*param.Rrot/vwind_eff;
@@ -70,7 +70,7 @@ static void aeroForceDerivs(const double cx_stat, const double dcx_dlam, const d
     dX_dtheta= Fwind*dcx_dtheta;                        // TODO to be exact, the derivative of the edge and flap terms is missing here 
 }
 
-void turbine_coll_flap_edge_pitch_aeroSystem::calculateExternalWithDeriv() {
+void turbine_coll_flap_edge_pitch_aero_estSystem::calculateExternalWithDeriv() {
     theta_deg= -theta/M_PI*180.0;
     double vwind_eff= vwind-vTLng;
     lam= omrot*param.Rrot/vwind_eff;
@@ -121,25 +121,25 @@ void turbine_coll_flap_edge_pitch_aeroSystem::calculateExternalWithDeriv() {
                     dcm_dvf_v, dcm_dve_v, 
                     dlam_dvw, dlam_dvtow, dlam_domrot,
                     Fwind, Fwind_v, dFwind_dvtow, dFwind_dvw, 
-                    dTrot_dqd1, dTrot_dqd3, dTrot_dqd4, dTrot_dqd5, dTrot_dvwind, dTrot_dtheta);
+                    dTrot_dqd1, dTrot_dqd3, dTrot_dqd4, dTrot_dqd5, dTrot_dq7, dTrot_dtheta);
     
     aeroForceDerivs(ct, DLAM_LUT(param.ct_lut), DTH_LUT(param.ct_lut), 
                     dct_dvf_v, dct_dve_v, 
                     dlam_dvw, dlam_dvtow, dlam_domrot,
                     Fwind, Fwind_v, dFwind_dvtow, dFwind_dvw, 
-                    dFthrust_dqd1, dFthrust_dqd3, dFthrust_dqd4, dFthrust_dqd5, dFthrust_dvwind, dFthrust_dtheta);
+                    dFthrust_dqd1, dFthrust_dqd3, dFthrust_dqd4, dFthrust_dqd5, dFthrust_dq7, dFthrust_dtheta);
     
     aeroForceDerivs(cflp, DLAM_LUT(param.cf_lut), DTH_LUT(param.cf_lut), 
                     dcf_dvf_v, dcf_dve_v, 
                     dlam_dvw, dlam_dvtow, dlam_domrot,
                     Fwind, Fwind_v, dFwind_dvtow, dFwind_dvw, 
-                    dmodalFlapForce_dqd1, dmodalFlapForce_dqd3, dmodalFlapForce_dqd4, dmodalFlapForce_dqd5, dmodalFlapForce_dvwind, dmodalFlapForce_dtheta);
+                    dmodalFlapForce_dqd1, dmodalFlapForce_dqd3, dmodalFlapForce_dqd4, dmodalFlapForce_dqd5, dmodalFlapForce_dq7, dmodalFlapForce_dtheta);
     
     aeroForceDerivs(cedg, -1.0*DLAM_LUT(param.ce_lut), -1.0*DTH_LUT(param.ce_lut), 
                     dce_dvf_v, dce_dve_v, 
                     dlam_dvw, dlam_dvtow, dlam_domrot,
                     Fwind, Fwind_v, dFwind_dvtow, dFwind_dvw, 
-                    dmodalEdgeForce_dqd1, dmodalEdgeForce_dqd3, dmodalEdgeForce_dqd4, dmodalEdgeForce_dqd5, dmodalEdgeForce_dvwind, dmodalEdgeForce_dtheta);
+                    dmodalEdgeForce_dqd1, dmodalEdgeForce_dqd3, dmodalEdgeForce_dqd4, dmodalEdgeForce_dqd5, dmodalEdgeForce_dq7, dmodalEdgeForce_dtheta);
     
     dFtow_y_dqd2= 1.5*Fwind_v*dcs_dvy_v;
     // TODO to be exact, the derivative with respect to qd3, wind and theta are missing here 

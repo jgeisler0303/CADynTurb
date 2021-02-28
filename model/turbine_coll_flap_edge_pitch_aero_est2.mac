@@ -4,9 +4,10 @@ SIMPLIFY: 1;
 SMALL_ELAST: 1;
 WITH_LINEAR: 1;
 WITH_ACCELERATIONS: 0;
-INPUTS: [vwind, Tgen, theta];
-EXTERNAL: [cm(), ct(), cflp(), cedg(), theta_deg(), lam(), Trot(qd[1], qd[3], qd[4], qd[5], vwind, theta), Fthrust(qd[1], qd[3], qd[4], qd[5], vwind, theta), Ftow_y(qd[2]), modalFlapForce(qd[1], qd[3], qd[4], qd[5], vwind, theta), modalEdgeForce(qd[1], qd[3], qd[4], qd[5], vwind, theta)];
+INPUTS: [Tgen, theta, w_theta_m, w_theta_t, w_theta_b1, w_theta_b2, w_tow_lat, dvwind];
+EXTERNAL: [cm(), ct(), cflp(), cedg(), theta_deg(), lam(), Trot(qd[1], qd[3], qd[4], qd[5], q[7], theta, w_theta_m), Fthrust(qd[1], qd[3], qd[4], qd[5], q[7], theta, w_theta_t), Ftow_y(qd[2], w_tow_lat), modalFlapForce(qd[1], qd[3], qd[4], qd[5], q[7], theta, w_theta_b1), modalEdgeForce(qd[1], qd[3], qd[4], qd[5], q[7], theta, w_theta_b2)];
 EXT_PARAM: [rho, Rrot, lambdaMin, lambdaMax, lambdaStep, thetaMin, thetaMax, thetaStep, Arot, cm_lut[25, 91], ct_lut[25, 91], cf_lut[25, 91], ce_lut[25, 91], dcm_dvf_v_lut[25, 91], dcm_dve_v_lut[25, 91], dct_dvf_v_lut[25, 91], dct_dve_v_lut[25, 91], dcs_dvy_v_lut[25, 91], dcf_dvf_v_lut[25, 91], dcf_dve_v_lut[25, 91], dce_dvf_v_lut[25, 91], dce_dve_v_lut[25, 91]];
+F_EXT: [qd[7]-dvwind, T_wind_filt^2*qdd[8]+2*D_wind_filt*T_wind_filt*qd[8]+q[8]-q[7]];
 
 /* Gravity vector */
 gravity: [0, 0, -g];
@@ -67,7 +68,7 @@ mass[7]: 0;
 Ixx[7]: GenIner;
 Iyy[7]: 0;
 Izz[7]: 0;
-TrefG[7]:  Trotx(q[6]);
+TrefG[7]:  Trotx(q[3]*GBRatio+q[6]);
 
 
 /* Initial conditions */
@@ -80,36 +81,6 @@ qi[5]: -0.01;
 
 
 appliedForces():= (
-    /* only necessary for linearization */
-    /* gradef(Fthrust, qd[1], dthrust_dvtow),
-    gradef(Fthrust, qd[3], dthrust_domrot),
-    gradef(Fthrust, qd[4], dthrust_dflp),
-    gradef(Fthrust, qd[5], dthrust_dedg),
-    gradef(Fthrust, vwind, dthrust_dvw),
-    gradef(Fthrust, theta_, dthrust_dtheta),
-
-    gradef(Trot, qd[1], dtorque_dvtow),
-    gradef(Trot, qd[3], dtorque_domrot),
-    gradef(Trot, qd[4], dtorque_dflp),
-    gradef(Trot, qd[5], dtorque_dedg),
-    gradef(Trot, vwind, dtorque_dvw),
-    gradef(Trot, theta_, dtorque_dtheta),
-          
-    gradef(modalFlapForce, qd[1], dFmof_dvtow),
-    gradef(modalFlapForce, qd[3], dFmof_domrot),
-    gradef(modalFlapForce, qd[4], dFmof_dflp),
-    gradef(modalFlapForce, qd[5], dFmof_dedg),
-    gradef(modalFlapForce, vwind, dFmof_dvw),
-    gradef(modalFlapForce, theta_, dFmof_dtheta),
-
-    gradef(modalEdgeForce, qd[1], dFmoe_dvtow),
-    gradef(modalEdgeForce, qd[3], dFmoe_domrot),
-    gradef(modalEdgeForce, qd[4], dFmoe_dflp),
-    gradef(modalEdgeForce, qd[5], dFmoe_dedg),
-    gradef(modalEdgeForce, vwind, dFmoe_dvw),
-    gradef(modalEdgeForce, theta_, dFmoe_dtheta),*/
-	 
-	 
     for i: 4 thru 6 do (
     /* Thrust */
         OoPforce: Fthrust/3,
@@ -142,7 +113,7 @@ appliedForces():= (
 
     /* M_DT: DTTorSpr*(q[6]/GBRatio-q[3]) + DTTorDmp*(qd[6]/GBRatio-qd[3]), */
     /* M_DT: DTTorSpr*(q[6]-q[3]) + DTTorDmp*(qd[6]-qd[3]), */
-    M_DT: DTTorSpr*(q[6]/GBRatio-q[3] - TwTrans2Roll*q[2]) + DTTorDmp*(qd[6]/GBRatio-qd[3] - TwTrans2Roll*qd[2]),
+    M_DT: DTTorSpr*(q[6]/GBRatio - TwTrans2Roll*q[2]) + DTTorDmp*(qd[6]/GBRatio - TwTrans2Roll*qd[2]),
 
     appliedM[7]: matrix([-M_DT/GBRatio - Tgen], [0], [0]),
     appliedM[3]: matrix([M_DT], [0], [0]),
@@ -154,5 +125,5 @@ appliedForces():= (
 );
 
 modelOutputs():= (
-    [accelerations[1], accelerations[2], qd[6], qd[1], qd[2]]
+    [qdd[1], qdd[2], qd[3]*GBRatio+qd[6], q[7], q[8]]
 );
