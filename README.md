@@ -9,6 +9,7 @@ On Windows you will also need to install the MinGW compiler for MATLAB following
 
 Then you need to install the eigen3 library from here: https://eigen.tuxfamily.org/index.php?title=Main_Page . Basically you can just copy everything from the zip file to your gcc (MinGW) compilers include directory. But there are also cmake based installations scripts.
 
+In order to run the turbine simulation, you will need the controller DISCON.dll shared library from the OpenFAST project. If you don't have it already, you will have to compile it yourself. Download or clone the OpenFAST code from this repo: https://github.com/OpenFAST/openfast . Go to the `OpenFAST/share/discon` folder and run `mkdir build`, then `cd build`, `cmake ..`, `make` and finally copy the compiled file `DISCON.dll` to the `5MW_Baseline` subfolder of the CADynTurb package.
 
 With all these programs setup, you can clone all of the following repositiries into the same parent directory:
 ``` bash
