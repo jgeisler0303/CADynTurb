@@ -1,3 +1,6 @@
+# Video Tutorial
+You can watch a tutorial showing you all of the following steps here: https://youtu.be/QwgTmSUtoPY
+
 # Getting Started
 You need to install Maxima from here: https://sourceforge.net/projects/maxima/files/ . On Linux make sure you select the Steel Bank Common Lisp version (it has sbcl in its name). Windows you may alos choose to install GUI wxMaxima from here: https://sourceforge.net/projects/wxmaxima/files/ this will install the commandline verions as well.
 
