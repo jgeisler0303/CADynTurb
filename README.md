@@ -1,5 +1,14 @@
 # Getting Started
-Clone this and the following repositiries into the same parent directory:
+You need to install Maxima from here: https://sourceforge.net/projects/maxima/files/ . On Linux make sure you select the Steel Bank Common Lisp version (it has sbcl in its name). Windows you may alos choose to install GUI wxMaxima from here: https://sourceforge.net/projects/wxmaxima/files/ this will install the commandline verions as well.
+
+Then you need to download or clone my fork of maxima from here https://github.com/jgeisler0303/maxima and copy all files from the repos share/contrib/gentran directory to the respective directory of your Maxima installation. On Linux this might look something like this: `sudo cp -r share/contrib/gentran/ /usr/share/maxima/5.44.0/share/contrib/`.
+
+On Windows you will also need to install the MinGW compiler for MATLAB following these instructions: https://de.mathworks.com/help/matlab/matlab_external/install-mingw-support-package.html .
+
+Then you need to install the eigen3 library from here: https://eigen.tuxfamily.org/index.php?title=Main_Page . Basically you can just copy everything from the zip file to your gcc (MinGW) compilers include directory. But there are also cmake based installations scripts.
+
+
+With all these programs setup, you can clone all of the following repositiries into the same parent directory:
 ``` bash
 git clone https://github.com/jgeisler0303/CADynTurb.git
 git clone https://github.com/jgeisler0303/CCBlade-M.git
@@ -8,8 +17,8 @@ git clone https://github.com/OpenFAST/matlab-toolbox.git
 git clone https://github.com/jgeisler0303/FEMBeam.git
 ```
 
-Go to `CCBlade-M` directory and run `makeCCBlade_mex`.
-Got to  `CADynTurb/matlab` directory. Open `set_path` and edit the `setenv('maxima_path', '/usr/bin/maxima')` according to your installation of Maxima. Then run the `testFAST2CADynTurb`.
+Then start MATLAB, go to the `CCBlade-M` directory and run `makeCCBlade_mex`.
+Then go to the `CADynTurb/matlab` directory. Open `set_path` and edit the line `setenv('maxima_path', '/usr/bin/maxima')` according to your installation of Maxima. Then run the `testFAST2CADynTurb`.
 
 It will:
 * Setup the search path to all required repositories,

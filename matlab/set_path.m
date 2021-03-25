@@ -1,6 +1,5 @@
 addpath(pwd)
 addpath(fullfile(pwd, 'gen'))
-addpath(fullfile(pwd, 'observer'))
 addpath(fullfile(pwd, 'plot'))
 addpath(fullfile(pwd, 'sim_data'))
 
