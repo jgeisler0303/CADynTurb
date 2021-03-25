@@ -3,6 +3,8 @@ You need to install Maxima from here: https://sourceforge.net/projects/maxima/fi
 
 Then you need to download or clone my fork of maxima from here https://github.com/jgeisler0303/maxima and copy all files from the repos share/contrib/gentran directory to the respective directory of your Maxima installation. On Linux this might look something like this: `sudo cp -r share/contrib/gentran/ /usr/share/maxima/5.44.0/share/contrib/`.
 
+Further, in the Maxima base directory in the file `share/numeric/expense.lisp` the line `(declare (fixnum exin rem in-cut pw2))` must be commented out (put a `;` at the start of the line).
+
 On Windows you will also need to install the MinGW compiler for MATLAB following these instructions: https://de.mathworks.com/help/matlab/matlab_external/install-mingw-support-package.html .
 
 Then you need to install the eigen3 library from here: https://eigen.tuxfamily.org/index.php?title=Main_Page . Basically you can just copy everything from the zip file to your gcc (MinGW) compilers include directory. But there are also cmake based installations scripts.
