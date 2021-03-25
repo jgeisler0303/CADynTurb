@@ -122,6 +122,8 @@ True          TabDelim    - Use tab delimiters in text tabular output file? (fla
               OutList     - The next line(s) contains a list of output parameters.  See OutListParameters.xlsx for a listing of available output channels, (-)
 "TwstDefl1"               - Blade 1 out-of-plane and in-plane deflections and tip twist
 "BldPitch1"               - Blade 1 pitch angle
+"BldPitch2"               - Blade 2 pitch angle
+"BldPitch3"               - Blade 3 pitch angle
 "Azimuth"                 - Blade 1 azimuth angle
 "RotSpeed"                - Low-speed shaft and high-speed shaft speeds
 "GenSpeed"                - Low-speed shaft and high-speed shaft speeds
@@ -174,6 +176,8 @@ True          TabDelim    - Use tab delimiters in text tabular output file? (fla
 "TipDyc2"
 "TipDyc3"
 "PtchPMzc1"
+"PtchPMzc2"
+"PtchPMzc3"
 "LSSTipPxa"
 "LSSTipVxa"
 "LSSTipAxa"

@@ -127,7 +127,9 @@ void setupOutputs(FAST_Output &out, turbine_coll_flap_edge_pitch_aeroSystem &sys
     out.addChannel("RotPwr", "kW", &RotPwr, 1.0/1000.0);
     out.addChannel("HSShftTq", "kNm", &system.u.data()[1], 1.0/1000.0);
     out.addChannel("HSShftPwr", "kW", &HSShftPwr, 1.0/1000.0);
+    out.addChannel("RtVAvgxh", "m/s", &system.u.data()[0]);
     out.addChannel("WindVxi", "m/s", &system.u.data()[0]);
+    out.addChannel("Wind1VelX", "m/s", &system.u.data()[0]);
     out.addChannel("RtTSR", "-", &system.lam);
     out.addChannel("RtAeroCq", "-", &system.cm);
     out.addChannel("RtAeroCt", "-", &system.ct);

@@ -26,6 +26,6 @@ system('gen/TurbineSimulator -p gen/params.txt  -d ../5MW_Baseline/DISCON.dll -w
 
 %% plot results
 d= loadFAST('simp_12.outb');
-plot_timeseries(d, {'WindVxi', 'PtchPMzc', 'HSShftV', 'GenTq', 'YawBrTDxp', 'YawBrTDyp', 'Q_BF1', 'Q_BE1'});
+plot_timeseries(d, {'RtVAvgxh', 'PtchPMzc', 'HSShftV', 'GenTq', 'YawBrTDxp', 'YawBrTDyp', 'Q_BF1', 'Q_BE1'});
 
 cd(old_dir)

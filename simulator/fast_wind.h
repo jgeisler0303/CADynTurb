@@ -257,7 +257,7 @@ public:
     void writeWind2File(const std::string& Filename) {
         std::ofstream outfile(Filename);
         
-        outfile << "! Averaged u-wind from file \"" << TurbFilename "\", avaerging exponent " << avg_exp << std::endl;
+        outfile << "! Averaged u-wind from file \"" << TurbFilename << "\", avaerging exponent " << avg_exp << std::endl;
         outfile << "! Time\tWind\tWind\tVert.\tHoriz.\tVert.\tLinV\tGust" << std::endl;
         outfile << "!\t\t\tSpeed\tDir\tSpeed\tShear\tShear\tShear\tSpeed" << std::endl;
         
