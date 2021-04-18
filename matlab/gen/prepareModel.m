@@ -20,7 +20,7 @@ if ~exist(ext_file_gen, 'file')
     copyfile(strrep(mac_file, '.mac', 'System_Externals.hpp'), ext_file_gen)
 end
 
-genModel(mac_file_gen, target_path)
+makeCAGEM(mac_file_gen, target_path)
 
 
 param= writeModelParams(param, target_path);
