@@ -2,6 +2,7 @@ addpath(pwd)
 addpath(fullfile(pwd, 'gen'))
 addpath(fullfile(pwd, 'plot'))
 addpath(fullfile(pwd, 'sim_data'))
+addpath(fullfile(pwd, 'lin_model'))
 
 old_dir= pwd;
 cd('../../matlab-toolbox/FAST2MATLAB')
