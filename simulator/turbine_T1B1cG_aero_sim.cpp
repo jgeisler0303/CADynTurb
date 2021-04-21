@@ -10,17 +10,17 @@
 #include "fast_parameters.h"
 #include "fast_wind.h"
 
-#include "turbine_T2B2cG_aeroSystem2.hpp"
+#include "turbine_T1B1cG_aeroSystem2.hpp"
 
-bool simulate(turbine_T2B2cG_aeroSystem &system, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name);
-bool DISCON_Step(double t, DISCON_Interface &DISCON, turbine_T2B2cG_aeroSystem &system);
+bool simulate(turbine_T1B1cG_aeroSystem &system, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name);
+bool DISCON_Step(double t, DISCON_Interface &DISCON, turbine_T1B1cG_aeroSystem &system);
 
 double RotPwr;
 double HSShftPwr;
 double wind_adjust;
 
 int main(int argc, char* argv[]) {
-    turbine_T2B2cG_aeroSystem system;
+    turbine_T1B1cG_aeroSystem system;
     FAST_Wind* wind;
     
     cxxopts::Options argc_options("TurbineSimulator", "A simple wind turbine simulator");
@@ -101,9 +101,8 @@ int main(int argc, char* argv[]) {
     exit (EXIT_SUCCESS);
 }
 
-void setupOutputs(FAST_Output &out, turbine_T2B2cG_aeroSystem &system) {
+void setupOutputs(FAST_Output &out, turbine_T1B1cG_aeroSystem &system) {
     out.addChannel("Q_BF1", "m", &system.states.bld_flp);
-    out.addChannel("Q_BE1", "m", &system.states.bld_edg);
 //     out.addChannel("TipDxb", "m", &system.q.data()[3]*blade_frame_49_phi0_1_1 + &system.q.data()[4]);
 //     out.addChannel("TipDyb", "m", &system.q.data()[4]);
     out.addChannel("PtchPMzc", "deg", &system.theta_deg);
@@ -113,13 +112,9 @@ void setupOutputs(FAST_Output &out, turbine_T2B2cG_aeroSystem &system) {
     out.addChannel("HSShftV", "rpm", &system.states.phi_gen_d, 30.0/M_PI);
     out.addChannel("HSShftA", "deg/s^2", &system.states.phi_gen_dd, 180.0/M_PI);
     out.addChannel("YawBrTDxp", "m", &system.states.tow_fa);
-    out.addChannel("YawBrTDyp", "m", &system.states.tow_ss);
     out.addChannel("YawBrTAxp", "m/s^2", &system.states.tow_fa_dd);
-    out.addChannel("YawBrTAyp", "m/s^2", &system.states.tow_ss_dd);
 //    out.addChannel("YawBrRDyt", "deg", &system.states.tow_fa, system.param.TwTrans2Roll*180.0/M_PI);
-//    out.addChannel("YawBrRDxt", "deg", &system.states.tow_ss, system.param.TwTrans2Roll*180.0/M_PI);
 //    out.addChannel("YawBrRVyp", "deg/s", &system.states.tow_fa_d, system.param.TwTrans2Roll*180.0/M_PI);
-//    out.addChannel("YawBrRVxp", "deg/s", &system.states.tow_ss_d, system.param.TwTrans2Roll*180.0/M_PI);
     out.addChannel("RootFxc", "kN", &system.Fthrust, 1.0/3000.0);
     out.addChannel("RootMxc", "kNm", &system.Trot, 1.0/3000.0);
     out.addChannel("LSShftFxa", "kN", &system.Fthrust, 1.0/1000.0);
@@ -134,14 +129,12 @@ void setupOutputs(FAST_Output &out, turbine_T2B2cG_aeroSystem &system) {
     out.addChannel("RtAeroCq", "-", &system.cm);
     out.addChannel("RtAeroCt", "-", &system.ct);
     out.addChannel("RotCf", "-", &system.cflp);
-    out.addChannel("RotCe", "-", &system.cedg);
     out.addChannel("BlPitchC", "deg", &system.inputs.theta,  -180.0/M_PI);
     out.addChannel("GenTq", "kNm", &system.inputs.Tgen, 1.0/1000.0);
     out.addChannel("RootMxb", "-", &system.modalFlapForce);
-    out.addChannel("RootMyb", "-", &system.modalEdgeForce);
 }
 
-bool simulate(turbine_T2B2cG_aeroSystem &system, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name) {
+bool simulate(turbine_T1B1cG_aeroSystem &system, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name) {
     FAST_Output out(tfinal/ts+1);
     out.setTime(0.0, ts);
     setupOutputs(out, system);
@@ -242,7 +235,7 @@ bool simulate(turbine_T2B2cG_aeroSystem &system, FAST_Wind* wind, double ts, dou
     return res;
 }
 
-bool DISCON_Step(double t, DISCON_Interface &DISCON, turbine_T2B2cG_aeroSystem &system) {
+bool DISCON_Step(double t, DISCON_Interface &DISCON, turbine_T1B1cG_aeroSystem &system) {
     DISCON.current_time= t;
     
     DISCON.wind_speed_hub= system.inputs.vwind;
@@ -258,7 +251,7 @@ bool DISCON_Step(double t, DISCON_Interface &DISCON, turbine_T2B2cG_aeroSystem &
     DISCON.blade3_pitch= -system.inputs.theta;
     
     DISCON.f_a_acc= system.states.tow_fa_dd;
-    DISCON.s_s_acc= system.states.tow_ss_dd;
+    DISCON.s_s_acc= 0.0;
     
     DISCON.rotor_pos= system.states.phi_rot;
     

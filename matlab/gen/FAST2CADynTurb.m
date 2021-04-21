@@ -1,4 +1,10 @@
-function [param, data, tw_sid, bd_sid]= FAST2CADynTurb(fst_file)
+function [param, data, tw_sid, bd_sid]= FAST2CADynTurb(fst_file, tower_modes, blade_modes)
+if ~exist('tower_modes', 'var')
+    tower_modes= {[1 2]};
+end
+if ~exist('blade_modes', 'var')
+    blade_modes= [1 2];
+end
 
 [fst_dir, fname]= fileparts(fst_file);
 base_path= fullfile(fst_dir, fname);
@@ -30,8 +36,13 @@ for i= 1:n
 end
 
 %%
-tw_sid= FEMBeam2SID(data, 1, {[1 2]}, 1);
-tw_sid.De.M0= diag(2*sqrt(tw_sid.Me.M0*tw_sid.Ke.M0)) .* [GetFASTPar(edtwrDataOut, 'TwrFADmp(1)') GetFASTPar(edtwrDataOut, 'TwrSSDmp(1)')]/100;
+tw_sid= FEMBeam2SID(data, 1, tower_modes, 1);
+% TODO: allow more than 2 tower modes
+if size(tw_sid.Ke.M0, 1)==2
+    tw_sid.De.M0= diag(2*sqrt(tw_sid.Me.M0*tw_sid.Ke.M0)) .* [GetFASTPar(edtwrDataOut, 'TwrFADmp(1)') GetFASTPar(edtwrDataOut, 'TwrSSDmp(1)')]/100;
+else
+    tw_sid.De.M0= diag(2*sqrt(tw_sid.Me.M0*tw_sid.Ke.M0)) .* [GetFASTPar(edtwrDataOut, 'TwrFADmp(1)')]/100;
+end
 tw_sid.De.structure= 1;
 
 %  write_sid_maxima(tw_sid, [base_path '_tw_sid'], 'tower', length(tw_sid.frame), 1e-5, 1)
@@ -65,8 +76,13 @@ for i= 1:n
 end
 
 %%
-bd_sid= FEMBeam2SID(data, 1, [1 2], 1);
-bd_sid.De.M0= 2*real(sqrt(bd_sid.Me.M0*bd_sid.Ke.M0)) * diag([GetFASTPar(edbldDataOut, 'BldFlDmp(1)') GetFASTPar(edbldDataOut, 'BldEdDmp(1)')])/100;
+bd_sid= FEMBeam2SID(data, 1, blade_modes, 1);
+% TODO: allow more than 2 blade modes
+if size(bd_sid.Ke.M0, 1)==2
+    bd_sid.De.M0= 2*real(sqrt(bd_sid.Me.M0*bd_sid.Ke.M0)) * diag([GetFASTPar(edbldDataOut, 'BldFlDmp(1)') GetFASTPar(edbldDataOut, 'BldEdDmp(1)')])/100;
+else
+    bd_sid.De.M0= 2*real(sqrt(bd_sid.Me.M0*bd_sid.Ke.M0)) * diag([GetFASTPar(edbldDataOut, 'BldFlDmp(1)')])/100;
+end
 bd_sid.De.structure= 2;
 
 %  write_sid_maxima(bd_sid, [base_path '_bd_sid'], 'tower', [], 1e-5, 1)
@@ -116,11 +132,11 @@ end
 
 for i= 1:length(bd_sid.frame)
     R(i)= bd_sid.frame(i).origin.M0(3);
-    for j= 1:2
+    for j= 1:size(bd_sid.frame(i).Phi.M0, 2)
         ModalShape{j}(:, i)= bd_sid.frame(i).Phi.M0(1:2, j);
     end
 end
-for j= 1:2
+for j= 1:size(bd_sid.frame(i).Phi.M0, 2)
     data.ModalShapes{j}= interp1([-1 R 1000]', [ModalShape{j}(:, 1) ModalShape{j} ModalShape{j}(:, end)]', data.R);
 end
 
