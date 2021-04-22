@@ -1,6 +1,8 @@
 # Video Tutorial
 You can watch a tutorial showing you all of the following steps here: https://youtu.be/QwgTmSUtoPY
 
+And here is a tutorial that explains the model definition file, the external forces file and the stand alone simulation program by showing what needs to be done to create a more simplified four degrees of freedom model from the already existing six degrees of freedom model:  https://youtu.be/_flxpCukBiI
+
 # Getting Started
 You need to install Maxima from here: https://sourceforge.net/projects/maxima/files/ . On Linux make sure you select the Steel Bank Common Lisp version (it has sbcl in its name). Windows you may alos choose to install GUI wxMaxima from here: https://sourceforge.net/projects/wxmaxima/files/ this will install the commandline verions as well.
 
