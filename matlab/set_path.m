@@ -1,24 +1,16 @@
-addpath(pwd)
-addpath(fullfile(pwd, 'gen'))
-addpath(fullfile(pwd, 'plot'))
-addpath(fullfile(pwd, 'sim_data'))
-addpath(fullfile(pwd, 'lin_model'))
+base_dir= fileparts(mfilename('fullpath'));
 
-old_dir= pwd;
-cd('../../matlab-toolbox/FAST2MATLAB')
-addpath(pwd)
-cd('../Utilities')
-addpath(pwd)
-cd(old_dir)
-cd('../../FEMBeam')
-addpath(pwd)
-cd(old_dir)
-cd('../../CCBlade-M')
-addpath(pwd)
-cd(old_dir)
-cd('../../CADyn/gen')
-addpath(pwd)
-cd(old_dir)
+addpath(base_dir)
+addpath(fullfile(base_dir, 'gen'))
+addpath(fullfile(base_dir, 'plot'))
+addpath(fullfile(base_dir, 'sim_data'))
+addpath(fullfile(base_dir, 'lin_model'))
+
+addpath(fullfile(base_dir, '../../matlab-toolbox/FAST2MATLAB'))
+addpath(fullfile(base_dir, '../../matlab-toolbox/Utilities'))
+addpath(fullfile(base_dir, '../../FEMBeam'))
+addpath(fullfile(base_dir, '../../CCBlade-M'))
+addpath(fullfile(base_dir, '../../CADyn/gen'))
 
 %%
 setenv('maxima_path', '/usr/bin/maxima')
