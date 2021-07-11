@@ -7,7 +7,7 @@
 #include <cxxopts.hpp>
 #include "discon_interface.h"
 #include "fast_output.h"
-#include "fast_parameters.h"
+#include "fast_parent_param.h"
 #include "fast_wind.h"
 
 #include "turbine_T1_aeroSystem2.hpp"
@@ -22,41 +22,26 @@ double wind_adjust;
 int main(int argc, char* argv[]) {
     turbine_T1_aeroSystem system;
     FAST_Wind* wind;
+    double simtime;
+    double simstep;
+    std::string discon_dll;
+    std::string out_name;
     
     cxxopts::Options argc_options("TurbineSimulator", "A simple wind turbine simulator");
     argc_options.add_options()
-    // ("i,icfile", "Initial conditions file name", cxxopts::value<std::string>()->default_value("./icfile.txt"))
     ("p,paramfile", "Parameter file name", cxxopts::value<std::string>()->default_value("./params.txt"))
-    ("t,simtime", "Simulation time", cxxopts::value<double>()->default_value("10.0"))
+    ("t,simtime", "Simulation time", cxxopts::value<double>()->default_value("10"))
     ("s,simstep", "Simulation time", cxxopts::value<double>()->default_value("0.01"))
-    ("w,vwind", "Inflow wind definition file name", cxxopts::value<std::string>()->default_value("Inflow.dat"))
-    ("d,discon_dll", "Path and name of the DISCON controller DLL", cxxopts::value<std::string>()->default_value("./discon.dll"))
-    ("o,output", "Output file name", cxxopts::value<std::string>()->default_value("sim_output.outb"))
+    ("d,discon_dll", "Path and name of the DISCON controller DLL", cxxopts::value<std::string>()->default_value("DISCON.dll"))
+    ("o,output", "Output file name", cxxopts::value<std::string>()->default_value("default.outb"))
     ("a,adjust_wind", "Adjustment factor for wind speed", cxxopts::value<double>()->default_value("1.0"))
+    ("fast", "OpenFAST main input file", cxxopts::value<std::string>())
     ;
+    
+    argc_options.parse_positional({"fast"});
     
     auto argc_result = argc_options.parse(argc, argv);
 
-//     {   
-//         std:string ic_file_name= argc_result["icfile"].as<std::string>();
-//         std::ifstream ic_file(ic_file_name);
-//         
-//         for(int i= 0; i<6; ++i) {
-//             ic_file >> system.q(i);
-//             if(ic_file.fail()) {
-//                 std::cout << "Not all initial conditions could be read from file \"" << ic_file_name << "\"" << std::endl;
-//                 exit (EXIT_FAILURE);
-//             }
-//         }
-//         for(int i= 0; i<6; ++i) {
-//             ic_file >> system.qd(i);
-//             if(ic_file.fail()) {
-//                 std::cout << "Not all initial conditions could be read from file \"" << ic_file_name << "\"" << std::endl;
-//                 exit (EXIT_FAILURE);
-//             }
-//         }
-//     }
-    
     try {
         system.param.setFromFile(argc_result["paramfile"].as<std::string>());
     } catch (const std::exception& e) {
@@ -68,24 +53,57 @@ int main(int argc, char* argv[]) {
         exit (EXIT_FAILURE);            
     }
     
-    try {
-        FAST_Parameters p(argc_result["vwind"].as<std::string>());
-        wind= makeFAST_Wind(p);
-    } catch (const std::exception& e) {
-        fprintf(stderr, "Inflow error: %s\n", e.what());
-        exit (EXIT_FAILURE);
+    if(argc_result.count("fast")) {
+        try {
+            FAST_Parent_Parameters p(argc_result["fast"].as<std::string>());
+
+            simtime= (argc_result.count("simtime"))? argc_result["simtime"].as<double>(): p["TMax"];
+            simstep= (argc_result.count("simstep"))? argc_result["simstep"].as<double>(): p["DT"];
+            if(argc_result.count("output")) {
+                out_name= argc_result["output"].as<std::string>();
+            } else {
+                out_name= argc_result["fast"].as<std::string>();
+                out_name.replace(out_name.end()-3, out_name.end(), "outb");
+            }
+            if(argc_result.count("discon_dll")) {
+                discon_dll= argc_result["discon_dll"].as<std::string>();
+            } else {
+                discon_dll= p.getFilename("ServoFile.DLL_FileName");
+            }
+            
+            try {
+                wind= makeFAST_Wind(p);
+            } catch (const std::exception& e) {
+                fprintf(stderr, "Inflow error: %s\n", e.what());
+                exit (EXIT_FAILURE);
+            }
+        } catch (const std::exception& e) {
+            fprintf(stderr, "FAST input error: %s\n", e.what());
+            exit (EXIT_FAILURE);
+        }
+    } else {
+        fprintf(stderr, "No FAST main input file was supplied\n");
+        exit (EXIT_FAILURE);        
     }
     
     
     {
         wind_adjust= argc_result["adjust_wind"].as<double>();
+        
+        std::cout << "Simulating with options:" << std::endl;
+        std::cout << "  wind_adjust=" << wind_adjust << std::endl;
+        std::cout << "  simstep=" << simstep << std::endl;
+        std::cout << "  simtime=" << simtime << std::endl;
+        std::cout << "  discon_dll=" << discon_dll << std::endl;
+        std::cout << "  output=" << out_name << std::endl;
+        
         std::clock_t startcputime = std::clock();
         bool res= simulate(system,
                            wind,
-                           argc_result["simstep"].as<double>(),
-                           argc_result["simtime"].as<double>(),
-                           argc_result["discon_dll"].as<std::string>(),
-                           argc_result["output"].as<std::string>());
+                           simstep,
+                           simtime,
+                           discon_dll,
+                           out_name);
         double cpu_duration = (std::clock() - startcputime) / (double)CLOCKS_PER_SEC;
 
         if(!res) {

@@ -16,7 +16,7 @@
 #include <tuple>
 #include <iomanip>
 
-#include "fast_parameters.h"
+#include "fast_parent_param.h"
 
 class FAST_WindException: public std::exception {
 public:
@@ -35,10 +35,10 @@ public:
 
 class FAST_Wind {
 public:
-    FAST_Wind(FAST_Parameters &p) :
+    FAST_Wind(FAST_Parent_Parameters &p) :
         p(p)
     {
-        PropagationDir= p["PropagationDir"] / 180.0*M_PI;
+        PropagationDir= p["InflowFile.PropagationDir"] / 180.0*M_PI;
     }
     
     virtual ~FAST_Wind() {}
@@ -46,21 +46,21 @@ public:
     virtual double getWind(double time) { return 0; }
     
 protected:
-    FAST_Parameters &p;
+    FAST_Parent_Parameters &p;
     double PropagationDir;
 };
 
 class FAST_Wind_Type1 : public FAST_Wind {
 public:
-    FAST_Wind_Type1(FAST_Parameters &p) :
+    FAST_Wind_Type1(FAST_Parent_Parameters &p) :
         FAST_Wind(p)
     {
-        if(p["WindType"]!=1)
+        if(p["InflowFile.WindType"]!=1)
             throw FAST_WindException("Trying to instantiate FAST_Wind_Type1 but parameter WindType is " + std::to_string(p["WindType"]));
         
-        HWindSpeed= p["HWindSpeed"];
-        RefHt= p["RefHt"];
-        PLexp= p["PLexp"];
+        HWindSpeed= p["InflowFile.HWindSpeed"];
+        RefHt= p["InflowFile.RefHt"];
+        PLexp= p["InflowFile.PLexp"];
     }
     
     virtual ~FAST_Wind_Type1() {}
@@ -77,17 +77,17 @@ protected:
 
 class FAST_Wind_Type2 : public FAST_Wind {
 public:
-    FAST_Wind_Type2(FAST_Parameters &p) :
+    FAST_Wind_Type2(FAST_Parent_Parameters &p) :
         FAST_Wind(p),
         wind(0)
     {
-        if(p["WindType"]!=2)
+        if(p["InflowFile.WindType"]!=2)
             throw FAST_WindException("Trying to instantiate FAST_Wind_Type2 but parameter WindType is " + std::to_string(p["WindType"]));
         
-        loadWindTable(p.getFilename(1));
+        loadWindTable(p.getFilename("InflowFile.Filename_Uni"));
         
-        RefHt= p["RefHt"];
-        RefLength= p["RefLength"];
+        RefHt= p["InflowFile.RefHt"];
+        RefLength= p["InflowFile.RefLength"];
     }
     
     virtual ~FAST_Wind_Type2() {}
@@ -148,24 +148,25 @@ protected:
 
 class FAST_Wind_Type3 : public FAST_Wind {
 public:
-    FAST_Wind_Type3(FAST_Parameters &p, double avg_exp_=3.0) :
+    FAST_Wind_Type3(FAST_Parent_Parameters &p, double avg_exp_=3.0) :
         FAST_Wind(p),
         wind(0),
+        TimeStep(1.0),
         TurbFilename(""),
         avg_exp(avg_exp_)
     {
-        if(p["WindType"]!=3)
+        if(p["InflowFile.WindType"]!=3)
             throw FAST_WindException("Trying to instantiate FAST_Wind_Type3 but parameter WindType is " + std::to_string(p["WindType"]));
         
-        loadWindFile(p.getFilename(2));
+        loadWindFile(p.getFilename("InflowFile.Filename_BTS"));
         
-        TurbFilename= p.getFilename(2);
+        TurbFilename= p.getFilename("InflowFile.Filename_BTS");
     }
     
     virtual ~FAST_Wind_Type3() {}
     
     void loadWindFile(const std::string& Filename) {
-        double TipRad= p["TipRad"];
+        double TipRad= p["EDFile.TipRad"];
         
         std::ifstream infile(Filename, std::ios::in | std::ios::binary);
         if(!infile.is_open())
@@ -195,7 +196,9 @@ public:
         float dy;
         infile.read((char*)&dy, sizeof(float));
 
-        infile.read((char*)&TimeStep, sizeof(float));
+        float fTimeStep;
+        infile.read((char*)&fTimeStep, sizeof(float));
+        TimeStep= fTimeStep;
         
         float u_hub;
         infile.read((char*)&u_hub, sizeof(float));
@@ -224,33 +227,66 @@ public:
             comment.push_back(c);
         }
         
+//         std::cout << "TipRad: " << TipRad << std::endl;
+//         std::cout << "ID: " << ID << std::endl;
+//         std::cout << "NumGrid_Z: " << NumGrid_Z << std::endl;
+//         std::cout << "NumGrid_Y: " << NumGrid_Y << std::endl;
+//         std::cout << "n_tower: " << n_tower << std::endl;
+//         std::cout << "nt: " << nt << std::endl;
+//         std::cout << "dz: " << dz << std::endl;
+//         std::cout << "dy: " << dy << std::endl;
+//         std::cout << "TimeStep: " << TimeStep << std::endl;
+//         std::cout << "u_hub: " << u_hub << std::endl;
+//         std::cout << "HubHt: " << HubHt << std::endl;
+//         std::cout << "Z_bottom: " << Z_bottom << std::endl;
+//         std::cout << "V_slope: " << V_slope[0] << " " << V_slope[1] << " "<< V_slope[2] << std::endl;
+//         std::cout << "V_intercept: " << V_intercept[0] << " " << V_intercept[1] << " "<< V_intercept[2] << std::endl;
+//         std::cout << "comment: " << comment << std::endl;
+        
         int16_t v_grid_norm;
-        float v_grid;
-        float v_avg;
-        float z_grid;
-        float y_grid;
+        double v_grid;
+        double v_avg;
+        double n_avg;
+        double z_grid;
+        double y_grid;
         for(int it= 0; it<nt; ++it) {
-            for(int grid_z= 0; grid_z<NumGrid_Z; ++grid_z) {
-                v_avg= 0.0;
-                
-                z_grid= Z_bottom + ((float)grid_z-1.0)*dz;
-                for(int grid_y= 0; grid_y<NumGrid_Y; ++grid_y) {
-                    y_grid= -0.5*((float)NumGrid_Y-1.0)*dy + ((float)grid_y-1.0)*dy;
+            v_avg= 0.0;
+            n_avg= 0;
+            for(int i_grid_z= 0; i_grid_z<NumGrid_Z; ++i_grid_z) {
+                z_grid= Z_bottom + ((float)i_grid_z)*dz;
+                for(int i_grid_y= 0; i_grid_y<NumGrid_Y; ++i_grid_y) {
+                    y_grid= -0.5*((float)NumGrid_Y-1.0)*dy + ((float)i_grid_y)*dy;
                     for(int uvw= 0; uvw<3; ++uvw) {
                         infile.read((char*)&v_grid_norm, sizeof(int16_t));
-                        if(uvw==0 && sqrt(pow(z_grid-HubHt, 2.0) + pow(y_grid, 2.0))<TipRad) {
+                        if(uvw==0) {
                             v_grid= ((float)v_grid_norm - V_intercept[uvw]) / V_slope[uvw];
-                            v_avg+= pow(v_grid, avg_exp);
+                            
+                            if(sqrt(pow(z_grid-HubHt, 2.0) + pow(y_grid, 2.0))<TipRad) {
+                                v_avg+= pow(v_grid, avg_exp);
+                                n_avg+= 1.0;
+                            }
+                            
+//                             if(it==0 && ((i_grid_z==0 && i_grid_y==0) || (i_grid_z==NumGrid_Z-1 && i_grid_y==0) || (i_grid_z==0 && i_grid_y==NumGrid_Y-1) || (i_grid_z==NumGrid_Z-1 && i_grid_y==NumGrid_Y-1))) {
+//                                 std::cout << "z_grid: " << z_grid << std::endl;
+//                                 std::cout << "y_grid: " << y_grid << std::endl;
+//                                 std::cout << "v_grid: " << v_grid << std::endl;                                
+//                             }
                         }
                     }
                 }
-                wind.push_back(pow(v_avg, 1.0/avg_exp));
             }
             for(int i_tower= 0; i_tower<n_tower; ++i_tower) {
                 for(int uvw= 0; uvw<3; ++uvw) {
                     infile.read((char*)&v_grid_norm, sizeof(int16_t));
                 }
             }
+            
+//             if(it<3) {             
+//                 std::cout << "pow(v_avg/n_avg, 1.0/avg_exp): " << pow(v_avg/n_avg, 1.0/avg_exp) << std::endl;
+//                 std::cout << "v_avg: " << v_avg << std::endl;
+//                 std::cout << "n_avg: " << n_avg << std::endl;
+//             }
+            wind.push_back(pow(v_avg/n_avg, 1.0/avg_exp));
         }
     }
     
@@ -271,26 +307,26 @@ public:
     }
     
     virtual double getWind(double time) {
-        float TimeScaled= time/TimeStep;
+        double TimeScaled= time/TimeStep;
         int idx= std::floor(TimeScaled);
         
         if(idx<0) return wind[0];
         if(idx>=(wind.size()-1)) return wind.back();
         
-        float TimeFact= TimeScaled - idx;
+        double TimeFact= TimeScaled - idx;
         
         return (1.0-TimeFact)*wind[idx] + TimeFact*wind[idx+1];
     }
     
 protected:
-    std::vector<float> wind;
-    float TimeStep;
+    std::vector<double> wind;
+    double TimeStep;
     std::string TurbFilename;
     double avg_exp;
 };
 
-FAST_Wind* makeFAST_Wind(FAST_Parameters &p) {
-    switch((int)p["WindType"]) {
+FAST_Wind* makeFAST_Wind(FAST_Parent_Parameters &p) {
+    switch((int)p["InflowFile.WindType"]) {
         case 1:
             return new FAST_Wind_Type1(p);
         case 2:
@@ -298,7 +334,7 @@ FAST_Wind* makeFAST_Wind(FAST_Parameters &p) {
         case 3:
             return new FAST_Wind_Type3(p);
         default:
-            throw FAST_WindException("Wind type " + std::to_string(p["WindType"]) + " not yet supported");
+            throw FAST_WindException("Wind type " + std::to_string(p["InflowFile.WindType"]) + " not yet supported");
     }
 }
 

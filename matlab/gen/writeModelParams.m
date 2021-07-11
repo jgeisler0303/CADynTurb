@@ -25,6 +25,7 @@ param.thetaStep= mean(diff(param.theta));
 param.T_wind_filt= 20;
 param.D_wind_filt= 1/sqrt(2);
 
+param.torqueForceRadius= param.bd_sid.frame(20).origin.M0(3);
 
 run(fullfile(target_dir, 'model_parameters.m'))
 

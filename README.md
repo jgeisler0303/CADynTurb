@@ -2,11 +2,7 @@
 You can watch a tutorial showing you all of the following steps here: https://youtu.be/QwgTmSUtoPY
 
 # Getting Started
-You need to install Maxima from here: https://sourceforge.net/projects/maxima/files/ . On Linux make sure you select the Steel Bank Common Lisp version (it has sbcl in its name). Windows you may alos choose to install GUI wxMaxima from here: https://sourceforge.net/projects/wxmaxima/files/ this will install the commandline verions as well.
-
-Then you need to download or clone my fork of maxima from here https://github.com/jgeisler0303/maxima and copy all files from the repos share/contrib/gentran directory to the respective directory of your Maxima installation. On Linux this might look something like this: `sudo cp -r share/contrib/gentran/ /usr/share/maxima/5.44.0/share/contrib/`.
-
-Further, in the Maxima base directory in the file `share/numeric/expense.lisp` the line `(declare (fixnum exin rem in-cut pw2))` must be commented out (put a `;` at the start of the line).
+You need to install Maxima from here: https://sourceforge.net/projects/maxima/files/ . Windows you may choose to install the GUI wxMaxima from here: https://sourceforge.net/projects/wxmaxima/files/ this will install the commandline verion as well.
 
 On Windows you will also need to install the MinGW compiler for MATLAB following these instructions: https://de.mathworks.com/help/matlab/matlab_external/install-mingw-support-package.html .
 

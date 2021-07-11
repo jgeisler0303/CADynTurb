@@ -48,7 +48,7 @@ tw_sid.De.structure= 1;
 %  write_sid_maxima(tw_sid, [base_path '_tw_sid'], 'tower', length(tw_sid.frame), 1e-5, 1)
 
 tname= [tempname '.m'];
-write_sid_maxima(tw_sid, tname, 'tower', length(tw_sid.frame), 1e-5, 2);
+write_sid_maxima(tw_sid, tname, 'tower', 'last', 1e-5, 2);
 param= load2struct(tname, param);
 delete(tname)
 
@@ -85,9 +85,8 @@ else
 end
 bd_sid.De.structure= 2;
 
-%  write_sid_maxima(bd_sid, [base_path '_bd_sid'], 'tower', [], 1e-5, 1)
 tname= [tempname '.m'];
-write_sid_maxima(bd_sid, tname, 'blade', 'last', 1e-5, 2);
+write_sid_maxima(bd_sid, tname, 'blade', 'all', 1e-5, 2);
 param= load2struct(tname, param);
 delete(tname)
 

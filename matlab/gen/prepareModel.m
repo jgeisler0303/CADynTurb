@@ -16,8 +16,8 @@ end
 param.tw_sid= tw_sid;
 param.bd_sid= bd_sid;
 
-write_sid_maxima(tw_sid, fullfile(target_path, 'tw_sid'), 'tower', length(tw_sid.frame), 1e-5, 1);
-write_sid_maxima(bd_sid, fullfile(target_path, 'bd_sid'), 'blade', 'last', 1e-5, 1);
+write_sid_maxima(tw_sid, fullfile(target_path, 'tw_sid'), 'tower', 'last', 1e-5, 1);
+write_sid_maxima(bd_sid, fullfile(target_path, 'bd_sid'), 'blade', 'all', 1e-5, 1);
 
 mac_file_gen= fullfile(target_path, [model_name '.mac']);
 copyfile(mac_file, mac_file_gen)
