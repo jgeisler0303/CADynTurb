@@ -20,10 +20,11 @@ EDTwrFile= strrep(GetFASTPar(edDataOut, 'TwrFile'), '"', '');
 
 edtwrDataOut = FAST2Matlab(fullfile(fst_dir, EDTwrFile));
 
-Rz= edtwrDataOut.TowProp(:, find(strcmp(edtwrDataOut.TowPropHdr, 'HtFract'))) * GetFASTPar(edDataOut, 'TowerHt');
-mu= edtwrDataOut.TowProp(:, find(strcmp(edtwrDataOut.TowPropHdr, 'TMassDen')));
-EIy= edtwrDataOut.TowProp(:, find(strcmp(edtwrDataOut.TowPropHdr, 'TwFAStif')));
-EIz= edtwrDataOut.TowProp(:, find(strcmp(edtwrDataOut.TowPropHdr, 'TwSSStif')));
+
+Rz= getFASTTableColumn(edtwrDataOut.TowProp, 'HtFract') * GetFASTPar(edDataOut, 'TowerHt');
+mu= getFASTTableColumn(edtwrDataOut.TowProp, 'TMassDen');
+EIy= getFASTTableColumn(edtwrDataOut.TowProp, 'TwFAStif');
+EIz= getFASTTableColumn(edtwrDataOut.TowProp, 'TwSSStif');
 
 data= [];
 n= length(Rz);
@@ -57,11 +58,11 @@ EDBldFile= strrep(GetFASTPar(edDataOut, 'BldFile(1)'), '"', '');
 edbldDataOut = FAST2Matlab(fullfile(fst_dir, EDBldFile));
 
 BldLen= GetFASTPar(edDataOut, 'TipRad') - GetFASTPar(edDataOut, 'HubRad');
-Rz= edbldDataOut.BldProp(:, find(strcmp(edbldDataOut.BldPropHdr, 'BlFract'))) * BldLen + GetFASTPar(edDataOut, 'HubRad');
-mu= edbldDataOut.BldProp(:, find(strcmp(edbldDataOut.BldPropHdr, 'BMassDen')));
-EIy= edbldDataOut.BldProp(:, find(strcmp(edbldDataOut.BldPropHdr, 'FlpStff')));
-EIz= edbldDataOut.BldProp(:, find(strcmp(edbldDataOut.BldPropHdr, 'EdgStff')));
-phi_abs= -edbldDataOut.BldProp(:, find(strcmp(edbldDataOut.BldPropHdr, 'StrcTwst')))/180*pi;
+Rz= getFASTTableColumn(edbldDataOut.BldProp, 'BlFract') * BldLen + GetFASTPar(edDataOut, 'HubRad');
+mu= getFASTTableColumn(edbldDataOut.BldProp, 'BMassDen');
+EIy= getFASTTableColumn(edbldDataOut.BldProp, 'FlpStff');
+EIz= getFASTTableColumn(edbldDataOut.BldProp, 'EdgStff');
+phi_abs= -getFASTTableColumn(edbldDataOut.BldProp, 'StrcTwst')/180*pi;
 phi= [phi_abs(1); diff(phi_abs(:))]; 
 
 data= [];
@@ -98,10 +99,10 @@ ADBldFile= strrep(GetFASTPar(adDataOut, 'ADBlFile(1)'), '"', '');
 adbldDataOut = FAST2Matlab(fullfile(fst_dir, ADBldFile));
 
 data= [];
-data.R= adbldDataOut.BldNodes(:, find(strcmp(adbldDataOut.BldNodesHdr, 'BlSpn'))) + GetFASTPar(edDataOut, 'HubRad');
-data.chord= adbldDataOut.BldNodes(:, find(strcmp(adbldDataOut.BldNodesHdr, 'BlChord')));
-data.twist= adbldDataOut.BldNodes(:, find(strcmp(adbldDataOut.BldNodesHdr, 'BlTwist')))/180*pi;
-data.airfoil_idx= adbldDataOut.BldNodes(:, find(strcmp(adbldDataOut.BldNodesHdr, 'BlAFID')));
+data.R= getFASTTableColumn(adbldDataOut.BldNode, 'BlSpn') + GetFASTPar(edDataOut, 'HubRad');
+data.chord= getFASTTableColumn(adbldDataOut.BldNode, 'BlChord');
+data.twist= getFASTTableColumn(adbldDataOut.BldNode, 'BlTwist')/180*pi;
+data.airfoil_idx= getFASTTableColumn(adbldDataOut.BldNode, 'BlAFID');
 data.rho= GetFASTPar(adDataOut, 'AirDens');
 data.TipLoss= double(strcmpi(GetFASTPar(adDataOut, 'TipLoss'), 'true'));
 data.HubLoss= double(strcmpi(GetFASTPar(adDataOut, 'HubLoss'), 'true'));
@@ -118,15 +119,11 @@ if strcmpi(strrep(data.IndToler, '"', ''), 'default')
 end
 data.acorr= 0.3;
 
-idx_alpha= GetFASTPar(adDataOut, 'InCol_Alfa');
-idx_cl= GetFASTPar(adDataOut, 'InCol_Cl');
-idx_cd= GetFASTPar(adDataOut, 'InCol_Cd');
-% idx_cm= GetFASTPar(adDataOut, 'InCol_Cm');
 for i= 1:length(adDataOut.FoilNm)
     AirFoil= FAST2Matlab(fullfile(fst_dir, strrep(adDataOut.FoilNm{i}, '"', '')));
-    data.AirFoil(i).alpha= AirFoil.AFCoeff(:, idx_alpha)/180*pi;
-    data.AirFoil(i).cl= AirFoil.AFCoeff(:, idx_cl);
-    data.AirFoil(i).cd= AirFoil.AFCoeff(:, idx_cd);
+    data.AirFoil(i).alpha= getFASTTableColumn(AirFoil.AFCoeff, 'Alpha')/180*pi;
+    data.AirFoil(i).cl= getFASTTableColumn(AirFoil.AFCoeff, 'Cl');
+    data.AirFoil(i).cd= getFASTTableColumn(AirFoil.AFCoeff, 'Cd');
 end
 
 for i= 1:length(bd_sid.frame)

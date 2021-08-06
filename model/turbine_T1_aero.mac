@@ -30,7 +30,7 @@ Iyy[2]: NacYIner;
 Izz[2]: NacZIner;
 BodyRef[2]: 1;
 /* TrefG[2]: Tdisp(tow_fa, tow_ss, 0).Tdisp(NacCMxn, NacCMyn, NacCMzn); */
-TrefG[2]: Telast(1, 'last).Tdisp(NacCMxn, NacCMyn, NacCMzn);
+TrefG[2]: Telast(1, 1).Tdisp(NacCMxn, NacCMyn, NacCMzn);
 /* TrefG[2]: Tdisp(tow_fa, tow_ss, 0).Tdisp(NacCMxn, NacCMyn, NacCMzn).Troty_lin(tow_fa*TwTrans2Roll).Trotx_lin(-tow_ss*TwTrans2Roll); */
 
 /* 3 Hub */
