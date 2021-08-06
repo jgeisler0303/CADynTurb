@@ -27,6 +27,12 @@ if ~exist(ext_file_gen, 'file')
     copyfile(strrep(mac_file, '.mac', 'System_Externals.hpp'), ext_file_gen)
 end
 
+acados_ext_file_gen= fullfile(target_path, [model_name '_acados_external.m']);
+acados_ext_file_src= strrep(mac_file, '.mac', '_acados_external.m');
+if ~exist(ext_file_gen, 'file') && exist(acados_ext_file_src, 'file')
+    copyfile(acados_ext_file_src, acados_ext_file_gen)
+end
+
 makeCAGEM(mac_file_gen, target_path)
 
 
