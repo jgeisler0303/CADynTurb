@@ -122,16 +122,21 @@ int main(int argc, char* argv[]) {
 void setupOutputs(FAST_Output &out, turbine_T2B2cG_aeroSystem &system) {
     out.addChannel("Q_BF1", "m", &system.states.bld_flp);
     out.addChannel("Q_BE1", "m", &system.states.bld_edg);
+    out.addChannel("QD_BF1", "m/s", &system.states.bld_flp_d);
+    out.addChannel("QD_BE1", "m/s", &system.states.bld_edg_d);
 //     out.addChannel("TipDxb", "m", &system.q.data()[3]*blade_frame_49_phi0_1_1 + &system.q.data()[4]);
 //     out.addChannel("TipDyb", "m", &system.q.data()[4]);
     out.addChannel("PtchPMzc", "deg", &system.theta_deg);
     out.addChannel("LSSTipPxa", "deg", &system.states.phi_rot, 180.0/M_PI);
+    out.addChannel("Q_GeAz", "rad", &system.states.phi_gen);
     out.addChannel("LSSTipVxa", "rpm", &system.states.phi_rot_d, 30.0/M_PI);
     out.addChannel("LSSTipAxa", "deg/s^2", &system.states.phi_rot_dd, 180.0/M_PI);
     out.addChannel("HSShftV", "rpm", &system.states.phi_gen_d, 30.0/M_PI);
     out.addChannel("HSShftA", "deg/s^2", &system.states.phi_gen_dd, 180.0/M_PI);
     out.addChannel("YawBrTDxp", "m", &system.states.tow_fa);
     out.addChannel("YawBrTDyp", "m", &system.states.tow_ss);
+    out.addChannel("YawBrTVyp", "m/s", &system.states.tow_fa_d);
+    out.addChannel("YawBrTVxp", "m/s", &system.states.tow_ss_d);
     out.addChannel("YawBrTAxp", "m/s^2", &system.states.tow_fa_dd);
     out.addChannel("YawBrTAyp", "m/s^2", &system.states.tow_ss_dd);
 //    out.addChannel("YawBrRDyt", "deg", &system.states.tow_fa, system.param.TwTrans2Roll*180.0/M_PI);
@@ -146,8 +151,8 @@ void setupOutputs(FAST_Output &out, turbine_T2B2cG_aeroSystem &system) {
     out.addChannel("HSShftTq", "kNm", &system.inputs.Tgen, 1.0/1000.0);
     out.addChannel("HSShftPwr", "kW", &HSShftPwr, 1.0/1000.0);
     out.addChannel("RtVAvgxh", "m/s", &system.inputs.vwind);
-    out.addChannel("WindVxi", "m/s", &system.inputs.vwind);
-    out.addChannel("Wind1VelX", "m/s", &system.inputs.vwind);
+//     out.addChannel("WindVxi", "m/s", &system.inputs.vwind);
+//     out.addChannel("Wind1VelX", "m/s", &system.inputs.vwind);
     out.addChannel("RtTSR", "-", &system.lam);
     out.addChannel("RtAeroCq", "-", &system.cm);
     out.addChannel("RtAeroCt", "-", &system.ct);

@@ -1,7 +1,5 @@
-LAM= 1:0.25:13;
-TH= 0:0.25:40;
-
-paramName.cm_tab= length(LAM)*length(TH);
+LAM= 1:0.5:13;
+TH= 0:0.5:45;
 
 cm_int= casadi.interpolant('cm_int', 'linear', {LAM, TH}, 1);
 ct_int= casadi.interpolant('ct_int', 'linear', {LAM, TH}, 1);
@@ -20,8 +18,8 @@ dce_dve_v_int= casadi.interpolant('dce_dve_v_int', 'linear', {LAM, TH}, 1);
 
 
 theta_deg= -theta/pi*180.0;
-vwind_eff= vwind-qd1;
-lam= qd3*Rrot/vwind_eff;
+vwind_eff= vwind-tow_fa_d;
+lam= phi_rot_d*Rrot/vwind_eff;
 Fwind_v= rho/2.0*Arot*vwind_eff;
 
 lam= min(max(lam, lambdaMin), lambdaMax);
@@ -42,8 +40,8 @@ dcf_dve_v= dcf_dve_v_int([lam, theta_deg], dcf_dve_v_lut);
 dce_dvf_v= dce_dvf_v_int([lam, theta_deg], dce_dvf_v_lut);
 dce_dve_v= dce_dve_v_int([lam, theta_deg], dce_dve_v_lut);
 
-Trot= Rrot*Fwind_v*(vwind_eff*cm + qd4*dcm_dvf_v + qd5*dcm_dve_v);
-Fthrust= Fwind_v*(vwind_eff*ct + qd4*dct_dvf_v + qd5*dct_dve_v);
-Ftow_y= 1.5*Fwind_v*qd2*dcs_dvy_v;
-modalFlapForce= Fwind_v*(vwind_eff*cflp + qd4*dcf_dvf_v + qd5*dcf_dve_v);
-modalEdgeForce= Fwind_v*(vwind_eff*cedg + qd4*dce_dvf_v + qd5*dce_dve_v);
+Trot= Rrot*Fwind_v*(vwind_eff*cm + bld_flp_d*dcm_dvf_v + bld_edg_d*dcm_dve_v);
+Fthrust= Fwind_v*(vwind_eff*ct + bld_flp_d*dct_dvf_v + bld_edg_d*dct_dve_v);
+Ftow_y= 1.5*Fwind_v*tow_ss_d*dcs_dvy_v;
+modalFlapForce= Fwind_v*(vwind_eff*cflp + bld_flp_d*dcf_dvf_v + bld_edg_d*dcf_dve_v);
+modalEdgeForce= Fwind_v*(vwind_eff*cedg + bld_flp_d*dce_dvf_v + bld_edg_d*dce_dve_v);
