@@ -35,6 +35,7 @@ int main(int argc, char* argv[]) {
     ("d,discon_dll", "Path and name of the DISCON controller DLL", cxxopts::value<std::string>()->default_value("DISCON.dll"))
     ("o,output", "Output file name", cxxopts::value<std::string>()->default_value("default.outb"))
     ("a,adjust_wind", "Adjustment factor for wind speed", cxxopts::value<double>()->default_value("1.0"))
+    ("c,config", "Options file for the integration algorithm (default: newmark_options.txt)", cxxopts::value<std::string>()->default_value("newmark_options.txt"))
     ("fast", "OpenFAST main input file", cxxopts::value<std::string>())
     ;
     
@@ -42,6 +43,15 @@ int main(int argc, char* argv[]) {
     
     auto argc_result = argc_options.parse(argc, argv);
 
+
+    if(argc_result.count("config")) {
+        try {
+            system.setOptionsFromFile(argc_result["config"].as<std::string>());
+        } catch (const std::exception& e) {
+            fprintf(stderr, "Options file error: %s\n", e.what());
+            exit (EXIT_FAILURE);
+        }
+    }
     try {
         system.param.setFromFile(argc_result["paramfile"].as<std::string>());
     } catch (const std::exception& e) {
