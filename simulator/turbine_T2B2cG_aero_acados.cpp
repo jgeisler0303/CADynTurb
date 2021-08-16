@@ -19,6 +19,7 @@
 #include "acados_c/sim_interface.h"
 #include "acados_sim_solver_T2B2cG_aero.h"
 
+typedef double real_type;
 #include "turbine_T2B2cG_aero_param.hpp"
 
 const int tow_fa= 0;

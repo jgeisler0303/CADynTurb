@@ -10,7 +10,7 @@
 #include "fast_parent_param.h"
 #include "fast_wind.h"
 
-#include "turbine_T2B2cG_aeroSystem2.hpp"
+#include "turbine_T2B2cG_aero_direct.hpp"
 
 bool simulate(turbine_T2B2cG_aeroSystem &system, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name);
 bool DISCON_Step(double t, DISCON_Interface &DISCON, turbine_T2B2cG_aeroSystem &system);

@@ -18,7 +18,7 @@ old_dir= pwd;
 cleanupObj = onCleanup(@()cd(old_dir));
 cd(dn)
 
-system('g++ -g -std=c++17 -I. -I../../simulator -I../../../CADyn/src -Iturbine_T1_aero ../../../CADyn/src/ODEOrder2.cpp ../../../CADyn/src/IntegratorGNUPlotVisitor.cpp ../../simulator/turbine_T1_aero_sim.cpp -ldl -o turbine_T1_aero_sim')
+system('g++ -g -std=c++17 -I. -I../../simulator -I../../../CADyn/src ../../simulator/turbine_T1_aero_sim.cpp -ldl -o turbine_T1_aero_sim')
 
 %% simulate model
 cd('..')
