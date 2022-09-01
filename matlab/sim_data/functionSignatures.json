@@ -1,0 +1,11 @@
+{
+
+"loadFAST":
+{
+    "inputs":
+    [
+        {"name":"file_name", "kind":"required", "type":[["filepath=*.outb"], ["folderpath"]]}
+    ]
+}
+
+}

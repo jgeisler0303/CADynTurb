@@ -1,0 +1,23 @@
+{
+
+"plot_timeseries":
+{
+    "inputs":
+    [
+        {"name":"tsc", "kind":"required", "type":[["tscollection"]]},
+        {"name":"vars", "kind":"required", "type":[["choices=sort(tsc.gettimeseriesnames)"], ["char"]]}
+    ]
+},
+
+"plot_timeseries_cmp":
+{
+    "inputs":
+    [
+        {"name":"tsc1", "kind":"required", "type":[["tscollection"]]},
+        {"name":"tsc2", "kind":"required", "type":[["tscollection"]]},
+        {"name":"vars1", "kind":"required", "type":[["choices=sort(tsc1.gettimeseriesnames)"], ["char"]]},
+        {"name":"vars2", "kind":"ordered", "type":[["choices=sort(tsc2.gettimeseriesnames)"], ["char"]]}
+    ]
+}
+
+}
