@@ -34,6 +34,7 @@ u_ref= [
     d.GenTq.Data'*1000
     d.BlPitchC.Data'/(-180)*pi
     ];
+
 %%
 load('params.mat');
 model_parameters
@@ -155,14 +156,18 @@ plot_timeseries_cmp(d, d_sim, {'RtVAvgxh', 'PtchPMzc', 'HSShftV', 'GenTq', 'YawB
 sim_generate_c_code(acados_sim_6DOF)
 
 %%
-system('g++ -fpermissive -g -std=c++17 -I. -I../../simulator -Ic_generated_code -I$ACADOS_INSTALL_DIR/include -I$ACADOS_INSTALL_DIR/include/blasfeo/include -I$ACADOS_INSTALL_DIR/include/hpipm/include ../../simulator/turbine_T2B2cG_aero_acados.cpp c_generated_code/acados_sim_solver_T2B2cG_aero.c c_generated_code/T2B2cG_aero_model/T2B2cG_aero_impl_dae_fun_jac_x_xdot_u.c c_generated_code/T2B2cG_aero_model/T2B2cG_aero_impl_dae_fun_jac_x_xdot_z.c c_generated_code/T2B2cG_aero_model/T2B2cG_aero_impl_dae_fun.c c_generated_code/T2B2cG_aero_model/T2B2cG_aero_impl_dae_hess.c c_generated_code/T2B2cG_aero_model/T2B2cG_aero_impl_dae_jac_x_xdot_u_z.c -L$ACADOS_INSTALL_DIR/lib -ldl -lacados -lblasfeo -lhpipm -o turbine_T2B2cG_aero_acados');
+if ispc
+    system('g++ -fpermissive -g -std=c++17 -D _USE_MATH_DEFINES -I. -I../../simulator -Ic_generated_code -I$ACADOS_INSTALL_DIR/include -I$ACADOS_INSTALL_DIR/include/blasfeo/include -I$ACADOS_INSTALL_DIR/include/hpipm/include ../../simulator/turbine_T2B2cG_aero_acados.cpp c_generated_code/acados_sim_solver_T2B2cG_aero.c c_generated_code/T2B2cG_aero_model/T2B2cG_aero_impl_dae_fun_jac_x_xdot_u.c c_generated_code/T2B2cG_aero_model/T2B2cG_aero_impl_dae_fun_jac_x_xdot_z.c c_generated_code/T2B2cG_aero_model/T2B2cG_aero_impl_dae_fun.c c_generated_code/T2B2cG_aero_model/T2B2cG_aero_impl_dae_hess.c c_generated_code/T2B2cG_aero_model/T2B2cG_aero_impl_dae_jac_x_xdot_u_z.c -L$ACADOS_INSTALL_DIR/lib -lacados -lblasfeo -lhpipm -o turbine_T2B2cG_aero_acados');
+else
+    system('g++ -fpermissive -g -std=c++17 -I. -I../../simulator -Ic_generated_code -I$ACADOS_INSTALL_DIR/include -I$ACADOS_INSTALL_DIR/include/blasfeo/include -I$ACADOS_INSTALL_DIR/include/hpipm/include ../../simulator/turbine_T2B2cG_aero_acados.cpp c_generated_code/acados_sim_solver_T2B2cG_aero.c c_generated_code/T2B2cG_aero_model/T2B2cG_aero_impl_dae_fun_jac_x_xdot_u.c c_generated_code/T2B2cG_aero_model/T2B2cG_aero_impl_dae_fun_jac_x_xdot_z.c c_generated_code/T2B2cG_aero_model/T2B2cG_aero_impl_dae_fun.c c_generated_code/T2B2cG_aero_model/T2B2cG_aero_impl_dae_hess.c c_generated_code/T2B2cG_aero_model/T2B2cG_aero_impl_dae_jac_x_xdot_u_z.c -L$ACADOS_INSTALL_DIR/lib -ldl -lacados -lblasfeo -lhpipm -o turbine_T2B2cG_aero_acados');
+end
 
 %%
-sim_command= './turbine_T2B2cG_aero_acados -a 0.965 -o simp_12_6DOF_acados.outb ../../5MW_Baseline/5MW_Land_IMP_12.fst';
+sim_command= 'turbine_T2B2cG_aero_acados -a 0.965 -o simp_12_6DOF_acados.outb ../../5MW_Baseline/5MW_Land_IMP_12.fst';
 if isunix
-    system(['LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6 ' sim_command])
+    system(['LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6 ./' sim_command])
 else
-    system(sim_command)
+    system(['set path=' getenv('PATH') ' & ' sim_command])
 end
 
 %%
