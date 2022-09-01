@@ -4,6 +4,8 @@ function d= collectBlades(d)
 d= processData(d, '(_B)1');
 d= processData(d, '(b)1$');
 d= processData(d, '(c)1$');
+d= processData(d, '(Pitch)1$');
+d= processData(d, '(BlPitchC)1$');
 
 function d= processData(d, pattern)
 all_names= d.gettimeseriesnames;
