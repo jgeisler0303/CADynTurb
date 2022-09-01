@@ -6,6 +6,8 @@ addpath(fullfile(base_dir, 'plot'))
 addpath(fullfile(base_dir, 'sim_data'))
 addpath(fullfile(base_dir, 'lin_model'))
 addpath(fullfile(base_dir, 'acados'))
+addpath(fullfile(base_dir, 'observer'))
+addpath(fullfile(base_dir, '../simulator'))
 
 addpath(fullfile(base_dir, '../../matlab-toolbox/FAST2MATLAB'))
 addpath(fullfile(base_dir, '../../matlab-toolbox/Utilities'))
