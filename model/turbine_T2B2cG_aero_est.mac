@@ -4,10 +4,11 @@ SIMPLIFY: 1;
 SMALL_ELAST: 1;
 WITH_LINEAR: 1;
 WITH_ACCELERATIONS: 0;
+STATES: [tow_fa, tow_ss, bld_flp, bld_edg, phi_rot, Dphi_gen, vwind];
 INPUTS: [dvwind, Tgen, theta];
-EXTERNAL: [cm(), ct(), cflp(), cedg(), theta_deg(), lam(), Trot(qd[1], qd[3], qd[4], qd[5], q[7], theta), Fthrust(qd[1], qd[3], qd[4], qd[5], q[7], theta), Ftow_y(qd[2]), modalFlapForce(qd[1], qd[3], qd[4], qd[5], q[7], theta), modalEdgeForce(qd[1], qd[3], qd[4], qd[5], q[7], theta)];
+EXTERNAL: [cm(), ct(), cflp(), cedg(), theta_deg(), lam(), Trot(tow_fa_d, phi_rot_d, bld_flp_d, bld_edg_d, vwind, theta), Fthrust(tow_fa_d, phi_rot_d, bld_flp_d, bld_edg_d, vwind, theta), Ftow_y(tow_ss_d), modalFlapForce(tow_fa_d, phi_rot_d, bld_flp_d, bld_edg_d, vwind, theta), modalEdgeForce(tow_fa_d, phi_rot_d, bld_flp_d, bld_edg_d, vwind, theta)];
 EXT_PARAM: [rho, Rrot, lambdaMin, lambdaMax, lambdaStep, thetaMin, thetaMax, thetaStep, Arot, cm_lut[25, 91], ct_lut[25, 91], cf_lut[25, 91], ce_lut[25, 91], dcm_dvf_v_lut[25, 91], dcm_dve_v_lut[25, 91], dct_dvf_v_lut[25, 91], dct_dve_v_lut[25, 91], dcs_dvy_v_lut[25, 91], dcf_dvf_v_lut[25, 91], dcf_dve_v_lut[25, 91], dce_dvf_v_lut[25, 91], dce_dve_v_lut[25, 91]];
-F_EXT: [qd[7]-dvwind, T_wind_filt^2*qdd[8]+2*D_wind_filt*T_wind_filt*qd[8]+q[8]-q[7]];
+F_EXT: [vwind_d-dvwind];
 
 /* Gravity vector */
 gravity: [0, 0, -g];
@@ -19,7 +20,7 @@ Trotz_lin(a):= subst([x= a], ratsimp(taytorat(taylor(Trotz(x), x, 0, 1))));
 
 /* 1 Tower */
 load(filename_merge(load_pathname, "tw_sid.mac"));
-elastic_dof[1]: [q[1], q[2]];
+elastic_dof[1]: [tow_fa, tow_ss];
 ebody[1]: tower;
 T0G[1]: Tdisp(0, 0, 0);
 
@@ -29,9 +30,9 @@ Ixx[2]: NacXIner;
 Iyy[2]: NacYIner;
 Izz[2]: NacZIner;
 BodyRef[2]: 1;
-/* TrefG[2]: Tdisp(q[1], q[2], 0).Tdisp(NacCMxn, NacCMyn, NacCMzn); */
+/* TrefG[2]: Tdisp(tow_fa, tow_ss, 0).Tdisp(NacCMxn, NacCMyn, NacCMzn); */
 TrefG[2]: Telast(1, 1).Tdisp(NacCMxn, NacCMyn, NacCMzn);
-/* TrefG[2]: Tdisp(q[1], q[2], 0).Tdisp(NacCMxn, NacCMyn, NacCMzn).Troty_lin(q[1]*TwTrans2Roll).Trotx_lin(-q[2]*TwTrans2Roll); */
+/* TrefG[2]: Tdisp(tow_fa, tow_ss, 0).Tdisp(NacCMxn, NacCMyn, NacCMzn).Troty_lin(tow_fa*TwTrans2Roll).Trotx_lin(-tow_ss*TwTrans2Roll); */
 
 /* 3 Hub */
 mass[3]: HubMass;
@@ -39,25 +40,25 @@ Ixx[3]: HubIner;
 Iyy[3]: HubIner;
 Izz[3]: HubIner;
 BodyRef[3]: 2;
-TrefG[3]:  Tdisp(HubCM+OverHang-NacCMxn, -NacCMyn, Twr2Shft-NacCMzn).Trotx(q[3]);
+TrefG[3]:  Tdisp(HubCM+OverHang-NacCMxn, -NacCMyn, Twr2Shft-NacCMzn).Trotx(phi_rot);
 
 /* 4,5,6 Blades */
 load(filename_merge(load_pathname, "bd_sid.mac"));
 
 /* Blade 1 */
-elastic_dof[4]: [q[4], q[5]];
+elastic_dof[4]: [bld_flp, bld_edg];
 ebody[4]: blade;
 BodyRef[4]: 3;
 TrefG[4]:  Tdisp(-HubCM, 0, 0).Trotz(theta);
 
 /* Blade 2 */
-elastic_dof[5]: [q[4], q[5]];
+elastic_dof[5]: [bld_flp, bld_edg];
 ebody[5]: blade;
 BodyRef[5]: 3;
 TrefG[5]:  Tdisp(-HubCM, 0, 0).Trotx(%pi/3*2).Trotz(theta);
 
 /* Blade 3 */
-elastic_dof[6]: [q[4], q[5]];
+elastic_dof[6]: [bld_flp, bld_edg];
 ebody[6]: blade;
 BodyRef[6]: 3;
 TrefG[6]:  Tdisp(-HubCM, 0, 0).Trotx(%pi/3*4).Trotz(theta);
@@ -68,16 +69,7 @@ mass[7]: 0;
 Ixx[7]: GenIner;
 Iyy[7]: 0;
 Izz[7]: 0;
-TrefG[7]:  Trotx(q[3]*GBRatio+q[6]);
-
-
-/* Initial conditions */
-qi[1]: 0.1;
-qi[2]: 0.01;
-qdi[3]: 1;
-qdi[6]: 1.001;
-qi[4]: 1;
-qi[5]: -0.01;
+TrefG[7]:  Trotx(phi_rot*GBRatio+Dphi_gen);
 
 
 appliedForces():= (
@@ -111,9 +103,9 @@ appliedForces():= (
         appliedFe[i]: matrix([modalFlapForce], [modalEdgeForce])
     ),
 
-    /* M_DT: DTTorSpr*(q[6]/GBRatio-q[3]) + DTTorDmp*(qd[6]/GBRatio-qd[3]), */
-    /* M_DT: DTTorSpr*(q[6]-q[3]) + DTTorDmp*(qd[6]-qd[3]), */
-    M_DT: DTTorSpr*(q[6]/GBRatio - TwTrans2Roll*q[2]) + DTTorDmp*(qd[6]/GBRatio - TwTrans2Roll*qd[2]),
+    /* M_DT: DTTorSpr*(q[6]/GBRatio-q[3]) + DTTorDmp*(qd[6]/GBRatio-phi_rot_d), */
+    /* M_DT: DTTorSpr*(q[6]-q[3]) + DTTorDmp*(qd[6]-phi_rot_d), */
+    M_DT: DTTorSpr*(Dphi_gen/GBRatio - TwTrans2Roll*tow_ss) + DTTorDmp*(Dphi_gen_d/GBRatio - TwTrans2Roll*tow_ss_d),
 
     appliedM[7]: matrix([-M_DT/GBRatio - Tgen], [0], [0]),
     appliedM[3]: matrix([M_DT], [0], [0]),
@@ -125,5 +117,5 @@ appliedForces():= (
 );
 
 modelOutputs():= (
-    [qdd[1], qdd[2], qd[3]*GBRatio+qd[6], q[7], q[8]]
+    [tow_fa_dd, tow_ss_dd, phi_rot_d*GBRatio+Dphi_gen_d, tow_fa_d, tow_ss_d]
 );

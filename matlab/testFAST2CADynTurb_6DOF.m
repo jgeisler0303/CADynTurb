@@ -32,7 +32,7 @@ end
 
 sim_command= [model_name '_sim -a 0.965 -o simp_12_6DOF.outb ../../5MW_Baseline/5MW_Land_IMP_12.fst'];
 if isunix
-    system(['LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6 './' sim_command])
+    system(['LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6 ./' sim_command])
 else
     system(['set path=' getenv('PATH') ' & ' sim_command])
 end
