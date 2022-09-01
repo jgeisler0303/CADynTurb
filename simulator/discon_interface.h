@@ -2,7 +2,16 @@
 #define DISCON_INTERFACE_H_
 
 #include <stdlib.h>
-#include <dlfcn.h>
+#ifdef __linux__
+    #include <dlfcn.h>
+#elif _WIN32
+    #include <windows.h>
+    #include <winbase.h>
+    #include <windef.h>
+    #include <system_error>
+#else
+    #error Platform not supported
+#endif
 #include <stdint.h>
 #include <cstring>
 #include <string>
@@ -51,10 +60,44 @@ public:
         
         return *this;
     }
-    
+
+    #if _WIN32
+    std::string getLastErrorStr() {
+//     LPVOID lpMsgBuf;
+//     LPVOID lpDisplayBuf;
+//     DWORD dw = GetLastError(); 
+// 
+//     FormatMessage(
+//         FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+//         FORMAT_MESSAGE_FROM_SYSTEM |
+//         FORMAT_MESSAGE_IGNORE_INSERTS,
+//         NULL,
+//         dw,
+//         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+//         (LPTSTR) &lpMsgBuf,
+//         0, NULL );
+// 
+//     // Display the error message and exit the process
+// 
+//     lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT, 
+//         (lstrlen((LPCTSTR)lpMsgBuf) + lstrlen((LPCTSTR)lpszFunction) + 40) * sizeof(TCHAR)); 
+//     StringCchPrintf((LPTSTR)lpDisplayBuf, 
+//         LocalSize(lpDisplayBuf) / sizeof(TCHAR),
+//         TEXT("%s failed with error %d: %s"), 
+//         lpszFunction, dw, lpMsgBuf); 
+//     MessageBox(NULL, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK); 
+        DWORD error = GetLastError();
+        return std::system_category().message(error);
+    }
+    #endif
+
     void close() {
         if(handle!=nullptr)
-            dlclose(handle);
+            #ifdef __linux__
+                dlclose(handle);
+            #elif _WIN32
+                FreeLibrary(handle);
+            #endif
         
         handle= nullptr;
         DISCON= nullptr;
@@ -63,20 +106,35 @@ public:
     void open(const std::string &dll_name) {
         char *error;
         
-        handle= dlopen(dll_name.c_str(), RTLD_NOW);
-        error= dlerror();
-        if(!handle) {
-            throw DISCON_Exception("Error opening handle for dll \"" + dll_name + "\": " + std::string(error));
-        }
-        
-        DISCON= (DISCON_t) dlsym(handle, "DISCON");
-        error= dlerror();
-        if(error!=nullptr) {
-            dlclose(handle);
-            handle= nullptr;
+        #ifdef __linux__
+            handle= dlopen(dll_name.c_str(), RTLD_NOW);
+            error= dlerror();
+            if(!handle) {
+                throw DISCON_Exception("Error opening handle for dll \"" + dll_name + "\": " + std::string(error));
+            }
             
-            throw DISCON_Exception("Error getting DISCON function from dll \"" + dll_name + "\": " + std::string(error));
-        }
+            DISCON= (DISCON_t) dlsym(handle, "DISCON");
+            error= dlerror();
+            if(error!=nullptr) {
+                dlclose(handle);
+                handle= nullptr;
+                
+                throw DISCON_Exception("Error getting DISCON function from dll \"" + dll_name + "\": " + std::string(error));
+            }
+        #elif _WIN32
+            handle= LoadLibrary(dll_name.c_str());
+            if(!handle) {
+                throw DISCON_Exception("Error opening handle for dll \"" + dll_name + "\": " + getLastErrorStr());
+            }
+        
+            DISCON= (DISCON_t) GetProcAddress(handle, "DISCON");
+            if(!DISCON) {
+                FreeLibrary(handle);
+                handle= nullptr;
+                
+                throw DISCON_Exception("Error getting DISCON function from dll \"" + dll_name + "\": " + getLastErrorStr());
+            }
+        #endif        
     }
         
     int32_t call(avrSwap_t *avrSwap, char *accInfile, char *accOutfile, char *avcMsg) {
@@ -104,7 +162,11 @@ protected:
     // typedef void (__declspec(dllexport) __cdecl *DISCON_t)(float *avrSwap, int32_t *aviFail, char *accInfile, char *avcOutname, char *avcMsg);
     typedef void(*DISCON_t)(float *avrSwap, int32_t *aviFail, char *accInfile, char *avcOutname, char *avcMsg);
     
-    void *handle;
+    #ifdef __linux__
+        void *handle;
+    #elif _WIN32
+        HINSTANCE handle;
+    #endif
     DISCON_t DISCON;    
 };
 

@@ -1,6 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <dlfcn.h>
+#ifdef __linux__
+    #include <dlfcn.h>
+#elif _WIN32
+    #include <windows.h>
+    #include <winbase.h>
+    #include <windef.h>
+#else
+    #error Platform not supported
+#endif
 #include <stdint.h>
 #include <cstring>
 
