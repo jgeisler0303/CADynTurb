@@ -1,3 +1,5 @@
+function testFAST2CADynTurb(model_name, model_dir, tower_modes, blade_modes)
+
 %% prepare paths
 dn= fileparts(model_dir);
 if ~exist(dn, 'dir')
@@ -9,7 +11,7 @@ if ~exist(dn, 'dir')
 end
 
 %% make model
-param= prepareModel('../5MW_Baseline/5MW_Land_IMP_6.fst', ['../model/' model_name '.mac'], model_dir);
+param= prepareModel('../5MW_Baseline/5MW_Land_IMP_6.fst', ['../model/' model_name '.mac'], model_dir, tower_modes, blade_modes);
 
 %%
 old_dir= pwd;
