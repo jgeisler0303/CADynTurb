@@ -17,6 +17,10 @@ bool DISCON_Step(double t, DISCON_Interface &DISCON, turbine_T1B1cG_aeroSystem &
 
 double RotPwr;
 double HSShftPwr;
+double Q_DrTr;
+double QD_DrTr;
+double Q_GeAz;
+double LSSTipPxa;
 double wind_adjust;
 
 int main(int argc, char* argv[]) {
@@ -133,13 +137,18 @@ void setupOutputs(FAST_Output &out, turbine_T1B1cG_aeroSystem &system) {
 //     out.addChannel("TipDxb", "m", &system.q.data()[3]*blade_frame_49_phi0_1_1 + &system.q.data()[4]);
 //     out.addChannel("TipDyb", "m", &system.q.data()[4]);
     out.addChannel("PtchPMzc", "deg", &system.theta_deg);
-    out.addChannel("LSSTipPxa", "deg", &system.states.phi_rot, 180.0/M_PI);
+    out.addChannel("LSSTipPxa", "deg", &LSSTipPxa, 180.0/M_PI);
+    out.addChannel("Q_GeAz", "rad", &Q_GeAz);
+    out.addChannel("Q_DrTr", "rad", &Q_DrTr);    
+    out.addChannel("QD_DrTr", "rad/s", &QD_DrTr);    
     out.addChannel("LSSTipVxa", "rpm", &system.states.phi_rot_d, 30.0/M_PI);
     out.addChannel("LSSTipAxa", "deg/s^2", &system.states.phi_rot_dd, 180.0/M_PI);
     out.addChannel("HSShftV", "rpm", &system.states.phi_gen_d, 30.0/M_PI);
     out.addChannel("HSShftA", "deg/s^2", &system.states.phi_gen_dd, 180.0/M_PI);
     out.addChannel("YawBrTDxp", "m", &system.states.tow_fa);
     out.addChannel("YawBrTAxp", "m/s^2", &system.states.tow_fa_dd);
+    out.addChannel("Q_TFA1", "m", &system.states.tow_fa);
+    out.addChannel("QD_TFA1", "m/s", &system.states.tow_fa_d);
 //    out.addChannel("YawBrRDyt", "deg", &system.states.tow_fa, system.param.TwTrans2Roll*180.0/M_PI);
 //    out.addChannel("YawBrRVyp", "deg/s", &system.states.tow_fa_d, system.param.TwTrans2Roll*180.0/M_PI);
     out.addChannel("RootFxc", "kN", &system.Fthrust, 1.0/3000.0);
@@ -230,6 +239,13 @@ bool simulate(turbine_T1B1cG_aeroSystem &system, FAST_Wind* wind, double ts, dou
 
     printf("Starting simulation\n");
     system.newmarkOneStep(0.0);
+    
+    RotPwr= system.Trot*system.states.phi_rot_d;
+    HSShftPwr= system.inputs.Tgen*system.states.phi_gen_d;
+    Q_GeAz= std::fmod(system.states.phi_gen/system.param.GBRatio+M_PI*3.0/2.0, 2*M_PI);
+    LSSTipPxa= std::fmod(system.states.phi_rot, 2*M_PI);        
+    Q_DrTr= system.states.phi_rot - system.states.phi_gen/system.param.GBRatio + system.states.tow_ss*system.param.TwTrans2Roll;
+    QD_DrTr= system.states.phi_rot_d - system.states.phi_gen_d/system.param.GBRatio + system.states.tow_ss_d*system.param.TwTrans2Roll;
     out.collectData();
     
     int ipas= 0;
@@ -251,6 +267,10 @@ bool simulate(turbine_T1B1cG_aeroSystem &system, FAST_Wind* wind, double ts, dou
         
         RotPwr= system.Trot*system.states.phi_rot_d;
         HSShftPwr= system.inputs.Tgen*system.states.phi_gen_d;
+        Q_GeAz= std::fmod(system.states.phi_gen/system.param.GBRatio+M_PI*3.0/2.0, 2*M_PI);
+        LSSTipPxa= std::fmod(system.states.phi_rot, 2*M_PI);        
+        Q_DrTr= system.states.phi_rot - system.states.phi_gen/system.param.GBRatio + system.states.tow_ss*system.param.TwTrans2Roll;
+        QD_DrTr= system.states.phi_rot_d - system.states.phi_gen_d/system.param.GBRatio + system.states.tow_ss_d*system.param.TwTrans2Roll;
         out.collectData();
     }
     printf("Simulation done\n");

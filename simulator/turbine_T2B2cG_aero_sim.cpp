@@ -17,6 +17,10 @@ bool DISCON_Step(double t, DISCON_Interface &DISCON, turbine_T2B2cG_aeroSystem &
 
 double RotPwr;
 double HSShftPwr;
+double Q_DrTr;
+double QD_DrTr;
+double Q_GeAz;
+double LSSTipPxa;
 double wind_adjust;
 
 int main(int argc, char* argv[]) {
@@ -27,7 +31,7 @@ int main(int argc, char* argv[]) {
     std::string discon_dll;
     std::string out_name;
     
-    cxxopts::Options argc_options("TurbineSimulator", "A simple wind turbine simulator");
+    cxxopts::Options argc_options(argv[0], "A simple wind turbine simulator");
     argc_options.add_options()
     ("p,paramfile", "Parameter file name", cxxopts::value<std::string>()->default_value("./params.txt"))
     ("t,simtime", "Simulation time", cxxopts::value<double>()->default_value("10"))
@@ -35,12 +39,19 @@ int main(int argc, char* argv[]) {
     ("d,discon_dll", "Path and name of the DISCON controller DLL", cxxopts::value<std::string>()->default_value("DISCON.dll"))
     ("o,output", "Output file name", cxxopts::value<std::string>()->default_value("default.outb"))
     ("a,adjust_wind", "Adjustment factor for wind speed", cxxopts::value<double>()->default_value("1.0"))
+    ("x,dx_wind", "Offset into wind field in m", cxxopts::value<double>()->default_value("0.0"))
     ("c,config", "Options file for the integration algorithm (default: newmark_options.txt)", cxxopts::value<std::string>()->default_value("newmark_options.txt"))
     ("fast", "OpenFAST main input file", cxxopts::value<std::string>())
     ;
     
     argc_options.parse_positional({"fast"});
-    
+    argc_options.positional_help("FAST_main_input_file.fst"); //.show_positional_help();
+
+    if(argc<2) {
+        std::cout << argc_options.help() << std::endl;
+        exit (EXIT_SUCCESS);
+    }
+        
     auto argc_result = argc_options.parse(argc, argv);
 
 
@@ -82,7 +93,7 @@ int main(int argc, char* argv[]) {
             }
             
             try {
-                wind= makeFAST_Wind(p);
+                wind= makeFAST_Wind(p, argc_result["dx_wind"].as<double>());
             } catch (const std::exception& e) {
                 fprintf(stderr, "Inflow error: %s\n", e.what());
                 exit (EXIT_FAILURE);
@@ -137,8 +148,10 @@ void setupOutputs(FAST_Output &out, turbine_T2B2cG_aeroSystem &system) {
 //     out.addChannel("TipDxb", "m", &system.q.data()[3]*blade_frame_49_phi0_1_1 + &system.q.data()[4]);
 //     out.addChannel("TipDyb", "m", &system.q.data()[4]);
     out.addChannel("PtchPMzc", "deg", &system.theta_deg);
-    out.addChannel("LSSTipPxa", "deg", &system.states.phi_rot, 180.0/M_PI);
-    out.addChannel("Q_GeAz", "rad", &system.states.phi_gen);
+    out.addChannel("LSSTipPxa", "deg", &LSSTipPxa, 180.0/M_PI);
+    out.addChannel("Q_GeAz", "rad", &Q_GeAz);
+    out.addChannel("Q_DrTr", "rad", &Q_DrTr);    
+    out.addChannel("QD_DrTr", "rad/s", &QD_DrTr);    
     out.addChannel("LSSTipVxa", "rpm", &system.states.phi_rot_d, 30.0/M_PI);
     out.addChannel("LSSTipAxa", "deg/s^2", &system.states.phi_rot_dd, 180.0/M_PI);
     out.addChannel("HSShftV", "rpm", &system.states.phi_gen_d, 30.0/M_PI);
@@ -149,6 +162,10 @@ void setupOutputs(FAST_Output &out, turbine_T2B2cG_aeroSystem &system) {
     out.addChannel("YawBrTVxp", "m/s", &system.states.tow_ss_d);
     out.addChannel("YawBrTAxp", "m/s^2", &system.states.tow_fa_dd);
     out.addChannel("YawBrTAyp", "m/s^2", &system.states.tow_ss_dd);
+    out.addChannel("Q_TFA1", "m", &system.states.tow_fa);
+    out.addChannel("QD_TFA1", "m/s", &system.states.tow_fa_d);
+    out.addChannel("Q_TSS1", "m", &system.states.tow_ss, -1.0);
+    out.addChannel("QD_TSS1", "m/s", &system.states.tow_ss_d, -1.0);
 //    out.addChannel("YawBrRDyt", "deg", &system.states.tow_fa, system.param.TwTrans2Roll*180.0/M_PI);
 //    out.addChannel("YawBrRDxt", "deg", &system.states.tow_ss, system.param.TwTrans2Roll*180.0/M_PI);
 //    out.addChannel("YawBrRVyp", "deg/s", &system.states.tow_fa_d, system.param.TwTrans2Roll*180.0/M_PI);
@@ -243,6 +260,13 @@ bool simulate(turbine_T2B2cG_aeroSystem &system, FAST_Wind* wind, double ts, dou
 
     printf("Starting simulation\n");
     system.newmarkOneStep(0.0);
+    
+    RotPwr= system.Trot*system.states.phi_rot_d;
+    HSShftPwr= system.inputs.Tgen*system.states.phi_gen_d;
+    Q_GeAz= std::fmod(system.states.phi_gen/system.param.GBRatio+M_PI*3.0/2.0, 2*M_PI);
+    LSSTipPxa= std::fmod(system.states.phi_rot, 2*M_PI);        
+    Q_DrTr= system.states.phi_rot - system.states.phi_gen/system.param.GBRatio + system.states.tow_ss*system.param.TwTrans2Roll;
+    QD_DrTr= system.states.phi_rot_d - system.states.phi_gen_d/system.param.GBRatio + system.states.tow_ss_d*system.param.TwTrans2Roll;
     out.collectData();
     
     int ipas= 0;
@@ -264,6 +288,10 @@ bool simulate(turbine_T2B2cG_aeroSystem &system, FAST_Wind* wind, double ts, dou
         
         RotPwr= system.Trot*system.states.phi_rot_d;
         HSShftPwr= system.inputs.Tgen*system.states.phi_gen_d;
+        Q_GeAz= std::fmod(system.states.phi_gen/system.param.GBRatio+M_PI*3.0/2.0, 2*M_PI);
+        LSSTipPxa= std::fmod(system.states.phi_rot, 2*M_PI);        
+        Q_DrTr= system.states.phi_rot - system.states.phi_gen/system.param.GBRatio + system.states.tow_ss*system.param.TwTrans2Roll;
+        QD_DrTr= system.states.phi_rot_d - system.states.phi_gen_d/system.param.GBRatio + system.states.tow_ss_d*system.param.TwTrans2Roll;
         out.collectData();
     }
     printf("Simulation done\n");

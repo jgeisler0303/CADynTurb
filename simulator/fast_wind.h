@@ -148,12 +148,13 @@ protected:
 
 class FAST_Wind_Type3 : public FAST_Wind {
 public:
-    FAST_Wind_Type3(FAST_Parent_Parameters &p, double avg_exp_=3.0) :
+    FAST_Wind_Type3(FAST_Parent_Parameters &p, double dx=0.0, double avg_exp_=3.0) :
         FAST_Wind(p),
         wind(0),
         TimeStep(1.0),
         TurbFilename(""),
-        avg_exp(avg_exp_)
+        avg_exp(avg_exp_),
+        dx(dx)
     {
         if(p["InflowFile.WindType"]!=3)
             throw FAST_WindException("Trying to instantiate FAST_Wind_Type3 but parameter WindType is " + std::to_string(p["WindType"]));
@@ -176,11 +177,12 @@ public:
         
         int16_t ID;
         infile.read((char*)&ID, sizeof(int16_t));
+        is_periodic= ID==8;
+        if(ID!=7 && ID!=8)
+            throw FAST_WindException("TurbSim wind file \"" + Filename + "\" has ID " + std::to_string(ID) + " but should be 7 or 8");
         
-        int32_t NumGrid_Z;
+        
         infile.read((char*)&NumGrid_Z, sizeof(int32_t));
-        
-        int32_t NumGrid_Y;
         infile.read((char*)&NumGrid_Y, sizeof(int32_t));
         
         int32_t n_tower;
@@ -190,23 +192,15 @@ public:
         infile.read((char*)&nt, sizeof(int32_t));
         wind.reserve(nt);
         
-        float dz;
         infile.read((char*)&dz, sizeof(float));
-        
-        float dy;
         infile.read((char*)&dy, sizeof(float));
 
         float fTimeStep;
         infile.read((char*)&fTimeStep, sizeof(float));
         TimeStep= fTimeStep;
         
-        float u_hub;
         infile.read((char*)&u_hub, sizeof(float));
-        
-        float HubHt;
         infile.read((char*)&HubHt, sizeof(float));
-        
-        float Z_bottom;
         infile.read((char*)&Z_bottom, sizeof(float));
         
         float V_slope[3];
@@ -261,7 +255,7 @@ public:
                         if(uvw==0) {
                             v_grid= ((float)v_grid_norm - V_intercept[uvw]) / V_slope[uvw];
                             
-                            if(sqrt(pow(z_grid-HubHt, 2.0) + pow(y_grid, 2.0))<TipRad) {
+                            if(NumGrid_Z<4 || NumGrid_Y<4 || sqrt(pow(z_grid-HubHt, 2.0) + pow(y_grid, 2.0))<TipRad) {
                                 v_avg+= pow(v_grid, avg_exp);
                                 n_avg+= 1.0;
                             }
@@ -307,6 +301,11 @@ public:
     }
     
     virtual double getWind(double time) {
+        if(!is_periodic) {
+            // if(time<0.1) std::cout << "((NumGrid_Y-1)*dy/2 + dx)/u_hub=" << ((NumGrid_Y-1)*dy/2 + dx)/u_hub << std::endl;
+            time= time + ((NumGrid_Y-1)*dy/2 + dx)/u_hub;
+        }
+        
         double TimeScaled= time/TimeStep;
         int idx= std::floor(TimeScaled);
         
@@ -323,16 +322,26 @@ protected:
     double TimeStep;
     std::string TurbFilename;
     double avg_exp;
+    double dx;
+    
+    int32_t NumGrid_Z;
+    int32_t NumGrid_Y;
+    float dz;
+    float dy;
+    float u_hub;
+    float HubHt;
+    float Z_bottom;
+    bool is_periodic;
 };
 
-FAST_Wind* makeFAST_Wind(FAST_Parent_Parameters &p) {
+FAST_Wind* makeFAST_Wind(FAST_Parent_Parameters &p, double dx=0.0) {
     switch((int)p["InflowFile.WindType"]) {
         case 1:
             return new FAST_Wind_Type1(p);
         case 2:
             return new FAST_Wind_Type2(p);
         case 3:
-            return new FAST_Wind_Type3(p);
+            return new FAST_Wind_Type3(p, dx);
         default:
             throw FAST_WindException("Wind type " + std::to_string(p["InflowFile.WindType"]) + " not yet supported");
     }

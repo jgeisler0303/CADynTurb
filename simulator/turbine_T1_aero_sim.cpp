@@ -17,6 +17,7 @@ bool DISCON_Step(double t, DISCON_Interface &DISCON, turbine_T1_aeroSystem &syst
 
 double RotPwr;
 double HSShftPwr;
+double LSSTipPxa;
 double wind_adjust;
 
 int main(int argc, char* argv[]) {
@@ -132,7 +133,7 @@ void setupOutputs(FAST_Output &out, turbine_T1_aeroSystem &system) {
 //     out.addChannel("TipDxb", "m", &system.q.data()[3]*blade_frame_49_phi0_1_1 + &system.q.data()[4]);
 //     out.addChannel("TipDyb", "m", &system.q.data()[4]);
     out.addChannel("PtchPMzc", "deg", &system.theta_deg);
-    out.addChannel("LSSTipPxa", "deg", &system.states.phi_rot, 180.0/M_PI);
+    out.addChannel("LSSTipPxa", "deg", &LSSTipPxa, 180.0/M_PI);
     out.addChannel("LSSTipVxa", "rpm", &system.states.phi_rot_d, 30.0/M_PI);
     out.addChannel("LSSTipAxa", "deg/s^2", &system.states.phi_rot_dd, 180.0/M_PI);
     out.addChannel("YawBrTDxp", "m", &system.states.tow_fa);
@@ -221,6 +222,10 @@ bool simulate(turbine_T1_aeroSystem &system, FAST_Wind* wind, double ts, double 
 
     printf("Starting simulation\n");
     system.newmarkOneStep(0.0);
+
+    RotPwr= system.Trot*system.states.phi_rot_d;
+    LSSTipPxa= std::fmod(system.states.phi_rot, 2*M_PI);        
+    HSShftPwr= system.inputs.Tgen*system.states.phi_rot_d*system.param.GBRatio;
     out.collectData();
     
     int ipas= 0;
@@ -241,6 +246,7 @@ bool simulate(turbine_T1_aeroSystem &system, FAST_Wind* wind, double ts, double 
         }
         
         RotPwr= system.Trot*system.states.phi_rot_d;
+        LSSTipPxa= std::fmod(system.states.phi_rot, 2*M_PI);        
         HSShftPwr= system.inputs.Tgen*system.states.phi_rot_d*system.param.GBRatio;
         out.collectData();
     }

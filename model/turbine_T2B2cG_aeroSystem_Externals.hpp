@@ -4,6 +4,8 @@
 #define DLAM_LUT(tab) ((thetaFact*(tab(lambdaIdx+1, thetaIdx)-tab(lambdaIdx, thetaIdx))/param.lambdaStep) + (1.0-thetaFact)*((tab(lambdaIdx+1, thetaIdx)-tab(lambdaIdx, thetaIdx))/param.lambdaStep))
 #define DTH_LUT(tab) (( (lambdaFact*tab(lambdaIdx, thetaIdx+1) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx+1))-(lambdaFact*tab(lambdaIdx, thetaIdx) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx)) )/param.thetaStep)
 
+typedef decltype(std::declval<turbine_T2B2cG_aeroSystem>().param.cm_lut) MatCx;
+
 void turbine_T2B2cG_aeroSystem::calculateExternal() {
     theta_deg= -inputs.theta/M_PI*180.0;
     double vwind_eff= inputs.vwind-states.tow_fa_d;

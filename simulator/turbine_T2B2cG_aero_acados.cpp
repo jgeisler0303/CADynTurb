@@ -41,8 +41,13 @@ const int theta= 2;
 bool simulate(sim_solver_capsule *capsule, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name);
 bool DISCON_Step(double t, DISCON_Interface &DISCON, double *states, double *inputs);
 
+double Q_DrTr;
+double QD_DrTr;
+double Q_GeAz;
+double LSSTipPxa;
 double GBRatio;
 double DTTorSpr;
+double TwTrans2Roll;
 double wind_adjust;
 
 int main(int argc, char* argv[]) {
@@ -109,6 +114,7 @@ int main(int argc, char* argv[]) {
         
         GBRatio= param.getParam("GBRatio");
         DTTorSpr= param.getParam("DTTorSpr");
+        TwTrans2Roll= param.getParam("TwTrans2Roll");
     }
 
     
@@ -191,8 +197,10 @@ void setupOutputs(FAST_Output &out, double *states, double *inputs) {
 //     out.addChannel("TipDxb", "m", &system.q.data()[3]*blade_frame_49_phi0_1_1 + &system.q.data()[4]);
 //     out.addChannel("TipDyb", "m", &system.q.data()[4]);
     out.addChannel("PtchPMzc", "deg", &inputs[theta], -180.0/M_PI);
-    out.addChannel("LSSTipPxa", "deg", &states[phi_rot], 180.0/M_PI);
-    out.addChannel("Q_GeAz", "rad", &states[phi_gen]);
+    out.addChannel("LSSTipPxa", "deg", &LSSTipPxa, 180.0/M_PI);
+    out.addChannel("Q_GeAz", "rad", &Q_GeAz);
+    out.addChannel("Q_DrTr", "rad", &Q_DrTr);    
+    out.addChannel("QD_DrTr", "rad/s", &Q_DrTr);    
     out.addChannel("LSSTipVxa", "rpm", &states[phi_rot_d], 30.0/M_PI);
 //     out.addChannel("LSSTipAxa", "deg/s^2", &states[phi_rot_dd], 180.0/M_PI);
     out.addChannel("HSShftV", "rpm", &states[phi_gen_d], 30.0/M_PI);
@@ -201,6 +209,10 @@ void setupOutputs(FAST_Output &out, double *states, double *inputs) {
     out.addChannel("YawBrTDyp", "m", &states[tow_ss]);
     out.addChannel("YawBrTVyp", "m/s", &states[tow_fa_d]);
     out.addChannel("YawBrTVxp", "m/s", &states[tow_ss_d]);
+    out.addChannel("Q_TFA1", "m", &states[tow_fa);
+    out.addChannel("QD_TFA1", "m/s", &states[tow_fa_d]);
+    out.addChannel("Q_TSS1", "m", &states[tow_ss], -1.0);
+    out.addChannel("QD_TSS1", "m/s", &states[tow_ss_d], -1.0);
 //     out.addChannel("YawBrTAxp", "m/s^2", &states[tow_fa_dd]);
 //     out.addChannel("YawBrTAyp", "m/s^2", &states[tow_ss_dd]);
 //    out.addChannel("YawBrRDyt", "deg", &states[tow_fa, system.param.TwTrans2Roll*180.0/M_PI);
@@ -295,6 +307,10 @@ bool simulate(sim_solver_capsule *capsule, FAST_Wind* wind, double ts, double tf
 
     printf("Starting simulation\n");
 
+    Q_GeAz= std::fmod(states[phi_gen]/GBRatio+M_PI*3.0/2.0, 2*M_PI);
+    LSSTipPxa= std::fmod(states[phi_rot], 2*M_PI);        
+    Q_DrTr= states[phi_rot] - states[phi_gen]/GBRatio + states[tow_ss]*TwTrans2Roll;
+    QD_DrTr= states[phi_rot_d] - states[phi_gen_d]/GBRatio + states[tow_ss_d]*TwTrans2Roll;
     out.collectData();
     
     int n_steps= tfinal/ts;
@@ -324,6 +340,10 @@ bool simulate(sim_solver_capsule *capsule, FAST_Wind* wind, double ts, double tf
         
         sim_out_get(acados_sim_config, acados_sim_dims, acados_sim_out, "x", states);
         
+        Q_GeAz= std::fmod(system.states.phi_gen/system.param.GBRatio+M_PI*3.0/2.0, 2*M_PI);
+        LSSTipPxa= std::fmod(system.states.phi_rot, 2*M_PI);        
+        Q_DrTr= system.states.phi_rot - system.states.phi_gen/system.param.GBRatio + system.states.tow_ss*system.param.TwTrans2Roll;
+        QD_DrTr= states[phi_rot_d] - states[phi_gen_d]/GBRatio + states[tow_ss_d]*TwTrans2Roll;
         out.collectData();
     }
     
