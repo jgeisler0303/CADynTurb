@@ -1,4 +1,4 @@
-function ha_= plot_timeseries_cmp(tsc1, tsc2, vars1, vars2, name1, name2, t0, t1, t_ofs1, t_ofs2)
+function ha_= plot_timeseries_cmp(tsc1, tsc2, vars1, vars2, name1, name2, t0, t1, t_ofs1, t_ofs2, one_legend)
 
 if ~iscell(vars1)
     vars1= {vars1};
@@ -30,14 +30,19 @@ end
 if ~exist('t_ofs2', 'var')
     t_ofs2= 0;
 end
+if ~exist('one_legend', 'var')
+    one_legend= true;
+end
 
 idx1= tsc1.Time>=t0 & tsc1.Time<=t1;
 idx2= tsc2.Time>=t0 & tsc2.Time<=t1;
 
 clf
 n_plots= max([length(vars1) length(vars2)]);
+tiledlayout(n_plots, 1)
+ha= zeros(n_plots, 1);
 for i_plot= 1:n_plots
-    ha(i_plot)= subplot(n_plots, 1, i_plot);
+    ha(i_plot)= nexttile;
     
     if i_plot<=length(vars1)
         sub_vars1= vars1{i_plot};
@@ -107,8 +112,14 @@ for i_plot= 1:n_plots
         xlabel('Time in s')
     end
     ylabel(label_str, 'Interpreter', 'none');
-    legend('Location', 'SouthWest', 'NumColumns', n_lines, 'Interpreter', 'none')
+    if ~one_legend
+        legend('Location', 'SouthWest', 'NumColumns', n_lines, 'Interpreter', 'none')
+    end
     grid on
+end
+if one_legend
+    lg= legend({name1, name2}, 'Orientation', 'horizontal', 'Interpreter', 'none');
+    lg.Layout.Tile = 'South';
 end
 
 linkaxes(findobj(gcf, 'Type', 'Axes'), 'x')
