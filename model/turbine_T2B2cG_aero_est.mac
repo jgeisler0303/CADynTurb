@@ -117,5 +117,5 @@ appliedForces():= (
 );
 
 modelOutputs():= (
-    [tow_fa_dd, tow_ss_dd, phi_rot_d*GBRatio+Dphi_gen_d, tow_fa_d, tow_ss_d]
+    [tow_fa_dd, tow_ss_dd, phi_rot_d*GBRatio+Dphi_gen_d]
 );

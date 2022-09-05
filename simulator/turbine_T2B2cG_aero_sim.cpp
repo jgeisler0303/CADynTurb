@@ -158,8 +158,8 @@ void setupOutputs(FAST_Output &out, turbine_T2B2cG_aeroSystem &system) {
     out.addChannel("HSShftA", "deg/s^2", &system.states.phi_gen_dd, 180.0/M_PI);
     out.addChannel("YawBrTDxp", "m", &system.states.tow_fa);
     out.addChannel("YawBrTDyp", "m", &system.states.tow_ss);
-    out.addChannel("YawBrTVyp", "m/s", &system.states.tow_fa_d);
-    out.addChannel("YawBrTVxp", "m/s", &system.states.tow_ss_d);
+    out.addChannel("YawBrTVxp", "m/s", &system.states.tow_fa_d);
+    out.addChannel("YawBrTVyp", "m/s", &system.states.tow_ss_d);
     out.addChannel("YawBrTAxp", "m/s^2", &system.states.tow_fa_dd);
     out.addChannel("YawBrTAyp", "m/s^2", &system.states.tow_ss_dd);
     out.addChannel("Q_TFA1", "m", &system.states.tow_fa);

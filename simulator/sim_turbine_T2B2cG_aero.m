@@ -91,7 +91,7 @@ for i= 2:nt
         error('Integrator error');
     end
 end
-% y(:, 1)= y(:, 2);
+y(:, 1)= y(:, 2);
 
 d_out= tscollection(t);
 d_out= addts(d_out, 'Q_BF1', 'm', x(bld_flp_idx, :));
@@ -109,8 +109,8 @@ d_out= addts(d_out, 'HSShftV', 'rpm', dx(phi_gen_idx, :)*30.0/pi);
 d_out= addts(d_out, 'HSShftA', 'deg/s^2', ddx(phi_gen_idx, :)*180.0/pi);
 d_out= addts(d_out, 'YawBrTDxp', 'm', x(tow_fa_idx, :));
 d_out= addts(d_out, 'YawBrTDyp', 'm', x(tow_ss_idx, :));
-d_out= addts(d_out, 'YawBrTVyp', 'm/s', dx(tow_fa_idx, :));
-d_out= addts(d_out, 'YawBrTVxp', 'm/s', dx(tow_ss_idx, :));
+d_out= addts(d_out, 'YawBrTVxp', 'm/s', dx(tow_fa_idx, :));
+d_out= addts(d_out, 'YawBrTVyp', 'm/s', dx(tow_ss_idx, :));
 d_out= addts(d_out, 'YawBrTAxp', 'm/s^2', ddx(tow_fa_idx, :));
 d_out= addts(d_out, 'YawBrTAyp', 'm/s^2', ddx(tow_ss_idx, :));
 d_out= addts(d_out, 'Q_TFA1', 'm', x(tow_fa_idx, :));
@@ -134,6 +134,7 @@ d_out= addts(d_out, 'BlPitchC', 'deg', -u(theta_idx, :)*180.0/pi);
 d_out= addts(d_out, 'GenTq', 'kNm', u(Tgen_idx, :)/1000.0);
 % d_out= addts(d_out, 'RootMxb', '-', &system.modalFlapForce);
 % d_out= addts(d_out, 'RootMyb', '-', &system.modalEdgeForce);
+d_out= addts(d_out, 'y', '-', y);
 
 function d= addts(d, name, unit, v)
 ts= timeseries(name);

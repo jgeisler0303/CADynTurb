@@ -1,4 +1,4 @@
-function testFAST2CADynTurb(model_name, model_dir, tower_modes, blade_modes)
+function d1= testFAST2CADynTurb(model_name, model_dir, tower_modes, blade_modes)
 
 %% prepare paths
 dn= fileparts(model_dir);

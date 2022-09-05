@@ -1,6 +1,8 @@
 *.orig
 
-sim/
+sim/*
+!sim/openFAST_config_no_inflow.xlsx
+!sim/OutListParameters.xlsx
 
 param.mat
 octave-workspace
