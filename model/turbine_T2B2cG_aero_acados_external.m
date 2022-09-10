@@ -5,6 +5,7 @@ cm_int= casadi.interpolant('cm_int', 'linear', {LAM, TH}, 1);
 ct_int= casadi.interpolant('ct_int', 'linear', {LAM, TH}, 1);
 cflp_int= casadi.interpolant('cflp_int', 'linear', {LAM, TH}, 1);
 cedg_int= casadi.interpolant('cedg_int', 'linear', {LAM, TH}, 1);
+thrustForceRadius_int= casadi.interpolant('thrustForceRadius_int', 'linear', {LAM, TH}, 1);
 
 dcm_dvf_v_int= casadi.interpolant('dcm_dvf_v_int', 'linear', {LAM, TH}, 1);
 dcm_dve_v_int= casadi.interpolant('dcm_dve_v_int', 'linear', {LAM, TH}, 1);
@@ -29,6 +30,7 @@ cm= cm_int([lam, theta_deg], cm_lut);
 ct= ct_int([lam, theta_deg], ct_lut);
 cflp= cflp_int([lam, theta_deg], cf_lut);
 cedg= cedg_int([lam, theta_deg], ce_lut);
+thrustForceRadius= thrustForceRadius_int([lam, theta_deg], thrustForceRadius_lut);
 
 dcm_dvf_v= dcm_dvf_v_int([lam, theta_deg], dcm_dvf_v_lut);
 dcm_dve_v= dcm_dve_v_int([lam, theta_deg], dcm_dve_v_lut);

@@ -1,4 +1,4 @@
-function param= prepareModel(fst_file, mac_file, target_path, tower_modes, blade_modes)
+function [param, tw_sid, bd_sid]= prepareModel(fst_file, mac_file, target_path, tower_modes, blade_modes)
 
 [~, model_name]= fileparts(mac_file);
 if ~exist('target_path', 'var')
@@ -11,13 +11,16 @@ if ~exist('blade_modes', 'var')
     blade_modes= [1 2];
 end
 
-
-[param, ~, tw_sid, bd_sid]= FAST2CADynTurb(fst_file, tower_modes, blade_modes);
-param.tw_sid= tw_sid;
-param.bd_sid= bd_sid;
-
-write_sid_maxima(tw_sid, fullfile(target_path, 'tw_sid'), 'tower', 'last', 1e-5, 1);
-write_sid_maxima(bd_sid, fullfile(target_path, 'bd_sid'), 'blade', 'all', 1e-5, 1);
+old= 1;
+if old
+    [param, ~, tw_sid, bd_sid]= FAST2CADynTurb(fst_file, tower_modes, blade_modes);
+    write_sid_maxima(tw_sid, fullfile(target_path, 'tw_sid'), 'tower', 'last', 1e-5, 1);
+    write_sid_maxima(bd_sid, fullfile(target_path, 'bd_sid'), 'blade', 'all', 1e-5, 1);
+else
+    [param, ~]= FAST2CADynTurb2(fst_file, tower_modes, blade_modes);
+end
+% TODO: replace write_sid_maxima(tw_sid, fullfile(target_path, 'tw_sid'), 'tower', 'last', 1e-5, 1);
+% TODO: replace write_sid_maxima(bd_sid, fullfile(target_path, 'bd_sid'), 'blade', 'all', 1e-5, 1);
 
 mac_file_gen= fullfile(target_path, [model_name '.mac']);
 copyfile(mac_file, mac_file_gen)

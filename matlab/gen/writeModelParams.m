@@ -13,6 +13,7 @@ param= addFieldAlias(param, 'dcm_dve_v_lut', 'dcm_dvb2_v');
 param= addFieldAlias(param, 'dct_dve_v_lut', 'dct_dvb2_v');
 param= addFieldAlias(param, 'dcf_dve_v_lut', 'dcb1_dvb2_v');
 param= addFieldAlias(param, 'dce_dve_v_lut', 'dcb2_dvb2_v');
+param= addFieldAlias(param, 'cmy_D23_lut', 'cmy_D23');
 
 param.lambdaMin= param.lambda(1);
 param.lambdaMax= param.lambda(end);
@@ -25,7 +26,8 @@ param.thetaStep= mean(diff(param.theta));
 param.T_wind_filt= 20;
 param.D_wind_filt= 1/sqrt(2);
 
-param.torqueForceRadius= param.bd_sid.frame(20).origin.M0(3);
+% param.torqueForceRadius= param.bd_sid.frame(20).origin.M0(3);
+param.torqueForceRadius= param.R(end)*2/3;
 
 run(fullfile(target_dir, 'model_parameters.m'))
 
@@ -43,7 +45,7 @@ for i= 1:length(parameter_names)
 end
 fclose(fid);
 
-% param= p_;
+save(fullfile(target_dir, 'params_config.mat'), 'p_');
 save(fullfile(target_dir, 'params.mat'), 'param');
 
 

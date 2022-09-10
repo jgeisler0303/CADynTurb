@@ -187,8 +187,10 @@ void setupOutputs(FAST_Output &out, turbine_T2B2cG_aeroSystem &system) {
     out.addChannel("RotCe", "-", &system.cedg);
     out.addChannel("BlPitchC", "deg", &system.inputs.theta,  -180.0/M_PI);
     out.addChannel("GenTq", "kNm", &system.inputs.Tgen, 1.0/1000.0);
-    out.addChannel("RootMxb", "-", &system.modalFlapForce);
-    out.addChannel("RootMyb", "-", &system.modalEdgeForce);
+    out.addChannel("RootMxb", "kNm", &system.y[5], 1.0/1000.0);
+    out.addChannel("RootMyb", "kNm", &system.y[6], 1.0/1000.0);
+    out.addChannel("Spn1ALxb1", "m/s^2", &system.y[3]);
+    out.addChannel("Spn1ALyb1", "m/s^2", &system.y[4]);
 }
 
 bool simulate(turbine_T2B2cG_aeroSystem &system, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name) {
@@ -260,6 +262,7 @@ bool simulate(turbine_T2B2cG_aeroSystem &system, FAST_Wind* wind, double ts, dou
 
     printf("Starting simulation\n");
     system.newmarkOneStep(0.0);
+    system.calcOut();
     
     RotPwr= system.Trot*system.states.phi_rot_d;
     HSShftPwr= system.inputs.Tgen*system.states.phi_gen_d;
@@ -285,7 +288,7 @@ bool simulate(turbine_T2B2cG_aeroSystem &system, FAST_Wind* wind, double ts, dou
             res= false;
             break;
         }
-        
+        system.calcOut();
         RotPwr= system.Trot*system.states.phi_rot_d;
         HSShftPwr= system.inputs.Tgen*system.states.phi_gen_d;
         Q_GeAz= std::fmod(system.states.phi_gen/system.param.GBRatio+M_PI*3.0/2.0, 2*M_PI);

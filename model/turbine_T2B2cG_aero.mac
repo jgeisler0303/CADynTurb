@@ -6,16 +6,11 @@ WITH_LINEAR: 1;
 WITH_ACCELERATIONS: 0;
 STATES: [tow_fa, tow_ss, bld_flp, bld_edg, phi_rot, phi_gen];
 INPUTS: [vwind, Tgen, theta];
-EXTERNAL: [cm(), ct(), cflp(), cedg(), theta_deg(), lam(), Trot(tow_fa_d, phi_rot_d, bld_flp_d, bld_edg_d, vwind, theta), Fthrust(tow_fa_d, phi_rot_d, bld_flp_d, bld_edg_d, vwind, theta), Ftow_y(tow_ss_d), modalFlapForce(tow_fa_d, phi_rot_d, bld_flp_d, bld_edg_d, vwind, theta), modalEdgeForce(tow_fa_d, phi_rot_d, bld_flp_d, bld_edg_d, vwind, theta)];
-EXT_PARAM: [rho, Rrot, lambdaMin, lambdaMax, lambdaStep, thetaMin, thetaMax, thetaStep, Arot, cm_lut[25, 91], ct_lut[25, 91], cf_lut[25, 91], ce_lut[25, 91], dcm_dvf_v_lut[25, 91], dcm_dve_v_lut[25, 91], dct_dvf_v_lut[25, 91], dct_dve_v_lut[25, 91], dcs_dvy_v_lut[25, 91], dcf_dvf_v_lut[25, 91], dcf_dve_v_lut[25, 91], dce_dvf_v_lut[25, 91], dce_dve_v_lut[25, 91]];
+EXTERNAL: [cm(), ct(), cflp(), cedg(), cmy_D23(), theta_deg(), lam(), Trot(tow_fa_d, phi_rot_d, bld_flp_d, bld_edg_d, vwind, theta), MyD23(phi_rot_d, vwind, theta), Fthrust(tow_fa_d, phi_rot_d, bld_flp_d, bld_edg_d, vwind, theta), Ftow_y(tow_ss_d), modalFlapForce(tow_fa_d, phi_rot_d, bld_flp_d, bld_edg_d, vwind, theta), modalEdgeForce(tow_fa_d, phi_rot_d, bld_flp_d, bld_edg_d, vwind, theta)];
+EXT_PARAM: [rho, lambdaMin, lambdaMax, lambdaStep, thetaMin, thetaMax, thetaStep, Arot, cm_lut[25, 91], ct_lut[25, 91], cmy_D23_lut[25, 91], cf_lut[25, 91], ce_lut[25, 91], dcm_dvf_v_lut[25, 91], dcm_dve_v_lut[25, 91], dct_dvf_v_lut[25, 91], dct_dve_v_lut[25, 91], dcs_dvy_v_lut[25, 91], dcf_dvf_v_lut[25, 91], dcf_dve_v_lut[25, 91], dce_dvf_v_lut[25, 91], dce_dve_v_lut[25, 91]];
 
 /* Gravity vector */
 gravity: [0, 0, -g];
-
-Trotx_lin(a):= subst([x= a], ratsimp(taytorat(taylor(Trotx(x), x, 0, 1))));
-Troty_lin(a):= subst([x= a], ratsimp(taytorat(taylor(Troty(x), x, 0, 1))));
-Trotz_lin(a):= subst([x= a], ratsimp(taytorat(taylor(Trotz(x), x, 0, 1))));
-
 
 /* 1 Tower */
 load(filename_merge(load_pathname, "tw_sid.mac"));
@@ -48,19 +43,19 @@ load(filename_merge(load_pathname, "bd_sid.mac"));
 elastic_dof[4]: [bld_flp, bld_edg];
 ebody[4]: blade;
 BodyRef[4]: 3;
-TrefG[4]:  Tdisp(-HubCM, 0, 0).Trotz(theta);
+TrefG[4]:  Tdisp(-HubCM, 0, 0).Trotz(theta).Trotx(z[1]).Troty(z[2]);
 
 /* Blade 2 */
 elastic_dof[5]: [bld_flp, bld_edg];
 ebody[5]: blade;
 BodyRef[5]: 3;
-TrefG[5]:  Tdisp(-HubCM, 0, 0).Trotx(%pi/3*2).Trotz(theta);
+TrefG[5]:  Tdisp(-HubCM, 0, 0).Trotx(%pi/3*2).Trotz(theta).Trotx(z[1]).Troty(z[2]);
 
 /* Blade 3 */
 elastic_dof[6]: [bld_flp, bld_edg];
 ebody[6]: blade;
 BodyRef[6]: 3;
-TrefG[6]:  Tdisp(-HubCM, 0, 0).Trotx(%pi/3*4).Trotz(theta);
+TrefG[6]:  Tdisp(-HubCM, 0, 0).Trotx(%pi/3*4).Trotz(theta).Trotx(z[1]).Troty(z[2]);
 
 /* 7 Geno */
 BodyRef[7]: 2;
@@ -75,15 +70,16 @@ appliedForces():= (
     for i: 4 thru 6 do (
     /* Thrust */
         OoPforce: Fthrust/3,
+        thrustForceRadius: 2/3*Rrot,
     /* flapwise */
         RMG: applyForceInLocal(unitZ*thrustForceRadius, cos(theta)*unitX*OoPforce, T0G[i]),
         appliedF[i]: RMG[1],
-        appliedM[i]: RMG[2],
+        appliedM[i]: RMG[2] + cos(theta)*MyD23,
 
     /* edgewise */
         RMG: applyForceInLocal(unitZ*thrustForceRadius, -sin(theta)*unitY*OoPforce, T0G[i]),
         appliedF[i]: appliedF[i] + RMG[1],
-        appliedM[i]: appliedM[i] + RMG[2],
+        appliedM[i]: appliedM[i] + RMG[2]  - sin(theta)*MyD23,
 
 
     /* Torque */
@@ -115,6 +111,8 @@ appliedForces():= (
     done
 );
 
-modelOutputs():= (
-    [tow_fa_dd, tow_ss_dd, phi_gen_d, tow_fa_d, tow_ss_d]
+modelOutputs(sys):= block([bld_accel],
+    bld_accel: transpose(submatrix(4, sys@sys_abs@T0G[3] . Troty(cone) . Trotz(theta), 4) . Trot_elast(sys@sys_abs, 4, 30)) . abs_accel_elast(sys@sys_abs, 4, 30),
+
+    [tow_fa_dd, tow_ss_dd, phi_gen_d, bld_accel[1,1], bld_accel[2,1], sys@constraints[1]/3, sys@constraints[2]/3]
 );

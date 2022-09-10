@@ -124,6 +124,6 @@ appliedForces():= (
     done
 );
 
-modelOutputs():= (
+modelOutputs(sys):= (
     [qdd[1], qdd[2], qd[3]*GBRatio+qd[6], q[7], q[8]]
 );

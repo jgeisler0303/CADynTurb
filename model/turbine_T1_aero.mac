@@ -85,6 +85,6 @@ appliedForces():= (
     done
 );
 
-modelOutputs():= (
+modelOutputs(sys):= (
     [tow_fa_dd, phi_rot_d, tow_fa_d]
 );
