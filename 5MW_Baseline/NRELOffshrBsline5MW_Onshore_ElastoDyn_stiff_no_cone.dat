@@ -46,16 +46,16 @@ False         PtfmYDOF    - Platform yaw rotation DOF (flag)
           3   NumBl       - Number of blades (-)
          63   TipRad      - The distance from the rotor apex to the blade tip (meters)
         1.5   HubRad      - The distance from the rotor apex to the blade root (meters)
-       -2.5   PreCone(1)  - Blade 1 cone angle (degrees)
-       -2.5   PreCone(2)  - Blade 2 cone angle (degrees)
-       -2.5   PreCone(3)  - Blade 3 cone angle (degrees) [unused for 2 blades]
+       0   PreCone(1)  - Blade 1 cone angle (degrees)
+       0   PreCone(2)  - Blade 2 cone angle (degrees)
+       0   PreCone(3)  - Blade 3 cone angle (degrees) [unused for 2 blades]
           0   HubCM       - Distance from rotor apex to hub mass [positive downwind] (meters)
           0   UndSling    - Undersling length [distance from teeter pin to the rotor apex] (meters) [unused for 3 blades]
           0   Delta3      - Delta-3 angle for teetering rotors (degrees) [unused for 3 blades]
           0   AzimB1Up    - Azimuth value to use for I/O when blade 1 points up (degrees)
     -5.0191   OverHang    - Distance from yaw axis to rotor apex [3 blades] or teeter pin [2 blades] (meters)
       1.912   ShftGagL    - Distance from rotor apex [3 blades] or teeter pin [2 blades] to shaft strain gages [positive for upwind rotors] (meters)
-         -5   ShftTilt    - Rotor shaft tilt angle (degrees)
+         0   ShftTilt    - Rotor shaft tilt angle (degrees)
         1.9   NacCMxn     - Downwind distance from the tower-top to the nacelle CM (meters)
           0   NacCMyn     - Lateral  distance from the tower-top to the nacelle CM (meters)
        1.75   NacCMzn     - Vertical distance from the tower-top to the nacelle CM (meters)
@@ -114,7 +114,7 @@ True          SumPrint    - Print summary data to "<RootName>.sum" (flag)
 True          TabDelim    - Use tab delimiters in text tabular output file? (flag) (currently unused)
 "ES10.3E2"    OutFmt      - Format used for text tabular output (except time).  Resulting field should be 10 characters. (quoted string) (currently unused)
           0   TStart      - Time to begin tabular output (s) (currently unused)
-          1   DecFact     - Decimation factor for tabular output {1: output every time step} (-) (currently unused)
+          2   DecFact     - Decimation factor for tabular output {1: output every time step} (-) (currently unused)
           0   NTwGages    - Number of tower nodes that have strain gages for output [0 to 9] (-)
          10,         19,         28    TwrGagNd    - List of tower nodes that have strain gages [1 to TwrNodes] (-) [unused if NTwGages=0]
           9   NBlGages    - Number of blade nodes that have strain gages for output [0 to 9] (-)
@@ -163,6 +163,12 @@ True          TabDelim    - Use tab delimiters in text tabular output file? (fla
 "TwrBsMxt"                - Side-to-side bending, fore-aft bending, and yaw moments at the base of the tower (mudline)
 "TwrBsMyt"                - Side-to-side bending, fore-aft bending, and yaw moments at the base of the tower (mudline)
 "TwrBsMzt"                - Side-to-side bending, fore-aft bending, and yaw moments at the base of the tower (mudline)
+"TipDxb1"
+"TipDxb2"
+"TipDxb3"
+"TipDyb1"
+"TipDyb2"
+"TipDyb3"
 "TipDxc1"
 "TipDxc2"
 "TipDxc3"
@@ -206,6 +212,93 @@ True          TabDelim    - Use tab delimiters in text tabular output file? (fla
 "QD_B1F2"
 "QD_B2F2"
 "QD_B3F2"
+"Spn1FLxb1"
+"Spn1FLxb2"
+"Spn1FLxb3"
+"Spn1FLyb1"
+"Spn1FLyb2"
+"Spn1FLyb3"
+"Spn1FLzb1"
+"Spn1FLzb2"
+"Spn1FLzb3"
+"Spn2FLxb1"
+"Spn2FLxb2"
+"Spn2FLxb3"
+"Spn2FLyb1"
+"Spn2FLyb2"
+"Spn2FLyb3"
+"Spn2FLzb1"
+"Spn2FLzb2"
+"Spn2FLzb3"
+"Spn3FLxb1"
+"Spn3FLxb2"
+"Spn3FLxb3"
+"Spn3FLyb1"
+"Spn3FLyb2"
+"Spn3FLyb3"
+"Spn3FLzb1"
+"Spn3FLzb2"
+"Spn3FLzb3"
+"Spn4FLxb1"
+"Spn4FLxb2"
+"Spn4FLxb3"
+"Spn4FLyb1"
+"Spn4FLyb2"
+"Spn4FLyb3"
+"Spn4FLzb1"
+"Spn4FLzb2"
+"Spn4FLzb3"
+"Spn5FLxb1"
+"Spn5FLxb2"
+"Spn5FLxb3"
+"Spn5FLyb1"
+"Spn5FLyb2"
+"Spn5FLyb3"
+"Spn5FLzb1"
+"Spn5FLzb2"
+"Spn5FLzb3"
+"Spn6FLxb1"
+"Spn6FLxb2"
+"Spn6FLxb3"
+"Spn6FLyb1"
+"Spn6FLyb2"
+"Spn6FLyb3"
+"Spn6FLzb1"
+"Spn6FLzb2"
+"Spn6FLzb3"
+"Spn7FLxb1"
+"Spn7FLxb2"
+"Spn7FLxb3"
+"Spn7FLyb1"
+"Spn7FLyb2"
+"Spn7FLyb3"
+"Spn7FLzb1"
+"Spn7FLzb2"
+"Spn7FLzb3"
+"Spn8FLxb1"
+"Spn8FLxb2"
+"Spn8FLxb3"
+"Spn8FLyb1"
+"Spn8FLyb2"
+"Spn8FLyb3"
+"Spn8FLzb1"
+"Spn8FLzb2"
+"Spn8FLzb3"
+"Spn9FLxb1"
+"Spn9FLxb2"
+"Spn9FLxb3"
+"Spn9FLyb1"
+"Spn9FLyb2"
+"Spn9FLyb3"
+"Spn9FLzb1"
+"Spn9FLzb2"
+"Spn9FLzb3"
+"Spn1MLxb1"
+"Spn1MLxb2"
+"Spn1MLxb3"
+"Spn1MLyb1"
+"Spn1MLyb2"
+"Spn1MLyb3"
 
 END of input file (the word "END" must appear in the first 3 columns of this last OutList line)
 ---------------------------------------------------------------------------------------
