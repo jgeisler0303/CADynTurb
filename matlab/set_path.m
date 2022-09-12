@@ -17,5 +17,5 @@ addpath(fullfile(base_dir, '../../CADyn/gen'))
 
 %%
 setenv('maxima_path', '/usr/bin/maxima')
-setenv('cagem_path', fullfile(pwd, '../../CADyn/gen/cagem.mac'))
+setenv('cagem_path', fullfile(base_dir, '../../CADyn/gen/cagem.mac'))
 

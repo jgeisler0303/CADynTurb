@@ -74,13 +74,13 @@ appliedForces():= (
     /* flapwise */
         RMG: applyForceInLocal(unitZ*thrustForceRadius, cos(theta)*unitX*OoPforce, T0G[i]),
         appliedF[i]: RMG[1],
-        appliedM[i]: RMG[2] + cos(theta)*MyD23,
+        appliedM[i]: RMG[2],
 
     /* edgewise */
         RMG: applyForceInLocal(unitZ*thrustForceRadius, -sin(theta)*unitY*OoPforce, T0G[i]),
         appliedF[i]: appliedF[i] + RMG[1],
-        appliedM[i]: appliedM[i] + RMG[2]  - sin(theta)*MyD23,
-
+        appliedM[i]: appliedM[i] + RMG[2] ,
+        appliedM[i]: appliedM[i] + submatrix(4, T0G[i].Trotz(-theta), 4) . matrix([0], [MyD23], [0]),
 
     /* Torque */
         IPforce: Trot/3/torqueForceRadius,

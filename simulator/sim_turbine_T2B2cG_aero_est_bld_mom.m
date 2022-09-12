@@ -97,7 +97,7 @@ for i= 2:nt
     end
 
     if do_est
-        [x(:, i), dx(:, i), Sigma_est, Q, R]= est_T2B2cG_aero_est_bld_mom(x(:, i), dx(:, i), y_pred(:, i), y_meas(:, i), Sigma_est, AB, CD, Q, R, N, t(i), alpha_adapt);
+        [x(:, i), dx(:, i), Sigma_est, Q, R]= est_T2B2cG_aero_est_bld_mom(x(:, i), dx(:, i), u(:, i-1), y_pred(:, i), y_meas(:, i), param, Sigma_est, AB, CD, Q, R, N, t(i), alpha_adapt);
     end
 end
 toc

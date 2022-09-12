@@ -50,7 +50,7 @@ void turbine_T2B2cG_aeroSystem::calculateExternal() {
 
 }
 
-static void aeroForceDerivs(const double cx_stat, const double dcx_dlam, const double dcx_dtheta, 
+static void aeroForceDerivs(const double torque_R, const double cx_stat, const double dcx_dlam, const double dcx_dtheta, 
                             const double dcx_dvf_v, const double dcx_dve_v, 
                             const double dlam_dvw, const double dlam_dvtow, const double dlam_dphi_rot_d,
                             const double Fwind, const double Fwind_v, const double dFwind_dvtow, const double dFwind_dvw, 
@@ -59,12 +59,12 @@ static void aeroForceDerivs(const double cx_stat, const double dcx_dlam, const d
     double dcx_dvtow= dcx_dlam * dlam_dvtow;
     double dcx_dphi_rot_d= dcx_dlam * dlam_dphi_rot_d;
     
-    dX_dtow_fa_d= dFwind_dvtow*cx_stat + Fwind*dcx_dvtow;    // TODO to be exact, the derivative of the edge and flap terms is missing here 
-    dX_dphi_rot_d= Fwind*dcx_dphi_rot_d;                          // TODO to be exact, the derivative of the edge and flap terms is missing here 
-    dX_dbld_flp_d= Fwind_v * dcx_dvf_v;
-    dX_dbld_edg_d= Fwind_v * dcx_dve_v;
-    dX_dvwind= dFwind_dvw*cx_stat + Fwind*dcx_dvw;      // TODO to be exact, the derivative of the edge and flap terms is missing here 
-    dX_dtheta= Fwind*dcx_dtheta;                        // TODO to be exact, the derivative of the edge and flap terms is missing here 
+    dX_dtow_fa_d= torque_R * (dFwind_dvtow*cx_stat + Fwind*dcx_dvtow);    // TODO to be exact, the derivative of the edge and flap terms is missing here 
+    dX_dphi_rot_d= torque_R * Fwind*dcx_dphi_rot_d;                          // TODO to be exact, the derivative of the edge and flap terms is missing here 
+    dX_dbld_flp_d= torque_R * Fwind_v * dcx_dvf_v;
+    dX_dbld_edg_d= torque_R * Fwind_v * dcx_dve_v;
+    dX_dvwind= torque_R * (dFwind_dvw*cx_stat + Fwind*dcx_dvw);      // TODO to be exact, the derivative of the edge and flap terms is missing here 
+    dX_dtheta= torque_R * Fwind*dcx_dtheta;                        // TODO to be exact, the derivative of the edge and flap terms is missing here 
 }
 
 void turbine_T2B2cG_aeroSystem::calculateExternalWithDeriv() {
@@ -104,7 +104,7 @@ void turbine_T2B2cG_aeroSystem::calculateExternalWithDeriv() {
     
     Trot= param.Rrot*Fwind_v*(vwind_eff*cm + states.bld_flp_d*dcm_dvf_v + states.bld_edg_d*dcm_dve_v);
     Fthrust= Fwind_v*(vwind_eff*ct + states.bld_flp_d*dct_dvf_v + states.bld_edg_d*dct_dve_v);
-    MyD23= Fwind_v*vwind_eff*cmy_D23;
+    MyD23= param.Rrot*Fwind_v*vwind_eff*cmy_D23;
 
     Ftow_y= 1.5*Fwind_v*states.tow_ss_d*dcs_dvy_v;
     modalFlapForce= Fwind_v*(vwind_eff*cflp + states.bld_flp_d*dcf_dvf_v + states.bld_edg_d*dcf_dve_v);
@@ -117,13 +117,13 @@ void turbine_T2B2cG_aeroSystem::calculateExternalWithDeriv() {
     double dlam_dvtow =  lam/inputs.vwind;
     double dlam_dphi_rot_d= lam/states.phi_rot_d;
     
-    aeroForceDerivs(cm, DLAM_LUT(param.cm_lut), DTH_LUT(param.cm_lut), 
+    aeroForceDerivs(param.Rrot, cm, DLAM_LUT(param.cm_lut), DTH_LUT(param.cm_lut), 
                     dcm_dvf_v, dcm_dve_v, 
                     dlam_dvw, dlam_dvtow, dlam_dphi_rot_d,
                     Fwind, Fwind_v, dFwind_dvtow, dFwind_dvw, 
                     dTrot_dtow_fa_d, dTrot_dphi_rot_d, dTrot_dbld_flp_d, dTrot_dbld_edg_d, dTrot_dvwind, dTrot_dtheta);
     
-    aeroForceDerivs(ct, DLAM_LUT(param.ct_lut), DTH_LUT(param.ct_lut), 
+    aeroForceDerivs(1.0, ct, DLAM_LUT(param.ct_lut), DTH_LUT(param.ct_lut), 
                     dct_dvf_v, dct_dve_v, 
                     dlam_dvw, dlam_dvtow, dlam_dphi_rot_d,
                     Fwind, Fwind_v, dFwind_dvtow, dFwind_dvw, 
@@ -134,13 +134,13 @@ void turbine_T2B2cG_aeroSystem::calculateExternalWithDeriv() {
     dMyD23_dvwind= dMyD23_dlam * dlam_dvw;
     dMyD23_dtheta= DTH_LUT(param.cmy_D23_lut);
     
-    aeroForceDerivs(cflp, DLAM_LUT(param.cf_lut), DTH_LUT(param.cf_lut), 
+    aeroForceDerivs(1.0, cflp, DLAM_LUT(param.cf_lut), DTH_LUT(param.cf_lut), 
                     dcf_dvf_v, dcf_dve_v, 
                     dlam_dvw, dlam_dvtow, dlam_dphi_rot_d,
                     Fwind, Fwind_v, dFwind_dvtow, dFwind_dvw, 
                     dmodalFlapForce_dtow_fa_d, dmodalFlapForce_dphi_rot_d, dmodalFlapForce_dbld_flp_d, dmodalFlapForce_dbld_edg_d, dmodalFlapForce_dvwind, dmodalFlapForce_dtheta);
     
-    aeroForceDerivs(cedg, -1.0*DLAM_LUT(param.ce_lut), -1.0*DTH_LUT(param.ce_lut), 
+    aeroForceDerivs(1.0, cedg, -1.0*DLAM_LUT(param.ce_lut), -1.0*DTH_LUT(param.ce_lut), 
                     dce_dvf_v, dce_dve_v, 
                     dlam_dvw, dlam_dvtow, dlam_dphi_rot_d,
                     Fwind, Fwind_v, dFwind_dvtow, dFwind_dvw, 

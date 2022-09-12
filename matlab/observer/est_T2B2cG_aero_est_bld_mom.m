@@ -1,4 +1,4 @@
-function [x_est, dx_est, Sigma_est, Q, R]= est_T2B2cG_aero_est_bld_mom(x, dx, y_pred, y_meas, Sigma, AB, CD, Q, R, N, t, alpha_adapt)
+function [x_est, dx_est, Sigma_est, Q, R]= est_T2B2cG_aero_est_bld_mom(x, dx, u, y_pred, y_meas, param, Sigma, AB, CD, Q, R, N, t, alpha_adapt)
 
 model_indices
 
@@ -107,7 +107,9 @@ dx_est(estimated_states(7:end)-7)= xx_est(7:end);
 
 
 if exist('alpha_adapt', 'var') && ~isempty(alpha_adapt)
+%     y_corr= turbine_T2B2cG_aero_est_bld_mom_mex(x_est, dx_est, u, param);
     ep= d-C*K*d; % y_+C*dx should be real h(x_est)
+%     ep= y_meas(out_idx) - y_corr(out_idx);
     R= alpha_adapt*R + (1-alpha_adapt)*(ep*ep' + C*Sigma__*C');
 
     Q= alpha_adapt*Q + (1-alpha_adapt)*(K*(d*d')*K');
