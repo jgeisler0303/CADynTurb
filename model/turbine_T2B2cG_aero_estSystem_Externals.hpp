@@ -2,7 +2,7 @@
 
 #define LUT(tab) (thetaFact*(lambdaFact*tab(lambdaIdx, thetaIdx) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx)) + (1.0-thetaFact)*(lambdaFact*tab(lambdaIdx, thetaIdx+1) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx+1)))
 #define DLAM_LUT(tab) ((thetaFact*(tab(lambdaIdx+1, thetaIdx)-tab(lambdaIdx, thetaIdx))/param.lambdaStep) + (1.0-thetaFact)*((tab(lambdaIdx+1, thetaIdx)-tab(lambdaIdx, thetaIdx))/param.lambdaStep))
-#define DTH_LUT(tab) (( (lambdaFact*tab(lambdaIdx, thetaIdx+1) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx+1))-(lambdaFact*tab(lambdaIdx, thetaIdx) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx)) )/param.thetaStep)
+#define DTH_LUT(tab) (( (lambdaFact*tab(lambdaIdx, thetaIdx+1) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx+1))-(lambdaFact*tab(lambdaIdx, thetaIdx) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx)) )/param.thetaStep * -180.0/M_PI)
 
 void turbine_T2B2cG_aero_estSystem::calculateExternal() {
     theta_deg= -inputs.theta/M_PI*180.0;
@@ -109,7 +109,7 @@ void turbine_T2B2cG_aero_estSystem::calculateExternalWithDeriv() {
     double dlam_dvtow =  lam/states.vwind;
     double dlam_dphi_rot_d= lam/states.phi_rot_d;
     
-    aeroForceDerivs(param.Trot, cm, DLAM_LUT(param.cm_lut), DTH_LUT(param.cm_lut), 
+    aeroForceDerivs(param.Rrot, cm, DLAM_LUT(param.cm_lut), DTH_LUT(param.cm_lut), 
                     dcm_dvf_v, dcm_dve_v, 
                     dlam_dvw, dlam_dvtow, dlam_dphi_rot_d,
                     Fwind, Fwind_v, dFwind_dvtow, dFwind_dvw, 

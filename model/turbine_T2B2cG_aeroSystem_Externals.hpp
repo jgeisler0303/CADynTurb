@@ -2,7 +2,7 @@
 
 #define LUT(tab) (thetaFact*(lambdaFact*tab(lambdaIdx, thetaIdx) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx)) + (1.0-thetaFact)*(lambdaFact*tab(lambdaIdx, thetaIdx+1) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx+1)))
 #define DLAM_LUT(tab) ((thetaFact*(tab(lambdaIdx+1, thetaIdx)-tab(lambdaIdx, thetaIdx))/param.lambdaStep) + (1.0-thetaFact)*((tab(lambdaIdx+1, thetaIdx)-tab(lambdaIdx, thetaIdx))/param.lambdaStep))
-#define DTH_LUT(tab) (( (lambdaFact*tab(lambdaIdx, thetaIdx+1) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx+1))-(lambdaFact*tab(lambdaIdx, thetaIdx) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx)) )/param.thetaStep)
+#define DTH_LUT(tab) (( (lambdaFact*tab(lambdaIdx, thetaIdx+1) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx+1))-(lambdaFact*tab(lambdaIdx, thetaIdx) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx)) )/param.thetaStep * -180.0/M_PI)
 
 typedef decltype(std::declval<turbine_T2B2cG_aeroSystem>().param.cm_lut) MatCx;
 
@@ -130,9 +130,9 @@ void turbine_T2B2cG_aeroSystem::calculateExternalWithDeriv() {
                     dFthrust_dtow_fa_d, dFthrust_dphi_rot_d, dFthrust_dbld_flp_d, dFthrust_dbld_edg_d, dFthrust_dvwind, dFthrust_dtheta);
     
     double dMyD23_dlam=  DLAM_LUT(param.cmy_D23_lut);
-    dMyD23_dphi_rot_d= dMyD23_dlam * dlam_dphi_rot_d;
-    dMyD23_dvwind= dMyD23_dlam * dlam_dvw;
-    dMyD23_dtheta= DTH_LUT(param.cmy_D23_lut);
+    dMyD23_dphi_rot_d= param.Rrot*dMyD23_dlam * dlam_dphi_rot_d;
+    dMyD23_dvwind= param.Rrot*dMyD23_dlam * dlam_dvw;
+    dMyD23_dtheta= param.Rrot*DTH_LUT(param.cmy_D23_lut);
     
     aeroForceDerivs(1.0, cflp, DLAM_LUT(param.cf_lut), DTH_LUT(param.cf_lut), 
                     dcf_dvf_v, dcf_dve_v, 
