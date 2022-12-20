@@ -44,6 +44,10 @@ public:
     virtual ~FAST_Wind() {}
     
     virtual double getWind(double time) { return 0; }
+    virtual void getShear(double time, double &h_shear, double &v_shear) {
+        h_shear= 0.0;
+        v_shear= 0.0;
+    }
     
 protected:
     FAST_Parent_Parameters &p;
@@ -148,20 +152,26 @@ protected:
 
 class FAST_Wind_Type3 : public FAST_Wind {
 public:
-    FAST_Wind_Type3(FAST_Parent_Parameters &p, double dx=0.0, double avg_exp_=3.0) :
+    FAST_Wind_Type3(FAST_Parent_Parameters &p, double dx=0.0, bool with_shear= false, double avg_exp_=3.0) :
         FAST_Wind(p),
         wind(0),
         TimeStep(1.0),
         TurbFilename(""),
         avg_exp(avg_exp_),
-        dx(dx)
+        dx(dx),
+        with_shear(with_shear)
     {
         if(p["InflowFile.WindType"]!=3)
             throw FAST_WindException("Trying to instantiate FAST_Wind_Type3 but parameter WindType is " + std::to_string(p["WindType"]));
         
-        loadWindFile(p.getFilename("InflowFile.Filename_BTS"));
-        
         TurbFilename= p.getFilename("InflowFile.Filename_BTS");
+        if(with_shear) {
+            TurbFilename.erase(TurbFilename.length()-4);
+            TurbFilename+= "_shear.bts";
+            avg_exp= 1.0;
+        }
+            
+        loadWindFile(TurbFilename);
     }
     
     virtual ~FAST_Wind_Type3() {}
@@ -185,12 +195,19 @@ public:
         infile.read((char*)&NumGrid_Z, sizeof(int32_t));
         infile.read((char*)&NumGrid_Y, sizeof(int32_t));
         
+        if(with_shear && NumGrid_Z!=2 && NumGrid_Z!=2)
+            throw FAST_WindException("TurbSim wind file \"" + Filename + "\" must have a grid of 2x2 to read shear data");
+        
         int32_t n_tower;
         infile.read((char*)&n_tower, sizeof(int32_t));
         
         int32_t nt;
         infile.read((char*)&nt, sizeof(int32_t));
         wind.reserve(nt);
+        if(with_shear) {
+            h_shear.reserve(nt);
+            v_shear.reserve(nt);
+        }
         
         infile.read((char*)&dz, sizeof(float));
         infile.read((char*)&dy, sizeof(float));
@@ -243,6 +260,7 @@ public:
         double n_avg;
         double z_grid;
         double y_grid;
+        double v22[2][2];
         for(int it= 0; it<nt; ++it) {
             v_avg= 0.0;
             n_avg= 0;
@@ -259,6 +277,8 @@ public:
                                 v_avg+= pow(v_grid, avg_exp);
                                 n_avg+= 1.0;
                             }
+                            if(with_shear && i_grid_y<2 && i_grid_z<2)
+                                v22[i_grid_y][i_grid_z]= v_grid;
                             
 //                             if(it==0 && ((i_grid_z==0 && i_grid_y==0) || (i_grid_z==NumGrid_Z-1 && i_grid_y==0) || (i_grid_z==0 && i_grid_y==NumGrid_Y-1) || (i_grid_z==NumGrid_Z-1 && i_grid_y==NumGrid_Y-1))) {
 //                                 std::cout << "z_grid: " << z_grid << std::endl;
@@ -281,6 +301,10 @@ public:
 //                 std::cout << "n_avg: " << n_avg << std::endl;
 //             }
             wind.push_back(pow(v_avg/n_avg, 1.0/avg_exp));
+            if(with_shear) {
+                h_shear.push_back(0.5*((v22[1][0]-v22[0][0])/dy + (v22[1][1]-v22[0][1])/dy));
+                v_shear.push_back(0.5*((v22[0][1]-v22[0][0])/dz + (v22[1][1]-v22[1][0])/dz));
+            }
         }
     }
     
@@ -317,12 +341,47 @@ public:
         return (1.0-TimeFact)*wind[idx] + TimeFact*wind[idx+1];
     }
     
+    virtual void getShear(double time, double &h_shear_val, double &v_shear_val) {
+        if(!with_shear) {
+            h_shear_val= 0.0;
+            v_shear_val= 0.0;
+            return;
+        }
+        
+        if(!is_periodic) {
+            // if(time<0.1) std::cout << "((NumGrid_Y-1)*dy/2 + dx)/u_hub=" << ((NumGrid_Y-1)*dy/2 + dx)/u_hub << std::endl;
+            time= time + ((NumGrid_Y-1)*dy/2 + dx)/u_hub;
+        }
+        
+        double TimeScaled= time/TimeStep;
+        int idx= std::floor(TimeScaled);
+        
+        if(idx<0) {
+            h_shear_val= h_shear[0];
+            v_shear_val= v_shear[0];
+            return;
+        }
+        if(idx>=(wind.size()-1)) {
+            h_shear_val= h_shear.back();
+            v_shear_val= v_shear.back();
+            return;
+        }
+        
+        double TimeFact= TimeScaled - idx;
+        
+        h_shear_val= (1.0-TimeFact)*h_shear[idx] + TimeFact*h_shear[idx+1];
+        v_shear_val= (1.0-TimeFact)*v_shear[idx] + TimeFact*v_shear[idx+1];        
+    }
+    
 protected:
     std::vector<double> wind;
+    std::vector<double> h_shear;
+    std::vector<double> v_shear;
     double TimeStep;
     std::string TurbFilename;
     double avg_exp;
     double dx;
+    bool with_shear;
     
     int32_t NumGrid_Z;
     int32_t NumGrid_Y;
@@ -334,14 +393,14 @@ protected:
     bool is_periodic;
 };
 
-FAST_Wind* makeFAST_Wind(FAST_Parent_Parameters &p, double dx=0.0) {
+FAST_Wind* makeFAST_Wind(FAST_Parent_Parameters &p, double dx=0.0, bool with_shear= false) {
     switch((int)p["InflowFile.WindType"]) {
         case 1:
             return new FAST_Wind_Type1(p);
         case 2:
             return new FAST_Wind_Type2(p);
         case 3:
-            return new FAST_Wind_Type3(p, dx);
+            return new FAST_Wind_Type3(p, dx, with_shear);
         default:
             throw FAST_WindException("Wind type " + std::to_string(p["InflowFile.WindType"]) + " not yet supported");
     }
