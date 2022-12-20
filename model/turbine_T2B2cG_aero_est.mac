@@ -6,6 +6,7 @@ WITH_LINEAR: 1;
 WITH_ACCELERATIONS: 0;
 STATES: [tow_fa, tow_ss, bld_flp, bld_edg, phi_rot, Dphi_gen, vwind];
 INPUTS: [dvwind, Tgen, theta];
+OUTPUTS: [tow_fa_acc, tow_ss_acc, rot_speed];
 EXTERNAL: [cm(), ct(), cflp(), cedg(), theta_deg(), lam(), Trot(tow_fa_d, phi_rot_d, bld_flp_d, bld_edg_d, vwind, theta), Fthrust(tow_fa_d, phi_rot_d, bld_flp_d, bld_edg_d, vwind, theta), Ftow_y(tow_ss_d), modalFlapForce(tow_fa_d, phi_rot_d, bld_flp_d, bld_edg_d, vwind, theta), modalEdgeForce(tow_fa_d, phi_rot_d, bld_flp_d, bld_edg_d, vwind, theta)];
 EXT_PARAM: [rho, Rrot, lambdaMin, lambdaMax, lambdaStep, thetaMin, thetaMax, thetaStep, Arot, cm_lut[25, 91], ct_lut[25, 91], cf_lut[25, 91], ce_lut[25, 91], dcm_dvf_v_lut[25, 91], dcm_dve_v_lut[25, 91], dct_dvf_v_lut[25, 91], dct_dve_v_lut[25, 91], dcs_dvy_v_lut[25, 91], dcf_dvf_v_lut[25, 91], dcf_dve_v_lut[25, 91], dce_dvf_v_lut[25, 91], dce_dve_v_lut[25, 91]];
 F_EXT: [vwind_d-dvwind];

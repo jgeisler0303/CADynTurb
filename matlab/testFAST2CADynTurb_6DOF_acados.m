@@ -1,10 +1,20 @@
 %%
-testFAST2CADynTurb_6DOF
+clc
+set_path
+
+% base dir doesn't work when run assection, but is returne by set_path
+% base_dir= fileparts(mfilename('fullpath'));
+
+model_name= 'turbine_T2B2cG_aero';
+model_dir= fullfile(base_dir, '../sim/gen6');
+
+%%
+[param, tw_sid, bd_sid]= make_model(model_name, model_dir, {[1 2]}, [1 2]);
 
 %%
 old_dir= pwd;
 cleanupObj = onCleanup(@()cd(old_dir));
-cd(dn)
+cd(model_dir)
 
 %%
 addpath(fullfile(getenv('ACADOS_INSTALL_DIR'), 'examples', 'acados_matlab_octave', 'getting_started'))
@@ -13,7 +23,8 @@ model= turbine_T2B2cG_aero_acados();
 acados_sim_6DOF= make_acados_sim(model);
 
 %%
-d= loadFAST('simp_12_6DOF.outb');
+d= sim_standalone(fullfile(model_dir, [model_name '_sim']), '../../5MW_Baseline/5MW_Land_IMP_12.fst', 'simp_12_6DOF.outb', '-a 0.965');
+
 x_ref= [
     d.YawBrTDxp.Data'
     d.YawBrTDyp.Data'
@@ -36,7 +47,6 @@ u_ref= [
     ];
 
 %%
-load('params.mat');
 model_parameters
 ap= acados_params(parameter_names, param);
 acados_sim_6DOF.set('p', ap);

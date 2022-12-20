@@ -1,4 +1,4 @@
-function [q_est, dq_est, Sigma_est, Q, R]= est_T2B2cG_aero_est_bld_mom(q, dq, u, y_pred, y_meas, param, Sigma, AB, CD, Q, R, N, t, alpha_adapt)
+function [q_est, dq_est, Sigma_est, Q, R]= est_T2B2cG_aero_est_bld_mom_3p(q, dq, u, y_pred, y_meas, param, Sigma, AB, CD, Q, R, N, t, alpha_adapt)
 
 model_indices
 
@@ -10,15 +10,17 @@ estimated_states= [
     Dphi_gen_idx
     vwind_idx
     m_bld_mom_idx
-%     m_bld_edg_mom_idx
+    v3p_idx
+
     tow_fa_d_idx
     tow_ss_d_idx
     bld_flp_d_idx
     bld_edg_d_idx
     phi_rot_d_idx
     Dphi_gen_d_idx
+    v3p_d_idx
     ];
-n_estimated_dofs= 7;
+n_estimated_dofs= 8;
 
 out_idx= [out_tow_fa_acc_idx, out_tow_ss_acc_idx, out_gen_speed_idx, out_bld_flp_mom_idx, out_bld_edg_mom_idx];
 
@@ -26,18 +28,12 @@ x_scaling= ones(length(estimated_states), 1);
 
 if isempty(Q)
     Q= 1e-6*eye(length(estimated_states));
-elseif length(Q)==nx
-    Q= Q(estimated_states, estimated_states);
 end
 if isempty(R)
     R= eye(length(out_idx));
-elseif length(R)==ny
-    R= R(out_idx, out_idx);
 end
 if isempty(N)
     N= zeros(length(Q), length(R));
-elseif size(N, 1)==nx
-    N= N(estimated_states, out_idx);
 end
 
 if isempty(Sigma)
@@ -57,9 +53,9 @@ C= C*diag(x_scaling);
 if any(isnan(xx_est)) || any(isnan(A(:))) || any(isnan(C(:)))
     error('x is nan at t= %fs', t);
 end
-if rank(obsv(A, C))~=length(xx_est)
-    warning('system not observable at t= %fs', t);
-end
+% if rank(obsv(A, C))~=length(xx_est)
+%     warning('system not observable at t= %fs', t);
+% end
 
 % Dan Simon eq (7.14)
 Sigma__= A*Sigma*A' + Q;
@@ -80,14 +76,16 @@ x_ul= [  2;                  % tower FA deflection
                 3;                  % blade edge defelction
                 pi;                  % generator angle offset
                 40; % wind speed
-                1e6; % m_bld_flp_mom_idx
-%                 2e0; % m_bld_edg_mom_idx
+                1e6; % m_bld_mom_idx
+                1;   % v3p_idx
+
                 100;                  % tower FA deflection speed
                 100;                  % tower SS deflection speed
                 100;                  % blade flap defelction speed
                 100;                  % blade edge defelction speed
                 50/30*pi; % rotor speed
                 50/30*pi;                  % rotor generator speed difference
+                4*pi;
                 ];                
 x_ll= [  -2;                  % tower FA deflection
                 -1;                  % tower SS deflection
@@ -95,16 +93,17 @@ x_ll= [  -2;                  % tower FA deflection
                 -3;                  % blade edge defelction
                 -pi;                  % generator angle offset
                 2; % wind speed
-                -1e6; % m_bld_flp_mom_idx
-%                 -2e0; % m_edg_flp_mom_idx
+                -1e6; % m_bld_mom_idx
+                -1;
+
                 -100;                  % tower FA deflection speed
                 -100;                  % tower SS deflection speed
                 -100;                  % blade flap defelction speed
                 -100;                  % blade edge defelction speed
                 0; % rotor speed
                 -500/30*pi;                  % rotor generator speed difference
-                ];                 % filtered wind speed rate of change
-
+                -4*pi;
+                ];
 xx_est= min(max(xx_est, x_ll), x_ul);
 
 q_est= q;

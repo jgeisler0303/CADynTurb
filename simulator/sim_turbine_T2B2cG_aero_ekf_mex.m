@@ -1,4 +1,4 @@
-function [d_out, cpu_time]= sim_turbine_T2B2cG_aero_ekf_mex(d_in, param, Q, R, N)
+function [d_out, cpu_time, Q, R]= sim_turbine_T2B2cG_aero_ekf_mex(d_in, param, Q, R, N)
 if ~exist('N', 'var')
     N= [];
 end

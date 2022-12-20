@@ -1,8 +1,12 @@
-%% prepare paths
+%%
+clc
 set_path
 
+% base dir doesn't work when run as section, but is returned by set_path
+% base_dir= fileparts(mfilename('fullpath'));
+
 model_name= 'turbine_T2B2cG_aero_est';
-model_dir= '../sim/gen_est';
+model_dir= fullfile(base_dir, '../sim/gen_est');
 
 dn= fileparts(model_dir);
 if ~exist(dn, 'dir')
@@ -14,20 +18,16 @@ if ~exist(dn, 'dir')
 end
     
 %% make model
-clc
 param= prepareModel('../5MW_Baseline/5MW_Land_IMP_6.fst', ['../model/' model_name '.mac'], model_dir);
-
-%%
-old_dir= pwd;
-cleanupObj = onCleanup(@()cd(old_dir));
-cd(model_dir)
 
 %% compile mex simulator
 clc
+cd(model_dir)
 makeMex('turbine_T2B2cG_aero_est', '.')
 
 %% simulate mex model
-d_in= collectBlades(loadFAST('/home/jgeisler/Temp/CADynTurb/sim/generated/sim_no_inflow/impulse_URef-12_maininput.outb'));
+cd(model_dir)
+d_in= collectBlades(loadFAST(fullfile(base_dir, '../sim/FAST/sim_no_inflow/impulse_URef-12_maininput.outb')));
 
 d_out= sim_turbine_T2B2cG_aero_est(d_in, param);
 
@@ -35,86 +35,83 @@ d_out= sim_turbine_T2B2cG_aero_est(d_in, param);
 plot_timeseries_cmp(d_in, d_out, {'RtVAvgxh', 'PtchPMzc', 'HSShftV', 'GenTq', 'YawBrTDxp', 'YawBrTDyp', 'Q_BF1', 'Q_BE1'});
 
 %% compile ekf
-cd(fullfile(old_dir, '..', 'simulator'))
-mex('-g',  'CXXFLAGS="$CXXFLAGS -std=c++11 -Wall -fdiagnostics-show-option"', '-I/home/jgeisler/Temp/CADynTurb/simulator/../../CADyn/src', '-I../sim/gen_est', 'turbine_T2B2cG_aero_ekf_mex.cpp')
+cd(fullfile(base_dir, '..', 'simulator'))
+mex('-g',  'CXXFLAGS="$CXXFLAGS -std=c++11 -Wall -fdiagnostics-show-option"', '-I../../CADyn/src', ['-I' model_dir], 'turbine_T2B2cG_aero_ekf_mex.cpp')
 
 %% setup reference simulations
-% fo the next commnd you nedd the AMPoWS repo in your path
+% for the next command you need the AMPoWS repo in your path
 openFAST_preprocessor('../openFAST_config_dyn_inflow.xlsx');
 system('make -j -i 1p1')
-dd= dir('../generated/wind/NTM_URef-*_turbsim.bts');
-makeCoherentBTS(fullfile('../generated/wind', {dd.name}), 63)
+dd= dir('../FAST/wind/NTM_URef-*_turbsim.bts');
+makeCoherentBTS(fullfile('../FAST/wind', {dd.name}), 63)
 
 %%
-load('params.mat')
-
-%%
-sim_dir= '../generated/sim_no_inflow';
-wind_dir= '../generated/wind';
+sim_dir= '../sim/FAST/sim_no_inflow';
+sim_dir_no= '../sim/FAST/sim_no_inflow';
+% sim_dir= '../sim/FAST/sim_dyn_inflow';
+wind_dir= '../sim/FAST/wind';
 file_pattern= '1p1*_maininput.outb';
 
-dd= dir(fullfile(sim_dir, file_pattern));
+dd= dir(fullfile(base_dir, sim_dir, file_pattern));
 files= {dd.name};
 
 vv= zeros(length(files), 1);
+yaw= zeros(length(files), 1);
 for i= 1:length(files)
     v_str= regexp(files{i}, 'URef-(\d+)_', 'tokens', 'once');
     vv(i)= str2double(v_str{1});
+
+    yaw_cell= regexp(files{i}, 'NacYaw-(neg)?(\d+)_', 'tokens', 'once');
+    if isempty(yaw_cell)
+        yaw(i)= nan;
+    else
+        yaw(i)= str2double(yaw_cell{2});
+        if ~isempty(yaw_cell{1})
+            yaw(i)= -yaw(i);
+        end
+    end
 end
 
-%% calculate noise covariance
-for i= 1:length(files)
-    d_in= collectBlades(loadFAST(fullfile(sim_dir, files{i})));
+%% run Kalman filter
+cd(model_dir)
+load('params.mat')
+
+% for i= 1:length(files)
+v= 12;
+% for  i= find(vv==12 & yaw==0)
+for  i= find(vv==12)
+% for  i= find(~isnan(yaw))'
+    d_in= collectBlades(loadFAST(fullfile(base_dir, sim_dir, files{i})));
     % load rotor average wind speed
-    [velocity, ~, ~, ~, ~, ~, ny, ~, dy, dt,~, ~, u_hub]= readfile_BTS(fullfile(wind_dir, strrep(strrep(files{i}, '1p1', 'NTM'), 'maininput.outb', 'turbsim_coh.bts')));
+    bst_file= regexprep(files{i}, 'NacYaw-(neg)?(\d+)_', '');
+    bst_file= strrep(strrep(bst_file, '1p1', 'NTM'), 'maininput.outb', 'turbsim_coh.bts');
+    [velocity, ~, ~, ~, ~, ~, ny, ~, dy, dt,~, ~, u_hub]= readfile_BTS(fullfile(base_dir, wind_dir, bst_file));
     tv= (0:(size(velocity, 1)-1))*dt;
     time= d_in.Time + ((ny-1)*dy/2)/u_hub;
     d_in.RtVAvgxh.Data= interp1(tv, velocity(:, 1, 1, 1), time);
 
-    d_out= sim_turbine_T2B2cG_aero_est(d_in, param, 1);
-    
-    pred_err= d_out.x-d_out.x_pred;
-    pred_err= pred_err - mean(pred_err);
-    Q= (pred_err*pred_err')/size(pred_err, 2);
+    Tadapt= 30;
+    [d_est, ~, ~, ~, ~, ~, Q, R]= sim_turbine_T2B2cG_aero_est(d_in, param, 0, 1, [], [], [], Tadapt);
 
-    out_err= d_out.y-d_out.y_pred;
-    out_err= out_err - mean(out_err);
-    R= (out_err*out_err')/size(pred_err, 2);
-    
-    N= (pred_err*out_err')/size(pred_err, 2);
-    
-    out_name= fullfile(sim_dir, strrep(files{i}, 'maininput.outb', 'prediction_error.mat'));
-    save(out_name, 'd_in', 'd_out', 'Q', 'R', 'N');
-end
+    out_name= fullfile(base_dir, sim_dir, strrep(files{i}, 'maininput.outb', 'est_a_T2B2cG.mat'));
+    save(out_name, 'd_est', 'Q', 'R', 'Tadapt');
 
-%% run Kalman filter
-for i= 1:length(files)
-% v= 16;
-% for  i= find(vv==v)
-    d_in= collectBlades(loadFAST(fullfile(sim_dir, files{i})));
-    % load rotor average wind speed
-    [velocity, ~, ~, ~, ~, ~, ny, ~, dy, dt,~, ~, u_hub]= readfile_BTS(fullfile(wind_dir, strrep(strrep(files{i}, '1p1', 'NTM'), 'maininput.outb', 'turbsim_coh.bts')));
-    tv= (0:(size(velocity, 1)-1))*dt;
-    time= d_in.Time + ((ny-1)*dy/2 + dx_hub)/u_hub;
-    d_in.RtVAvgxh.Data= interp1(tv, velocity(:, 1, 1, 1), time);
-
-    QR_name= fullfile(sim_dir, strrep(files{i}, 'maininput.outb', 'prediction_error.mat'));
-    QR= load(QR_name);
-
-%     d_est= sim_turbine_T2B2cG_aero_est(d_in, param, 0, 1, QR.Q, QR.R, QR.N);
-    d_est= sim_turbine_T2B2cG_aero_est(d_in, param, 0, 1, QR.Q, QR.R, [], 30);
-
-    out_name= fullfile(sim_dir, strrep(files{i}, 'maininput.outb', 'est_adapt30.mat'));
-    save(out_name, 'd_est');
-%     plot_timeseries_cmp(d_in, d_est, {'Q_TFA1' 'Q_TSS1' 'Q_BF1' 'Q_BE1' 'LSSTipVxa', 'Q_DrTr', 'RtVAvgxh'})
+    plot_timeseries_cmp(d_in, d_est, {'RtVAvgxh', 'Q_TFA1' 'Q_TSS1' 'Q_BF1' 'Q_BE1' 'LSSTipVxa', 'Q_DrTr'}, {}, {}, {}, 200)
+%     set(gcf, 'PaperType', 'A4')
+%     set(gcf, 'PaperPosition', [0 0 get(gcf, 'PaperSize')])
+%     print(strrep(out_name, '.mat', '.pdf'), '-dpdf', '-r300')
 end
 
 %% plot results
+cd(model_dir)
+load('params.mat')
+
 e2= zeros(length(files), 14);
-for i= 1:length(files)
-% v= 12;
-% for  i= find(vv==v)
-    est_name= fullfile(sim_dir, strrep(files{i}, 'maininput.outb', 'est_adapt30.mat'));
+% for i= 1:length(files)
+v= 12;
+for  i= find(vv==v)
+    d_in= collectBlades(loadFAST(fullfile(base_dir, sim_dir, files{i})));
+    est_name= fullfile(base_dir, sim_dir, strrep(files{i}, 'maininput.outb', 'est_adapt30.mat'));
     load(est_name);
 
     e2(i, :)= calcEstError(d_in, d_est, param, 200);
@@ -123,31 +120,4 @@ end
 state_names= {'tow_fa_idx', 'tow_ss_idx', 'bld_flp_idx', 'bld_edg_idx', 'phi_rot_idx', 'Dphi_gen_idx', 'vwind_idx', 'dtow_fa_idx', 'dtow_ss_idx', 'dbld_flp_idx', 'dbld_edg_idx', 'dphi_rot_idx', 'dDphi_gen_idx', 'dvwind_idx'};
 idx= [1, 3, 6, 7];
 bar(vv, sqrt(e2(:, idx)))
-legend(state_names(idx))
-
-%% run mex Kalman filter
-for i= 1:length(files)
-% v= 6;
-% for  i= find(vv==v)
-    d_in= collectBlades(loadFAST(fullfile(sim_dir, files{i})));
-    % load rotor average wind speed
-    [velocity, ~, ~, ~, ~, ~, ny, ~, dy, dt,~, ~, u_hub]= readfile_BTS(fullfile(wind_dir, strrep(strrep(files{i}, '1p1', 'NTM'), 'maininput.outb', 'turbsim_coh.bts')));
-    tv= (0:(size(velocity, 1)-1))*dt;
-    time= d_in.Time + ((ny-1)*dy/2 + dx_hub)/u_hub;
-    d_in.RtVAvgxh.Data= interp1(tv, velocity(:, 1, 1, 1), time);
-
-    QR_name= fullfile(sim_dir, strrep(files{i}, 'maininput.outb', 'prediction_error.mat'));
-    QR= load(QR_name);
-
-    QR.Q(7, :)= QR.Q(7, :)*4;
-    QR.Q(:, 7)= QR.Q(:, 7)*4;
-    QR.N(7, :)= QR.N(7, :)*4;
-    
-    [d_est, cpu_time]= sim_turbine_T2B2cG_aero_ekf_mex(d_in, param, QR.Q, QR.R, QR.N);
-
-    out_name= fullfile(sim_dir, strrep(files{i}, 'maininput.outb', 'est_mex.mat'));
-    save(out_name, 'd_est');
-end
-
-%%
-cd(old_dir)
+legend(state_names(idx), 'Interpreter', 'none')

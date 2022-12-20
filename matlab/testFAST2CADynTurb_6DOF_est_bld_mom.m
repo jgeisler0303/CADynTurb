@@ -2,7 +2,7 @@
 set_path
 
 model_name= 'turbine_T2B2cG_aero_est_bld_mom';
-model_dir= '../sim/gen_est_bld_mom';
+model_dir= fullfile(base_dir, '../sim/gen_est_bld_mom');
 
 dn= fileparts(model_dir);
 if ~exist(dn, 'dir')
@@ -17,17 +17,14 @@ end
 clc
 param= prepareModel('../5MW_Baseline/5MW_Land_IMP_6.fst', ['../model/' model_name '.mac'], model_dir);
 
-%%
-old_dir= pwd;
-cleanupObj = onCleanup(@()cd(old_dir));
-cd(model_dir)
-
 %% compile mex simulator
 clc
+cd(model_dir)
 makeMex(model_name, '.')
 
 %% simulate mex model
-d_in= collectBlades(loadFAST('/home/jgeisler/Temp/CADynTurb/sim/generated/sim_no_inflow/impulse_URef-12_maininput.outb'));
+cd(model_dir)
+d_in= collectBlades(loadFAST(fullfile(base_dir, '../sim/FAST/sim_no_inflow/impulse_URef-6_maininput.outb')));
 
 d_out= sim_turbine_T2B2cG_aero_est_bld_mom(d_in, param);
 
@@ -35,21 +32,23 @@ d_out= sim_turbine_T2B2cG_aero_est_bld_mom(d_in, param);
 plot_timeseries_cmp(d_in, d_out, {'RtVAvgxh', 'PtchPMzc', 'HSShftV', 'GenTq', 'YawBrTDxp', 'YawBrTDyp', 'RootMxb', 'RootMyb'});
 
 %% setup reference simulations
-% fo the next commnd you nedd the AMPoWS repo in your path
+% for the next commnd you need the AMPoWS repo in your path
+cd(model_dir)
 openFAST_preprocessor('../openFAST_config_dyn_inflow.xlsx');
 system('make -j -i 1p1')
-dd= dir('../generated/wind/NTM_URef-*_turbsim.bts');
-makeCoherentBTS(fullfile('../generated/wind', {dd.name}), 63)
+dd= dir('../FAST/wind/NTM_URef-*_turbsim.bts');
+makeCoherentBTS(fullfile('../FAST/wind', {dd.name}), 63)
 
 %%
-load('params.mat')
-
-%%
-sim_dir= '../generated/sim_no_inflow';
-wind_dir= '../generated/wind';
+sim_dir= '../sim/FAST/sim_no_inflow';
+% sim_dir= '../sim/FAST/sim_no_inflow_no3p';
+% sim_dir= '../sim/FAST/sim_no_inflow_lin_shear';
+wind_dir= '../sim/FAST/wind';
 file_pattern= '1p1*_maininput.outb';
+% file_pattern= 'coh*_maininput.outb';
+% file_pattern= 'shear*_maininput.outb';
 
-dd= dir(fullfile(sim_dir, file_pattern));
+dd= dir(fullfile(base_dir, sim_dir, file_pattern));
 files= {dd.name};
 
 vv= zeros(length(files), 1);
@@ -59,21 +58,33 @@ for i= 1:length(files)
 end
 
 %% run Kalman filter
-for i= 1:length(files)
-% v= 16;
-% for  i= find(vv==v)
-    d_in= collectBlades(loadFAST(fullfile(sim_dir, files{i})));
+cd(model_dir)
+load('params')
+% for i= 1:length(files)
+param.Tm_avg= 0;
+v= 12;
+for  i= find(vv==v)
+    d_in= collectBlades(loadFAST(fullfile(base_dir, sim_dir, files{i})));
     % load rotor average wind speed
-    [velocity, ~, ~, ~, ~, ~, ny, ~, dy, dt,~, ~, u_hub]= readfile_BTS(fullfile(wind_dir, strrep(strrep(files{i}, '1p1', 'NTM'), 'maininput.outb', 'turbsim_coh.bts')));
+    bts_file= strrep(files{i}, '1p1', 'NTM');
+    bts_file= strrep(bts_file, 'coh', 'NTM');
+    bts_file= strrep(bts_file, 'shear', 'NTM');
+    bts_file= fullfile(base_dir, wind_dir, strrep(bts_file, 'maininput.outb', 'turbsim_coh.bts'));
+    [velocity, ~, ~, ~, ~, ~, ny, ~, dy, dt,~, ~, u_hub]= readfile_BTS(bts_file);
     tv= (0:(size(velocity, 1)-1))*dt;
     time= d_in.Time + ((ny-1)*dy/2)/u_hub;
     d_in.RtVAvgxh.Data= interp1(tv, velocity(:, 1, 1, 1), time);
 
-    d_est= sim_turbine_T2B2cG_aero_est_bld_mom(d_in, param, 0, 1, [], [], [], 30);
+    Tadapt= 30;
+    [d_est, ~, ~, ~, ~, ~, Q, R]= sim_turbine_T2B2cG_aero_est_bld_mom(d_in, param, 0, 1, [], [], [], Tadapt);
 
-    out_name= fullfile(sim_dir, strrep(files{i}, 'maininput.outb', 'est_bld_mom_adapt30.mat'));
-    save(out_name, 'd_est');
-    plot_timeseries_cmp(d_in, d_est, {'Q_TFA1' 'Q_TSS1' 'Q_BF1' 'Q_BE1' 'LSSTipVxa', 'Q_DrTr', 'RtVAvgxh'})
+    out_name= fullfile(base_dir, sim_dir, strrep(files{i}, 'maininput.outb', 'est_a_T2B2cG_bld_mom_3p.mat'));
+    save(out_name, 'd_est', 'Q', 'R', 'Tadapt');
+%     plot_timeseries_cmp(d_in, d_est, {'Q_TFA1' 'Q_TSS1' 'Q_BF1' 'Q_BE1' 'LSSTipVxa', 'Q_DrTr', 'RtVAvgxh'})
+    plot_timeseries_cmp(d_in, d_est, {'Q_TFA1' 'Q_TSS1' 'RootMxb' 'RootMyb' 'LSSTipVxa', 'Q_DrTr', 'RtVAvgxh'})
+%     set(gcf, 'PaperType', 'A4')
+%     set(gcf, 'PaperPosition', [0 0 get(gcf, 'PaperSize')])
+%     print(strrep(out_name, '.mat', '.pdf'), '-dpdf', '-r300')
 end
 
 %% plot results
@@ -91,6 +102,3 @@ state_names= {'tow_fa_idx', 'tow_ss_idx', 'bld_flp_idx', 'bld_edg_idx', 'phi_rot
 idx= [1, 3, 6, 7];
 bar(vv, sqrt(e2(:, idx)))
 legend(state_names(idx))
-
-%%
-cd(old_dir)

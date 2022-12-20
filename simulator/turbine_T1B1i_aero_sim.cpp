@@ -10,10 +10,10 @@
 #include "fast_parent_param.h"
 #include "fast_wind.h"
 
-#include "turbine_T1Bi1_aero_direct.hpp"
+#include "turbine_T1B1i_aero_direct.hpp"
 
-bool simulate(turbine_T1Bi1_aeroSystem &system, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name);
-bool DISCON_Step(double t, DISCON_Interface &DISCON, turbine_T1Bi1_aeroSystem &system);
+bool simulate(turbine_T1B1i_aeroSystem &system, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name);
+bool DISCON_Step(double t, DISCON_Interface &DISCON, turbine_T1B1i_aeroSystem &system);
 
 double RotPwr;
 double HSShftPwr;
@@ -22,7 +22,7 @@ double LSSTipPxa;
 double wind_adjust;
 
 int main(int argc, char* argv[]) {
-    turbine_T1Bi1_aeroSystem system;
+    turbine_T1B1i_aeroSystem system;
     FAST_Wind* wind;
     double simtime;
     double simstep;
@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
             }
             
             try {
-                wind= makeFAST_Wind(p);
+                wind= makeFAST_Wind(p, 0, true);
             } catch (const std::exception& e) {
                 fprintf(stderr, "Inflow error: %s\n", e.what());
                 exit (EXIT_FAILURE);
@@ -130,7 +130,7 @@ int main(int argc, char* argv[]) {
     exit (EXIT_SUCCESS);
 }
 
-void setupOutputs(FAST_Output &out, turbine_T1Bi1_aeroSystem &system) {
+void setupOutputs(FAST_Output &out, turbine_T1B1i_aeroSystem &system) {
     out.addChannel("PtchPMzc1", "deg", &system.theta_deg1);
     out.addChannel("PtchPMzc2", "deg", &system.theta_deg2);
     out.addChannel("PtchPMzc3", "deg", &system.theta_deg3);
@@ -144,10 +144,10 @@ void setupOutputs(FAST_Output &out, turbine_T1Bi1_aeroSystem &system) {
     out.addChannel("QD_TFA1", "m/s", &system.states.tow_fa_d);
     out.addChannel("Q_B1F1", "m", &system.states.bld1_flp);
     out.addChannel("Q_B2F1", "m", &system.states.bld2_flp);
-    out.addChannel("Q_B2F1", "m", &system.states.bld2_flp);
+    out.addChannel("Q_B3F1", "m", &system.states.bld3_flp);
     out.addChannel("QD_B1F1", "m/s", &system.states.bld1_flp_d);
     out.addChannel("QD_B2F1", "m/s", &system.states.bld2_flp_d);
-    out.addChannel("QD_B2F1", "m/s", &system.states.bld3_flp_d);
+    out.addChannel("QD_B3F1", "m/s", &system.states.bld3_flp_d);
     out.addChannel("RootFxc1", "kN", &system.Fthrust1, 1.0/3000.0);
     out.addChannel("RootFxc2", "kN", &system.Fthrust2, 1.0/3000.0);
     out.addChannel("RootFxc3", "kN", &system.Fthrust3, 1.0/3000.0);
@@ -173,7 +173,7 @@ void setupOutputs(FAST_Output &out, turbine_T1Bi1_aeroSystem &system) {
     out.addChannel("RootMyb3", "kNm", &system.y[7], 1.0/1000.0);
 }
 
-bool simulate(turbine_T1Bi1_aeroSystem &system, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name) {
+bool simulate(turbine_T1B1i_aeroSystem &system, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name) {
     FAST_Output out(tfinal/ts+1);
     out.setTime(0.0, ts);
     setupOutputs(out, system);
@@ -181,6 +181,7 @@ bool simulate(turbine_T1Bi1_aeroSystem &system, FAST_Wind* wind, double ts, doub
     system.t= 0.0;
 
     system.inputs.vwind= wind_adjust*wind->getWind(system.t);
+    wind->getShear(system.t, system.inputs.h_shear, system.inputs.v_shear);
     system.inputs.Tgen= 10000; // TODO
     system.inputs.theta1= 0;
     system.inputs.theta2= 0;
@@ -189,12 +190,12 @@ bool simulate(turbine_T1Bi1_aeroSystem &system, FAST_Wind* wind, double ts, doub
     system.states.phi_rot= 0.0;
     system.states.phi_rot_d= 1000.0/30.0*M_PI/system.param.GBRatio;
     
-    system.doflocked[system.states_idx.phi_rot]= true;
-    
-    if(!system.staticEquilibrium())
-        printf("Static equilibrium could not be found\n");
-    
-    system.doflocked[system.states_idx.phi_rot]= false;
+//     system.doflocked[system.states_idx.phi_rot]= true;
+//     
+//     if(!system.staticEquilibrium())
+//         printf("Static equilibrium could not be found\n");
+//     
+//     system.doflocked[system.states_idx.phi_rot]= false;
     
     
     DISCON_Interface DISCON(discon_path);
@@ -213,7 +214,7 @@ bool simulate(turbine_T1Bi1_aeroSystem &system, FAST_Wind* wind, double ts, doub
     DISCON.gen_torque_sp= 40000;
     DISCON.gen_torque_meas= system.inputs.Tgen;
     DISCON.rot_speed_meas= system.states.phi_rot_d;
-    DISCON.gen_speed_meas= system.states.phi_rot_d;
+    DISCON.gen_speed_meas= system.states.phi_rot_d*system.param.GBRatio;
     DISCON.power_out_meas= DISCON.gen_speed_meas * DISCON.gen_torque_meas;
     
     DISCON.sp_pitch_partial= 0;
@@ -242,9 +243,10 @@ bool simulate(turbine_T1Bi1_aeroSystem &system, FAST_Wind* wind, double ts, doub
     system.newmarkOneStep(0.0);
     
     RotPwr= (system.Trot1+system.Trot2+system.Trot3)*system.states.phi_rot_d;
-    HSShftPwr= system.inputs.Tgen*system.states.phi_rot_d;
-    Q_GeAz= std::fmod(system.states.phi_rot/system.param.GBRatio+M_PI*3.0/2.0, 2*M_PI);
-    LSSTipPxa= std::fmod(system.states.phi_rot, 2*M_PI);        
+    HSShftPwr= system.inputs.Tgen*system.states.phi_rot_d*system.param.GBRatio;
+    Q_GeAz= std::fmod(system.states.phi_rot+M_PI*3.0/2.0, 2*M_PI);
+    LSSTipPxa= std::fmod(system.states.phi_rot, 2*M_PI);   
+    system.calcOut();    
     out.collectData();
     
     int ipas= 0;
@@ -259,15 +261,17 @@ bool simulate(turbine_T1Bi1_aeroSystem &system, FAST_Wind* wind, double ts, doub
         
         ipas++;
         system.inputs.vwind= wind_adjust*wind->getWind(system.t);
+        wind->getShear(system.t, system.inputs.h_shear, system.inputs.v_shear);
         if(!system.newmarkInterval(ts*ipas, h, ts)) {
             res= false;
             break;
         }
         
         RotPwr= (system.Trot1+system.Trot2+system.Trot3)*system.states.phi_rot_d;
-        HSShftPwr= system.inputs.Tgen*system.states.phi_rot_d;
-        Q_GeAz= std::fmod(system.states.phi_rot/system.param.GBRatio+M_PI*3.0/2.0, 2*M_PI);
+        HSShftPwr= system.inputs.Tgen*system.states.phi_rot_d*system.param.GBRatio;
+        Q_GeAz= std::fmod(system.states.phi_rot+M_PI*3.0/2.0, 2*M_PI);
         LSSTipPxa= std::fmod(system.states.phi_rot, 2*M_PI);        
+        system.calcOut();
         out.collectData();
     }
     printf("Simulation done\n");
@@ -279,7 +283,7 @@ bool simulate(turbine_T1Bi1_aeroSystem &system, FAST_Wind* wind, double ts, doub
     return res;
 }
 
-bool DISCON_Step(double t, DISCON_Interface &DISCON, turbine_T1Bi1_aeroSystem &system) {
+bool DISCON_Step(double t, DISCON_Interface &DISCON, turbine_T1B1i_aeroSystem &system) {
     DISCON.current_time= t;
     
     DISCON.wind_speed_hub= system.inputs.vwind;
@@ -287,7 +291,7 @@ bool DISCON_Step(double t, DISCON_Interface &DISCON, turbine_T1Bi1_aeroSystem &s
     DISCON.abs_yaw= 0;
     DISCON.gen_torque_meas= system.inputs.Tgen;
     DISCON.rot_speed_meas= system.states.phi_rot_d;
-    DISCON.gen_speed_meas= system.states.phi_rot_d;
+    DISCON.gen_speed_meas= system.states.phi_rot_d*system.param.GBRatio;
     DISCON.power_out_meas= DISCON.gen_speed_meas * DISCON.gen_torque_meas;
     
     DISCON.blade1_pitch= -system.inputs.theta1;
@@ -315,10 +319,12 @@ bool DISCON_Step(double t, DISCON_Interface &DISCON, turbine_T1Bi1_aeroSystem &s
     if(DISCON.run())
         printf("%s\n", DISCON.getMessage().c_str());
     
-//     system.inputs.theta= -(1.0/3.0)*(DISCON.blade1_dem + DISCON.blade2_dem + DISCON.blade3_dem);
-    system.inputs.theta1= -DISCON.pitch_coll_dem;
-    system.inputs.theta2= -DISCON.pitch_coll_dem;
-    system.inputs.theta3= -DISCON.pitch_coll_dem;
+    system.inputs.theta1= -DISCON.blade1_dem;
+    system.inputs.theta2= -DISCON.blade2_dem;
+    system.inputs.theta3= -DISCON.blade3_dem;
+//     system.inputs.theta1= -DISCON.pitch_coll_dem;
+//     system.inputs.theta2= -DISCON.pitch_coll_dem;
+//     system.inputs.theta3= -DISCON.pitch_coll_dem;
     system.inputs.Tgen= DISCON.gen_torque_dem;
     
     if(((int)DISCON.safety_code_dem) != 0)

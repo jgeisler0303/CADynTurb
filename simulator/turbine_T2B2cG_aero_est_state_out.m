@@ -1,17 +1,6 @@
 function varargout= turbine_T2B2cG_aero_est_state_out(varargin)
 
-% TODO generate this automatically
-tow_fa_idx= 1;
-tow_ss_idx= 2;
-bld_flp_idx= 3;
-bld_edg_idx= 4;
-phi_rot_idx= 5;
-Dphi_gen_idx= 6;
-vwind_idx= 7;
-
-dvwind_idx= 1;
-Tgen_idx= 2;
-theta_idx= 3;
+model_indices
 
 if length(varargin)==2
     d_in= varargin{1};
@@ -59,7 +48,7 @@ else
     d_out= addts(d_out, 'Q_BE1', 'm', x(bld_edg_idx, :));
     d_out= addts(d_out, 'QD_BF1', 'm/s', dx(bld_flp_idx, :));
     d_out= addts(d_out, 'QD_BE1', 'm/s', dx(bld_edg_idx, :));
-    d_out= addts(d_out, 'PtchPMzc', 'deg', -u(theta_idx, :)/pi*180);
+    d_out= addts(d_out, 'PtchPMzc', 'deg', -u(in_theta_idx, :)/pi*180);
     d_out= addts(d_out, 'LSSTipPxa', 'deg', mod(x(phi_rot_idx, :), 2*pi)*180.0/pi);
     d_out= addts(d_out, 'Q_GeAz', 'rad', mod(x(phi_rot_idx, :) + x(Dphi_gen_idx, :)/param.GBRatio+3/2*pi, 2*pi));
     d_out= addts(d_out, 'Q_DrTr', 'rad', -x(Dphi_gen_idx, :)/param.GBRatio + x(tow_ss_idx, :)*param.TwTrans2Roll);
@@ -83,7 +72,7 @@ else
     % d_out= addts(d_out, 'LSShftFxa', 'kN', &system.Fthrust, 1.0/1000.0);
     % d_out= addts(d_out, 'LSShftMxa', 'kNm', &system.Trot, 1.0/1000.0);
     % d_out= addts(d_out, 'RotPwr', 'kW', system.Trot*system.states.phi_rot_d/1000.0);
-    d_out= addts(d_out, 'HSShftTq', 'kNm', u(Tgen_idx, :)/1000.0);
+    d_out= addts(d_out, 'HSShftTq', 'kNm', u(in_Tgen_idx, :)/1000.0);
     % d_out= addts(d_out, 'HSShftPwr', 'kW', system.inputs.Tgen*system.states.phi_gen_d/1000.0);
     d_out= addts(d_out, 'RtVAvgxh', 'm/s', x(vwind_idx, :));
     % d_out= addts(d_out, 'RtTSR', '-', &system.lam);
@@ -91,8 +80,8 @@ else
     % d_out= addts(d_out, 'RtAeroCt', '-', &system.ct);
     % d_out= addts(d_out, 'RotCf', '-', &system.cflp);
     % d_out= addts(d_out, 'RotCe', '-', &system.cedg);
-    d_out= addts(d_out, 'BlPitchC', 'deg', -u(theta_idx, :)*180.0/pi);
-    d_out= addts(d_out, 'GenTq', 'kNm', u(Tgen_idx, :)/1000.0);
+    d_out= addts(d_out, 'BlPitchC', 'deg', -u(in_theta_idx, :)*180.0/pi);
+    d_out= addts(d_out, 'GenTq', 'kNm', u(in_Tgen_idx, :)/1000.0);
     % d_out= addts(d_out, 'RootMxb', '-', &system.modalFlapForce);
     % d_out= addts(d_out, 'RootMyb', '-', &system.modalEdgeForce);
     d_out= addts(d_out, 'y', '-', y);

@@ -1,39 +1,28 @@
-function [x_est, dx_est, Sigma_est, Q, R]= est6DOF(x, dx, y_pred, y_meas, Sigma, AB, CD, Q, R, N, t, alpha_adapt)
+function [x_est, dx_est, Sigma_est, Q, R]= est_T1B1i_aero_est(x, dx, u, y_pred, y_meas, param, Sigma, AB, CD, Q, R, N, t, alpha_adapt, adjust_adapt)
 
 model_indices
+nq= nx/2;
 
 estimated_states= [
     tow_fa_idx
-    tow_ss_idx
-    bld_flp_idx
-    bld_edg_idx
-    Dphi_gen_idx
+    bld1_flp_idx
+    bld2_flp_idx
+    bld3_flp_idx
+    phi_rot_idx
     vwind_idx
+    h_shear_idx
+    v_shear_idx
+    
     tow_fa_d_idx
-    tow_ss_d_idx
-    bld_flp_d_idx
-    bld_edg_d_idx
+    bld1_flp_d_idx
+    bld2_flp_d_idx
+    bld3_flp_d_idx
     phi_rot_d_idx
-    Dphi_gen_d_idx
     ];
 
-out_idx= [out_tow_fa_acc_idx, out_tow_ss_acc_idx, out_rot_speed_idx];
+out_idx= 1:ny;
 
-% x_scaling= [
-%     0.4
-%     0.1
-%     5
-%     0.05
-%     0.002
-%     12
-%     0.1
-%     0.05
-%     1
-%     0.1
-%     1
-%     0.1    
-%     ];
-x_scaling= ones(12, 1);
+x_scaling= ones(length(estimated_states), 1);
 
 if isempty(Q)
     Q= 1e-6*eye(length(estimated_states));
@@ -52,7 +41,7 @@ elseif size(N, 1)==14
 end
 
 if isempty(Sigma)
-    Sigma= eye(12);
+    Sigma= eye(length(estimated_states));
 end
 
 
@@ -86,42 +75,55 @@ xx_est= xx_est.*x_scaling;
 
 % 
 x_ul= [  2;                  % tower FA deflection
-                1;                  % tower SS deflection
                 10;                  % blade flap defelction
-                3;                  % blade edge defelction
-                pi;                  % generator angle offset
+                10;                  % blade flap defelction
+                10;                  % blade flap defelction
+                inf;                  % rotor angle
                 40; % wind speed
+                5;  %h_shear
+                10; % v_shear
                 inf;                  % tower FA deflection speed
-                inf;                  % tower SS deflection speed
                 inf;                  % blade flap defelction speed
-                inf;                  % blade edge defelction speed
+                inf;                  % blade flap defelction speed
+                inf;                  % blade flap defelction speed
                 50/30*pi; % rotor speed
-                50/30*pi;                  % rotor generator speed difference
                 ];                
 x_ll= [  -2;                  % tower FA deflection
-                -1;                  % tower SS deflection
-                -10;                  % blade flap defelction
-                -3;                  % blade edge defelction
-                -pi;                  % generator angle offset
+                -5;                  % blade flap defelction
+                -5;                  % blade flap defelction
+                -5;                  % blade flap defelction
+                -inf;                % rotor angle
                 2; % wind speed
+                -5;  %h_shear
+                -5; % v_shear
                 -inf;                  % tower FA deflection speed
-                -inf;                  % tower SS deflection speed
                 -inf;                  % blade flap defelction speed
-                -inf;                  % blade edge defelction speed
-                0; % rotor speed
-                -500/30*pi;                  % rotor generator speed difference
-                ];                 % filtered wind speed rate of change
+                -inf;                  % blade flap defelction speed
+                -inf;                  % blade flap defelction speed
+                0.01; % rotor speed
+                ];                 
 
 xx_est= min(max(xx_est, x_ll), x_ul);
 
 x_est= x;
-x_est(estimated_states(1:6))= xx_est(1:6);
+x_est(estimated_states(1:8))= xx_est(1:8);
 dx_est= dx;
-dx_est(estimated_states(7:end)-7)= xx_est(7:end);
-
+dx_est(estimated_states(9:end)-nq)= xx_est(9:end);
 
 if exist('alpha_adapt', 'var') && ~isempty(alpha_adapt)
-    ep= d-C*K*d; % y_+C*dx should be real h(x_est)
+    ep= d-C*K*d; % should be real residual: y_meas-h(x_corr)
+    if exist('adjust_adapt', 'var') && ~isempty(adjust_adapt)
+        ep= ep.*adjust_adapt(:);
+    end
+
+    % but d= y_meas-y_pred
+    % x_corr=x_pred+K*d
+    % C*K*d=C*x_corr-C*x_pred=y_corr-y_pred
+    % d-C*K*d=y_meas-y_pred-(y_corr-y_pred)=y_meas-y_corr
+
+%     y_corr= turbine_T2B2cG_aero_est_bld_mom_mex(x_est, dx_est, u, param);
+%     ep= y_meas(out_idx) - y_corr(out_idx);
+
     R= alpha_adapt*R + (1-alpha_adapt)*(ep*ep' + C*Sigma__*C');
 
     Q= alpha_adapt*Q + (1-alpha_adapt)*(K*(d*d')*K');

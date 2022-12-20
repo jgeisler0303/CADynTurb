@@ -1,4 +1,4 @@
-function [d_out, cpu_time, int_err, n_steps, n_backsteps, n_sub_steps, Q, R]= sim_turbine_T2B2cG_aero_est(d_in, param, step_predict, do_est, Q, R, N, T_adapt)
+function [d_out, cpu_time, int_err, n_steps, n_backsteps, n_sub_steps]= sim_turbine_T2B2cG_aero_est_bld_mom_3p(d_in, param, step_predict, do_est, Q, R, N, T_adapt)
 if ~exist('step_predict', 'var') || isempty(step_predict)
     step_predict= 0;
 end
@@ -20,14 +20,14 @@ wind_adjust= 1;
 opts= struct('StepTol', 1e6, 'AbsTol', 1e6, 'RelTol', 1e6, 'hminmin', 1E-8, 'jac_recalc_step', 10, 'max_steps', 1);
 
 if do_est
-%     tow_fa, tow_ss, bld_flp, bld_edg, phi_rot, Dphi_gen, vwind
-    q0= [0 0 0 0 0 0 8];
-    dq0= [0 0 0 0 1000/30*pi/param.GBRatio 0 0];
-    ddq0= [0 0 0 0 0 0 0];
+%   [tow_fa, tow_ss, bld_flp, bld_edg, phi_rot, Dphi_gen, vwind, m_bld_flp_mom, m_bld_edg_mom
+    q0= [0 0 0 0 0 0 8 -600e3 0];
+    dq0= [0 0 0 0 1000/30*pi/param.GBRatio 0 0 0 0];
+    ddq0= [0 0 0 0 0 0 0 0 0];
 else
-    q0= [d_in.Q_TFA1.Data(1) d_in.Q_TSS1.Data(1) d_in.Q_BF1.Data(1) d_in.Q_BE1.Data(1) 0 -d_in.Q_DrTr.Data(1)*param.GBRatio d_in.RtVAvgxh.Data(1)];
-    dq0= [0 0 0 0 d_in.LSSTipVxa.Data(1)/30*pi 0 0];
-    ddq0= [0 0 0 0 0 0 0];
+    q0= [d_in.Q_TFA1.Data(1) d_in.Q_TSS1.Data(1) d_in.Q_BF1.Data(1) d_in.Q_BE1.Data(1) 0 -d_in.Q_DrTr.Data(1)*param.GBRatio d_in.RtVAvgxh.Data(1) -600e3 0.1];
+    dq0= [0 0 0 0 d_in.LSSTipVxa.Data(1)/30*pi 0 0 0 0];
+    ddq0= [0 0 0 0 0 0 0 0 0];
 end
 
 t= d_in.Time;
@@ -42,7 +42,7 @@ q(:, 1)= q0;
 dq(:, 1)= dq0;
 ddq(:, 1)= ddq0;
 
-u= zeros(3, nt);
+u= zeros(nu, nt);
 if step_predict || do_est
     u(in_dvwind_idx, :)= 0;
 else
@@ -57,7 +57,7 @@ end
 u(in_Tgen_idx, :)= d_in.GenTq.Data*1000;
 u(in_theta_idx, :)= -d_in.BlPitchC.Data/180*pi;
 
-[q_ref, y_meas]= turbine_T2B2cG_aero_est_state_out(d_in, param);
+[x_ref, y_meas]= turbine_T2B2cG_aero_est_bld_mom_state_out(d_in, param);
 
 cpu_time= zeros(1, nt);
 int_err= zeros(1, nt);
@@ -71,31 +71,31 @@ Sigma_est= [];
 tic
 for i= 2:nt
     if step_predict
-        q_in= q_ref(1:7, i-1);
-        dq_in= q_ref(8:end, i-1);
+        x_in= x_ref(1:nq, i-1);
+        dx_in= x_ref((nq+1):end, i-1);
     else
-        q_in= q(:, i-1);
-        dq_in= dq(:, i-1);
+        x_in= q(:, i-1);
+        dx_in= dq(:, i-1);
     end
     [q(:, i), dq(:, i), ddq(:, i), y_pred(:, i), AB, CD, res, cpu_time(i), int_err(i), n_steps(i), n_backsteps(i), n_sub_steps(i)]= ...
-        turbine_T2B2cG_aero_est_mex(q_in, dq_in, u(:, i-1), param, t(i)-t(i-1), opts);
+        turbine_T2B2cG_aero_est_bld_mom_3p_mex(x_in, dx_in, u(:, i-1), param, t(i)-t(i-1), opts);
 
     if ~res
         error('Integrator error');
     end
 
     if do_est
-        [q(:, i), dq(:, i), Sigma_est, Q, R]= est6DOF(q(:, i), dq(:, i), y_pred(:, i), y_meas(:, i), Sigma_est, AB, CD, Q, R, N, t(i), alpha_adapt);
+        [q(:, i), dq(:, i), Sigma_est, Q, R]= est_T2B2cG_aero_est_bld_mom_3p(q(:, i), dq(:, i), u(:, i-1), y_pred(:, i), y_meas(:, i), param, Sigma_est, AB, CD, Q, R, N, t(i), alpha_adapt);
     end
 end
 toc
 y_pred(:, 1)= y_pred(:, 2);
 
 if step_predict
-    d_out.x= q_ref;
+    d_out.x= x_ref;
     d_out.x_pred= [q; dq];
     d_out.y= y_meas;
     d_out.y_pred= y_pred;    
 else
-    d_out= turbine_T2B2cG_aero_est_state_out(t, q, dq, ddq, u, y_pred, param);
+    d_out= turbine_T2B2cG_aero_est_bld_mom_state_out(t, q, dq, ddq, u, y_pred, param);
 end
