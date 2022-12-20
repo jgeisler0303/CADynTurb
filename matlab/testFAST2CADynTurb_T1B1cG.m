@@ -6,7 +6,7 @@ set_path
 % base_dir= fileparts(mfilename('fullpath'));
 
 model_name= 'turbine_T1B1cG_aero';
-model_dir= fullfile(base_dir, '../sim/gen4');
+model_dir= fullfile(base_dir, '../sim/T1B1cG');
 
 %%
 [param, tw_sid, bd_sid]= make_model(model_name, model_dir, {[1 -2 ]}, 1);

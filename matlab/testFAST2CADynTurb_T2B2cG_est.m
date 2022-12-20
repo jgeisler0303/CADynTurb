@@ -6,7 +6,7 @@ set_path
 % base_dir= fileparts(mfilename('fullpath'));
 
 model_name= 'turbine_T2B2cG_aero_est';
-model_dir= fullfile(base_dir, '../sim/gen_est');
+model_dir= fullfile(base_dir, '../sim/T2B2cG_est');
 
 dn= fileparts(model_dir);
 if ~exist(dn, 'dir')
