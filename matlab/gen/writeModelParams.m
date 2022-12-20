@@ -22,6 +22,8 @@ param= addFieldAlias(param, 'dcf_dkappa_v_lut', 'dcb1_dkappa_v');
 param= addFieldAlias(param, 'dce_dkappa_v_lut', 'dcb2_dkappa_v');
 param= addFieldAlias(param, 'dcmy_D23_dkappa_v_lut', 'dcmy_D23_dkappa_v');
 
+param.Tm_avg= 30;
+
 param.lambdaMin= param.lambda(1);
 param.lambdaMax= param.lambda(end);
 param.lambdaStep= mean(diff(param.lambda));
