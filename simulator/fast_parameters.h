@@ -33,13 +33,25 @@ public:
 
 class FAST_Parameters {
 public:
+    FAST_Parameters() :
+        values(),
+        path(),
+        comment()
+    {}
+
+    
     FAST_Parameters(const std::string& file_name, bool with_exception= true) :
         values(),
-        path(file_name),
+        path(),
         comment()
     {
-        // std::setlocale(LC_NUMERIC, "en_US.UTF-8");
+        readFile(file_name, with_exception);
+    }
         
+    void readFile(const std::string& file_name, bool with_exception= true) {
+        path= file_name;
+        
+        // std::setlocale(LC_NUMERIC, "en_US.UTF-8");
         std::ifstream infile(file_name);
         if(!infile.is_open()) {
             if(with_exception)

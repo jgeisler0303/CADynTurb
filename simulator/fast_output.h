@@ -96,7 +96,10 @@ public:
     
     void collectData() {
         if(!data) allocData();
-        if(t_idx>=nt) throw FAST_OutputException("Trying to collect data beyond maximum capacity");
+        if(t_idx>=nt) {
+            printf("max capacity is %d\n", nt);
+            throw FAST_OutputException("Trying to collect data beyond maximum capacity");
+        }
         
         for(auto const &item : channels) {
             data[idx]= std::get<2>(item)[0];

@@ -1,0 +1,92 @@
+title: "Simulation of a simplified horizontal axis wind turbine";
+
+SIMPLIFY: 1;
+SMALL_ELAST: 1;
+WITH_LINEAR: 1;
+WITH_ACCELERATIONS: 0;
+STATES: [tow_fa, phi_rot, vwind];
+INPUTS: [dvwind, Tgen, theta];
+OUTPUTS: [tow_fa_acc, gen_speed];
+EXTERNAL: [cm(), ct(), theta_deg(), lam(), Trot(tow_fa_d, phi_rot_d, vwind, theta), Fthrust(tow_fa_d, phi_rot_d, vwind, theta)];
+EXT_PARAM: [rho, Rrot, lambdaMin, lambdaMax, lambdaStep, thetaMin, thetaMax, thetaStep, Arot, cm_lut[25, 91], ct_lut[25, 91]];
+F_EXT: [vwind_d-dvwind];
+
+/* Gravity vector */
+gravity: [0, 0, -g];
+
+Trotx_lin(a):= subst([x= a], ratsimp(taytorat(taylor(Trotx(x), x, 0, 1))));
+Troty_lin(a):= subst([x= a], ratsimp(taytorat(taylor(Troty(x), x, 0, 1))));
+Trotz_lin(a):= subst([x= a], ratsimp(taytorat(taylor(Trotz(x), x, 0, 1))));
+
+
+/* 1 Tower */
+load(filename_merge(load_pathname, "tw_sid.mac"));
+elastic_dof[1]: [tow_fa];
+ebody[1]: tower;
+T0G[1]: Tdisp(0, 0, 0);
+
+/* 2 Nacelle */
+mass[2]: NacMass;
+Ixx[2]: NacXIner;
+Iyy[2]: NacYIner;
+Izz[2]: NacZIner;
+BodyRef[2]: 1;
+/* TrefG[2]: Tdisp(tow_fa, tow_ss, 0).Tdisp(NacCMxn, NacCMyn, NacCMzn); */
+TrefG[2]: Telast(1, 1).Tdisp(NacCMxn, NacCMyn, NacCMzn);
+/* TrefG[2]: Tdisp(tow_fa, tow_ss, 0).Tdisp(NacCMxn, NacCMyn, NacCMzn).Troty_lin(tow_fa*TwTrans2Roll).Trotx_lin(-tow_ss*TwTrans2Roll); */
+
+/* 3 Hub */
+mass[3]: HubMass;
+Ixx[3]: HubIner;
+Iyy[3]: HubIner;
+Izz[3]: HubIner;
+BodyRef[3]: 2;
+TrefG[3]:  Tdisp(HubCM+OverHang-NacCMxn, -NacCMyn, Twr2Shft-NacCMzn).Trotx(phi_rot);
+
+/* 4,5,6 Blades */
+load(filename_merge(load_pathname, "bd_sid.mac"));
+
+/* Blade 1 */
+mass[4]: blade_mass;
+Ixx[4]: blade_I0_1_1;
+Iyy[4]: blade_I0_2_2;
+Izz[4]: blade_I0_3_3;
+BodyRef[4]: 3;
+TrefG[4]:  Tdisp(-HubCM, 0, 0).Trotz(theta).Tdisp(0, 0, blade_md0_3_1/blade_mass);
+
+/* Blade 2 */
+mass[5]: blade_mass;
+Ixx[5]: blade_I0_1_1;
+Iyy[5]: blade_I0_2_2;
+Izz[5]: blade_I0_3_3;
+BodyRef[5]: 3;
+TrefG[5]:  Tdisp(-HubCM, 0, 0).Trotx(%pi/3*2).Trotz(theta).Tdisp(0, 0, blade_md0_3_1/blade_mass);
+
+/* Blade 3 */
+mass[6]: blade_mass;
+Ixx[6]: blade_I0_1_1;
+Iyy[6]: blade_I0_2_2;
+Izz[6]: blade_I0_3_3;
+BodyRef[6]: 3;
+TrefG[6]:  Tdisp(-HubCM, 0, 0).Trotx(%pi/3*4).Trotz(theta).Tdisp(0, 0, blade_md0_3_1/blade_mass);
+
+/* 7 Geno */
+BodyRef[7]: 2;
+mass[7]: 0;
+Ixx[7]: GenIner;
+Iyy[7]: 0;
+Izz[7]: 0;
+TrefG[7]:  Trotx(phi_rot*GBRatio);
+
+
+appliedForces():= (
+    appliedF[3]: matrix([Fthrust], [0], [0]),
+    appliedM[3]: matrix([Trot], [0], [0]),
+    appliedM[7]: matrix([-Tgen], [0], [0]),
+    
+    done
+);
+
+modelOutputs(sys):= (
+    [tow_fa_dd, phi_rot_d*GBRatio]
+);

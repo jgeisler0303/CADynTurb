@@ -7,6 +7,26 @@ d= processData(d, '(c)1$');
 d= processData(d, '(Pitch)1$');
 d= processData(d, '(BlPitchC)1$');
 
+if ~ismember('RootMxb', d.gettimeseriesnames) && ismember('RootMxc', d.gettimeseriesnames) && ismember('RootMyc', d.gettimeseriesnames) && ismember('BlPitchC', d.gettimeseriesnames)
+    ts= timeseries('RootMxb');
+    ts.Time= d.get('RootMxc').Time;
+    ts.Data= d.RootMxc.Data.*cosd(d.BlPitchC.Data) - d.RootMyc.Data.*sind(d.BlPitchC.Data);
+    ts.DataInfo.Units= d.get('RootMxc').DataInfo.Units;
+    ts.TimeInfo.Units= 's';
+    
+    d= d.addts(ts);
+end
+if ~ismember('RootMyb', d.gettimeseriesnames) && ismember('RootMxc', d.gettimeseriesnames) && ismember('RootMyc', d.gettimeseriesnames) && ismember('BlPitchC', d.gettimeseriesnames)
+    ts= timeseries('RootMyb');
+    ts.Time= d.get('RootMxc').Time;
+    ts.Data= d.RootMxc.Data.*sind(d.BlPitchC.Data) + d.RootMyc.Data.*cosd(d.BlPitchC.Data);
+    ts.DataInfo.Units= d.get('RootMxc').DataInfo.Units;
+    ts.TimeInfo.Units= 's';
+    
+    d= d.addts(ts);
+end
+    
+
 function d= processData(d, pattern)
 all_names= d.gettimeseriesnames;
 idx= cellfun(@(s)~isempty(s), regexp(all_names, pattern, 'once', 'match'), 'UniformOutput', true);

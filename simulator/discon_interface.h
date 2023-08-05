@@ -30,6 +30,7 @@ public:
     {}
     
     virtual const char* what() const throw () {
+        printf("fail code %d\n", fail_code);
         return m_msg.c_str();
     }
     
@@ -141,7 +142,7 @@ public:
         if(DISCON==nullptr)
             throw DISCON_Exception("Trying to call DISCON but function pointer is null");
             
-        int32_t aviFail;
+        int32_t aviFail= 0;
         
         DISCON(avrSwap->array, &aviFail, accInfile, accOutfile, avcMsg);
         if(aviFail<0)
@@ -175,6 +176,8 @@ public:
     DISCON_Interface(std::string dll_name = "./DISCON.dll", std::string in_name = "", std::string out_name = "")
       : DISCON_DLL()
     {
+        for(int i= 0; i<256; ++i) array[i]= 0.0;
+        
         open(dll_name);
         setInfile(in_name);
         setOutfile(out_name);

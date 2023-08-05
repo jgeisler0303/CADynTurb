@@ -1,4 +1,4 @@
-function [param, tw_sid, bd_sid]= prepareModel(fst_file, mac_file, target_path, tower_modes, blade_modes)
+function [param, tw_sid, bd_sid]= prepareModel(fst_file, mac_file, target_path, tower_modes, blade_modes, files_to_generate)
 
 [~, model_name]= fileparts(mac_file);
 if ~exist('target_path', 'var')
@@ -9,6 +9,9 @@ if ~exist('tower_modes', 'var')
 end
 if ~exist('blade_modes', 'var')
     blade_modes= [1 2];
+end
+if ~exist('files_to_generate', 'var')
+    files_to_generate= {'cpp_direct'};
 end
 
 old= 1;
@@ -27,7 +30,7 @@ copyfile(mac_file, mac_file_gen)
 
 ext_file_gen= fullfile(target_path, [model_name 'System_Externals.hpp']);
 if ~exist(ext_file_gen, 'file')
-    copyfile(strrep(mac_file, '.mac', 'System_Externals.hpp'), ext_file_gen)
+    copyfile(strrep(mac_file, '.mac', '_Externals.hpp'), ext_file_gen)
 end
 
 acados_ext_file_gen= fullfile(target_path, [model_name '_acados_external.m']);
@@ -36,7 +39,7 @@ if ~exist(ext_file_gen, 'file') && exist(acados_ext_file_src, 'file')
     copyfile(acados_ext_file_src, acados_ext_file_gen)
 end
 
-makeCAGEM(mac_file_gen, target_path)
+makeCAGEM(mac_file_gen, target_path, [], files_to_generate)
 
 
 param= writeModelParams(param, target_path);

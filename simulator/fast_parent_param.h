@@ -19,9 +19,22 @@
 
 class FAST_Parent_Parameters : public FAST_Parameters {
 public:
+    FAST_Parent_Parameters() :
+        FAST_Parameters()
+    {}
+
     FAST_Parent_Parameters(const std::string& file_name, bool with_exception= true) :
         FAST_Parameters(file_name, with_exception)
     {
+        readFile();
+    }
+    
+    void readFile(const std::string& file_name, bool with_exception= true) {
+        FAST_Parameters::readFile(file_name, with_exception);
+        readFile();
+    }
+
+    void readFile() {
         // detect and fill main file
         try {
 //             children.emplace( std::piecewise_construct, std::make_tuple("BDBldFile(1)"), std::make_tuple(getFilename("BDBldFile(1)"), false) );
@@ -69,7 +82,7 @@ public:
             children.emplace( std::piecewise_construct, std::make_tuple("FurlFile"), std::make_tuple(getFilename("FurlFile"), false) );
             children.emplace( std::piecewise_construct, std::make_tuple("TwrFile"), std::make_tuple(getFilename("TwrFile"), false) );
         } catch(...) {
-        }
+        }        
     }
     
     double operator[](const std::string &name) {

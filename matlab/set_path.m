@@ -11,6 +11,7 @@ addpath(fullfile(base_dir, '../simulator'))
 
 addpath(fullfile(base_dir, '../../matlab-toolbox/FAST2MATLAB'))
 addpath(fullfile(base_dir, '../../matlab-toolbox/Utilities'))
+addpath(fullfile(base_dir, '../../matlab-toolbox/Utilities/compatibility'))
 addpath(fullfile(base_dir, '../../FEMBeam'))
 addpath(fullfile(base_dir, '../../CCBlade-M'))
 addpath(fullfile(base_dir, '../../CADyn/gen'))

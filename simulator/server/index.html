@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+<head>
+<title>WebSocket++ Telemetry Client</title>
+</head>
+<body>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+<link rel="stylesheet" href="./style.css">
+
+<script type="text/javascript">
+var ws;
+var url;
+var first_msg;
+
+function connect() {
+	url = document.getElementById("server_url").value;
+	first_msg= true;
+	
+	if ("WebSocket" in window) {
+		ws = new WebSocket(url);
+	} else if ("MozWebSocket" in window) {
+		ws = new MozWebSocket(url);
+	} else {
+		document.getElementById("messages").innerHTML += "This Browser does not support WebSockets<br />";
+		return;
+	}
+	ws.onopen = function(e) {
+		document.getElementById("messages").innerHTML += "Client: A connection to "+ws.url+" has been opened.<br />";
+		
+		document.getElementById("server_url").disabled = true;
+		document.getElementById("toggle_connect").innerHTML = "Disconnect";
+	};
+	
+	ws.onerror = function(e) {
+		document.getElementById("messages").innerHTML += "Client: An error occured, see console log for more details.<br />";
+		console.log(e);
+	};
+	
+	ws.onclose = function(e) {
+		document.getElementById("messages").innerHTML += "Client: The connection to "+url+" was closed. ["+e.code+(e.reason != "" ? ","+e.reason : "")+"]<br />";
+	    cleanup_disconnect();
+	};
+	
+	ws.onmessage = function(e) {
+        if(first_msg) {
+            first_msg= false;
+            document.getElementById("messages").innerHTML += e.data+"<br />";
+        }
+        
+        const data = JSON.parse(e.data);
+        
+        hours= (data.time/3600.0)%12;
+        minutes= (data.time/60.0)%60;
+        seconds= data.time%60;
+        
+        const secondline = document.querySelector('.line-second');
+        const minuteline = document.querySelector('.line-minute');
+        const hourline = document.querySelector('.line-hour');
+
+        let rotations = [0, 0, 0] // [second, minutes, hours]
+  
+        if (seconds === 0) {
+            rotations[0]++;
+        }
+
+        if (minutes === 0 && seconds === 0) {
+            rotations[1]++;
+        }
+
+        if (hours === 0 && minutes === 0 && seconds === 0) {
+            rotations[2]++;
+        }
+
+        const secondsDeg = ((seconds / 60) * 360);
+        const minutesDeg = (minutes / 60 * 360) + (rotations[1] * 360);
+        const hoursDeg = (hours / 12 * 360) + (minutes / 60 * 30) + (rotations[2] * 360);
+
+        secondline.style.transform = `rotate(${secondsDeg}deg)`;
+        minuteline.style.transform = `rotate(${minutesDeg}deg)`;
+        hourline.style.transform = `rotate(${hoursDeg}deg)`;
+	};
+}
+
+function disconnect() {
+	ws.close();
+	cleanup_disconnect();
+}
+
+function cleanup_disconnect() {
+    document.getElementById("server_url").disabled = false;
+	document.getElementById("toggle_connect").innerHTML = "Connect";
+}
+
+function toggle_connect() {
+	if (document.getElementById("server_url").disabled === false) {
+		connect();
+	} else {
+		disconnect();
+	}
+}
+</script>
+
+
+
+<div id="controls">
+	<div id="server">
+	<input type="text" name="server_url" id="server_url" value="ws://localhost:9002" /><br />
+	<button id="toggle_connect" onclick="toggle_connect();">Connect</button>
+	</div>
+</div>
+<svg class="clock" viewBox="0 0 100 100">
+        <g class="lines">
+            <line class="line line-1" x1="50" y1="5" x2="50" y2="10"></line>
+            <line class="line line-2" x1="50" y1="5" x2="50" y2="10"></line>
+            <line class="line line-3" x1="50" y1="5" x2="50" y2="10"></line>
+            <line class="line line-4" x1="50" y1="5" x2="50" y2="10"></line>
+            <line class="line line-5" x1="50" y1="5" x2="50" y2="10"></line>
+            <line class="line line-6" x1="50" y1="5" x2="50" y2="10"></line>
+            <line class="line line-7" x1="50" y1="5" x2="50" y2="10"></line>
+            <line class="line line-8" x1="50" y1="5" x2="50" y2="10"></line>
+            <line class="line line-9" x1="50" y1="5" x2="50" y2="10"></line>
+            <line class="line line-10" x1="50" y1="5" x2="50" y2="10"></line>
+            <line class="line line-11" x1="50" y1="5" x2="50" y2="10"></line>
+            <line class="line line-12" x1="50" y1="5" x2="50" y2="10"></line>
+        </g>
+ 
+        <line class="line line-hour" x1="50" y1="25" x2="50" y2="50"></line>
+        <line class="line line-minute" x1="50" y1="10" x2="50" y2="50"></line>
+        <circle cx="50" cy="50" r="3"></circle>
+ 
+        <g class="line line-second">
+            <line x1="50" y1="10" x2="50" y2="60"></line>
+            <circle cx="50" cy="50" r="1.5"></circle>
+        </g>
+  </svg>
+<div id="messages"></div>
+
+</body>
+</html>

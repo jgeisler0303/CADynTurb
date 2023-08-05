@@ -203,6 +203,8 @@ public:
         
         int32_t nt;
         infile.read((char*)&nt, sizeof(int32_t));
+        max_time= nt*TimeStep;
+        
         wind.reserve(nt);
         if(with_shear) {
             h_shear.reserve(nt);
@@ -329,6 +331,8 @@ public:
             // if(time<0.1) std::cout << "((NumGrid_Y-1)*dy/2 + dx)/u_hub=" << ((NumGrid_Y-1)*dy/2 + dx)/u_hub << std::endl;
             time= time + ((NumGrid_Y-1)*dy/2 + dx)/u_hub;
         }
+        time= std::fmod(time, 2*max_time);
+        if(time>max_time) time= 2*max_time - time;
         
         double TimeScaled= time/TimeStep;
         int idx= std::floor(TimeScaled);
@@ -352,6 +356,8 @@ public:
             // if(time<0.1) std::cout << "((NumGrid_Y-1)*dy/2 + dx)/u_hub=" << ((NumGrid_Y-1)*dy/2 + dx)/u_hub << std::endl;
             time= time + ((NumGrid_Y-1)*dy/2 + dx)/u_hub;
         }
+        time= std::fmod(time, 2*max_time);
+        if(time>max_time) time= 2*max_time - time;
         
         double TimeScaled= time/TimeStep;
         int idx= std::floor(TimeScaled);
@@ -391,6 +397,7 @@ protected:
     float HubHt;
     float Z_bottom;
     bool is_periodic;
+    double max_time;
 };
 
 FAST_Wind* makeFAST_Wind(FAST_Parent_Parameters &p, double dx=0.0, bool with_shear= false) {

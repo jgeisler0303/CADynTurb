@@ -1,4 +1,4 @@
-function d1= sim_standalone(model_path, fast_config, out_file, options)
+function d1= sim_standalone(model_path, fast_config, out_file, options, win_on_linux)
 if ~exist('options', 'var')
     options= '';
 end
@@ -16,11 +16,16 @@ old_dir= pwd;
 cleanupObj = onCleanup(@()cd(old_dir));
 cd(model_dir)
 
-sim_command= [model_path ' ' options ' -o ' out_file ' ' fast_config];
-if isunix
-    system(['LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6 ' sim_command]);
+if exist('win_on_linux', 'var') && win_on_linux
+    sim_command= ['wineconsole ' model_path '.exe ' options ' -o ' out_file ' ' fast_config];
+    system(sim_command);
 else
-    system(['set path=' getenv('PATH') ' & ' sim_command]);
+    sim_command= [model_path ' ' options ' -o ' out_file ' ' fast_config];
+    if isunix
+        system(['LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6 ' sim_command]);
+    else
+        system(['set path=' getenv('PATH') ' & ' sim_command]);
+    end
 end
 
 if nargout>0

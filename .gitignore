@@ -1,15 +1,12 @@
 *.orig
 
-sim/*
-!sim/openFAST_config_no_inflow.xlsx
-!sim/OutListParameters.xlsx
+generated
 
-param.mat
+*.mat
 octave-workspace
 *~
 *.mex*
 *.asv
-turbine_coll_flap_edge_pitch_aero/
 
 .directory
 .cproject
