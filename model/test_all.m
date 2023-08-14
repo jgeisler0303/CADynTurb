@@ -1,0 +1,7 @@
+run('T0_est/testFAST2CADynTurb_T0_est.m')
+run('T1/testFAST2CADynTurb_T1.m')
+run('T1_est/testFAST2CADynTurb_T1_est.m')
+run('T1B1cG/testFAST2CADynTurb_T1B1cG.m')
+run('T1B1cG_est/testFAST2CADynTurb_T1B1cG_est.m')
+run('T2B2cG/testFAST2CADynTurb_T2B2cG.m')
+run('T2B2cG_est/testFAST2CADynTurb_T2B2cG_est.m')

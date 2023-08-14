@@ -1,11 +1,11 @@
 %% prepare paths
 clc
-set_path
+model_dir= fileparts(matlab.desktop.editor.getActiveFilename);
+run(fullfile(model_dir, '../matlab/setupCADynTurb'))
 
 fst_file= '../../5MW_Baseline/5MW_Land_DLL_WTurb.fst';
 
 model_name= 'T1B1cG_est';
-model_dir= fileparts(matlab.desktop.editor.getActiveFilename);
 gen_dir= fullfile(model_dir, 'generated');
 
 files_to_generate= {'cpp_direct'};
@@ -39,7 +39,7 @@ ref_sims= get_ref_sims(sim_dir, '1p1*_maininput.outb');
 cd(gen_dir)
 
 v= 11;
-for  i= find(ref_sims.vv==v & ref_sims.yaw==0)
+for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
     d_FAST= loadData(ref_sims.files{i}, wind_dir);
 
     d_sim= run_simulation(model_name, d_FAST, param);

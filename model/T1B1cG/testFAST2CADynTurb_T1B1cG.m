@@ -1,11 +1,11 @@
 %%
 clc
-set_path
+model_dir= fileparts(matlab.desktop.editor.getActiveFilename);
+run(fullfile(model_dir, '../matlab/setupCADynTurb'))
 
 fst_file= '../../5MW_Baseline/5MW_Land_DLL_WTurb.fst';
 
 model_name= 'T1B1cG';
-model_dir= fileparts(matlab.desktop.editor.getActiveFilename);
 gen_dir= fullfile(model_dir, 'generated');
 
 files_to_generate= {'cpp_direct'};

@@ -1,22 +1,21 @@
-base_dir= fileparts(mfilename('fullpath'));
+CADynTurb_dir= fileparts(mfilename('fullpath'));
 
-addpath(base_dir)
-addpath(fullfile(base_dir, 'gen'))
-addpath(fullfile(base_dir, 'plot'))
-addpath(fullfile(base_dir, 'sim_data'))
-addpath(fullfile(base_dir, 'lin_model'))
-addpath(fullfile(base_dir, 'acados'))
-addpath(fullfile(base_dir, 'observer'))
-addpath(fullfile(base_dir, '../simulator'))
+addpath(CADynTurb_dir)
+addpath(fullfile(CADynTurb_dir, 'gen'))
+addpath(fullfile(CADynTurb_dir, 'plot'))
+addpath(fullfile(CADynTurb_dir, 'sim_data'))
+addpath(fullfile(CADynTurb_dir, 'lin_model'))
+addpath(fullfile(CADynTurb_dir, 'acados'))
+addpath(fullfile(CADynTurb_dir, 'observer'))
 
-addpath(fullfile(base_dir, '../../matlab-toolbox/FAST2MATLAB'))
-addpath(fullfile(base_dir, '../../matlab-toolbox/Utilities'))
-addpath(fullfile(base_dir, '../../matlab-toolbox/Utilities/compatibility'))
-addpath(fullfile(base_dir, '../../FEMBeam'))
-addpath(fullfile(base_dir, '../../CCBlade-M'))
-addpath(fullfile(base_dir, '../../CADyn/gen'))
+addpath(fullfile(CADynTurb_dir, '../../matlab-toolbox/FAST2MATLAB'))
+addpath(fullfile(CADynTurb_dir, '../../matlab-toolbox/MATLAB2FAST'))
+addpath(fullfile(CADynTurb_dir, '../../matlab-toolbox/Utilities'))
+addpath(fullfile(CADynTurb_dir, '../../matlab-toolbox/Utilities/compatibility'))
 
-%%
-setenv('maxima_path', '/usr/bin/maxima')
-setenv('cagem_path', fullfile(base_dir, '../../CADyn/gen/cagem.mac'))
+addpath(fullfile(CADynTurb_dir, '../../AMPoWS/Matlab/pre_processing/'))
+
+addpath(fullfile(CADynTurb_dir, '../../FEMBeam'))
+addpath(fullfile(CADynTurb_dir, '../../CADyn/gen'))
+addpath(fullfile(CADynTurb_dir, '../../SimpleDynInflow/AeroDynUtils'))
 
