@@ -1,7 +1,7 @@
 %%
 clc
 model_dir= fileparts(matlab.desktop.editor.getActiveFilename);
-run(fullfile(model_dir, '../matlab/setupCADynTurb'))
+run(fullfile(model_dir, '../../matlab/setupCADynTurb'))
 
 fst_file= '../../5MW_Baseline/5MW_Land_DLL_WTurb.fst';
 
