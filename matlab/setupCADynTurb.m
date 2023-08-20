@@ -23,6 +23,10 @@ set_path
 
 %% load configuration
 configCADynTurb
+try
+    my_configCADynTurb
+catch e
+end
 
 setenv('cagem_path', fullfile(CADynTurb_dir, '../../CADyn/gen/cagem.mac'))
 
@@ -66,4 +70,39 @@ end
 if ~exist(fullfile(CADynTurb_dir, '../ref_sim/sim_dyn_inflow'), 'dir') || ~exist(fullfile(CADynTurb_dir, '../ref_sim/sim_no_inflow'), 'dir')
     warning(['No reference simulations with dynamic inflow condition found. To create them please click <a href= "matlab:makeRefSim">here</a>.' newline ...
         'If you don''t want to see this warning again, just create empty directories "ref_sim/sim_dyn_inflow" and "ref_sim/sim_no_inflow" in the CADynTurb directory.'])
+end
+
+%% check acados
+if isempty(getenv('ACADOS_INSTALL_DIR')) && isempty(getenv('NO_ACADOS'))
+    warning(['acados doesn''t seem to be installed. acados examples will not work. ' newline ...
+        'To install acados, please follow <a href = "matlab:web(''https://docs.acados.org/installation/'')">these</a> instructions. ' newline ...
+        'And then <a href = "matlab:web(''https://docs.acados.org/matlab_octave_interface/index.html#setup-casadi'')">these</a> instructions. ' newline ...
+        'Then set the environment variable "ACADOS_INSTALL_DIR" to the path of the acados base directory. Do this by editing the script configCADynTurb accordingly. ' newline ...
+        'If you don''t want to see this message again, set the environment variable "NO_ACADOS" in the configCADynTurb script to "yes".'])
+end
+if ~isempty(getenv('ACADOS_INSTALL_DIR'))
+    if ispc
+        acadoslib= fullfile(getenv('ACADOS_INSTALL_DIR'), 'lib/libacados.so');
+    else
+        acadoslib= fullfile(getenv('ACADOS_INSTALL_DIR'), 'lib/libacados.dll');
+    end        
+    if ~exist(acadoslib, 'file')
+        error(['The environment variable "ACADOS_INSTALL_DIR" is set but acados doesn''t seem to be installed properly (libacados not found).' newline ...
+        'To install acados, please follow <a href = "matlab:web(''https://docs.acados.org/installation/'')">these</a> instructions. ' newline ...
+        'And then <a href = "matlab:web(''https://docs.acados.org/matlab_octave_interface/index.html#setup-casadi'')">these</a> instructions.'])
+    end
+    casadi_mex= fullfile(getenv('ACADOS_INSTALL_DIR'), ['external/casadi-matlab/casadiMEX.' mexext]);
+    if ~exist(casadi_mex, 'file')
+        error(['The environment variable "ACADOS_INSTALL_DIR" is set but acados doesn''t seem to be installed properly (CasADi mex function not found).' newline ...
+        'To install CasADi, please follow  <a href = "matlab:web(''https://docs.acados.org/matlab_octave_interface/index.html#setup-casadi'')">these</a> instructions.'])
+    end
+    
+    addpath(fullfile(getenv('ACADOS_INSTALL_DIR'), 'examples', 'acados_matlab_octave', 'getting_started'))
+    addpath(fullfile(getenv('ACADOS_INSTALL_DIR'), 'interfaces/acados_matlab_octave'));
+    addpath(fullfile(getenv('ACADOS_INSTALL_DIR'), 'interfaces/acados_matlab_octave/acados_template_mex'));
+    addpath(fullfile(getenv('ACADOS_INSTALL_DIR'), 'external/casadi-matlab'))
+    % the following is necessary to make the dynamic linker search for libs in the
+    % current directory because MATLAB doesn't pass the LD_LIBRARY_PATH
+    % correctly
+    setenv('ACADOS_MEX_FLAGS', 'LDFLAGS=$LDFLAGS -Wl,--disable-new-dtags,-rpath,\$ORIGIN')
 end

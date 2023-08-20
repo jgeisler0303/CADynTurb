@@ -2,3 +2,5 @@
 % setenv('AD_DRIVER', '')
 % setenv('OPENFAST', '')
 % setenv('TURBSIM', '')
+% setenv('ACADOS_INSTALL_DIR', '')
+% setenv('NO_ACADOS', 'yes')

@@ -17,14 +17,15 @@ write_sid_maxima(bd_sid, fullfile(target_path, 'bd_sid'), 'blade', 'all', 1e-5, 
 mac_file_gen= fullfile(target_path, [model_name '.mac']);
 copyfile(mac_file, mac_file_gen)
 
+ext_file_src= strrep(mac_file, '.mac', '_Externals.hpp');
 ext_file_gen= fullfile(target_path, [model_name '_Externals.hpp']);
-if ~exist(ext_file_gen, 'file')
-    copyfile(strrep(mac_file, '.mac', '_Externals.hpp'), ext_file_gen)
+if recompile(ext_file_gen, {ext_file_src})
+    copyfile(ext_file_src, ext_file_gen)
 end
 
 acados_ext_file_gen= fullfile(target_path, [model_name '_acados_external.m']);
 acados_ext_file_src= strrep(mac_file, '.mac', '_acados_external.m');
-if ~exist(ext_file_gen, 'file') && exist(acados_ext_file_src, 'file')
+if recompile(acados_ext_file_gen, {acados_ext_file_src})
     copyfile(acados_ext_file_src, acados_ext_file_gen)
 end
 
