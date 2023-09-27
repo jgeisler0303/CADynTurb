@@ -1,4 +1,4 @@
-function [d_out, cpu_time, int_err, n_steps, n_backsteps, n_sub_steps, Q, R, x_end_est]= run_simulation(model, d_in, param, opt, step_predict, do_est, Q, R, N, x_est0_)
+function [d_out, cpu_time, int_err, n_steps, n_backsteps, n_sub_steps, Q, R, x_end_est]= run_simulation(model, d_in, param, opt, step_predict, do_est, Q, R, N, x0_est_)
 
 sys_mex= str2func([model '_mex']);
 get_ekf_config= str2func([model '_ekf_config']);
