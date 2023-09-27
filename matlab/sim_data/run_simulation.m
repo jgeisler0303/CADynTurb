@@ -1,4 +1,4 @@
-function [d_out, cpu_time, int_err, n_steps, n_backsteps, n_sub_steps, Q, R]= run_simulation(model, d_in, param, opt, step_predict, do_est, Q, R, N)
+function [d_out, cpu_time, int_err, n_steps, n_backsteps, n_sub_steps, Q, R, x_end_est]= run_simulation(model, d_in, param, opt, step_predict, do_est, Q, R, N, x_est0_)
 
 sys_mex= str2func([model '_mex']);
 get_ekf_config= str2func([model '_ekf_config']);
@@ -38,6 +38,9 @@ end
 q= x_ref(1:nq, :);
 dq= x_ref(nq+1:end, :);
 ddq= zeros(size(q));
+if exist('x0_est_', 'var') && ~isempty(x0_est_)
+    x0_est= x0_est_;
+end
 
 if do_est
     q(:, 1)= x0_est(1:nq);
@@ -95,4 +98,5 @@ if step_predict
     d_out.y_pred= y_pred;    
 else
     d_out= convertFAST_CADyn(t, q, dq, ddq, u, y_pred, param);
+    x_end_est= [q(:, end); dq(:, end)];
 end
