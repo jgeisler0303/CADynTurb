@@ -1,4 +1,4 @@
-function [d_out, cpu_time, int_err, n_steps, n_backsteps, n_sub_steps, Q, R, x_end_est]= run_simulation(model, d_in, param, opt, step_predict, do_est, Q, R, N, x0_est_)
+function [d_out, cpu_time, int_err, n_steps, n_backsteps, n_sub_steps, Q, R, x_end_est, P_end]= run_simulation(model, d_in, param, opt, step_predict, do_est, Q, R, N, x0_est_, P0)
 
 sys_mex= str2func([model '_mex']);
 get_ekf_config= str2func([model '_ekf_config']);
@@ -18,6 +18,9 @@ if ~exist('opts', 'var') || isempty(opt)
     % opts= struct('StepTol', 1e-8, 'AbsTol', 1e-6, 'RelTol', 1e-6, 'hminmin', 1E-8, 'jac_recalc_step', 4, 'max_steps', 10);
     % one step
     opts= struct('StepTol', 1e6, 'AbsTol', 1e6, 'RelTol', 1e6, 'hminmin', 1E-8, 'jac_recalc_step', 10, 'max_steps', 1);
+end
+if ~exist('P0', 'var')
+    P0= [];
 end
 
 model_indices
@@ -46,8 +49,8 @@ if do_est
     q(:, 1)= x0_est(1:nq);
     dq(:, 1)= x0_est((nq+1):end);
     ekf_config= get_ekf_config();
-    if ~isfield(param, 'adaptUpdate') || isempty(param.adaptUpdate)
-        param.adaptUpdate= ones(length(ekf_config.estimated_states), 1);
+    if ~isfield(param, 'fixedQxx') || isempty(param.fixedQxx)
+        param.fixedQxx= zeros(length(ekf_config.estimated_states), 1);
     end
     u_offset= 1;
 else
@@ -86,7 +89,7 @@ if do_est<2
         end
     end
 else
-    [q, dq, ~, y_pred, Q, R, cpu_time]= ekf_mex(q(:, 1), dq(:, 1), u, y_meas, param, dt, ekf_config.x_ul, ekf_config.x_ll, Q, R, param.Tadapt, param.adaptScale, param.adaptUpdate, opts);    
+    [q, dq, ~, y_pred, Q, R, cpu_time, d_norm, p_xx, r_xx, s_xx, P_end]= ekf_mex(q(:, 1), dq(:, 1), u, y_meas, param, dt, ekf_config.x_ul, ekf_config.x_ll, Q, R, param.Tadapt, param.adaptScale, param.fixedQxx, opts, P0);
 end
 toc
 y_pred(:, 1)= y_pred(:, 2);
@@ -98,5 +101,11 @@ if step_predict
     d_out.y_pred= y_pred;    
 else
     d_out= convertFAST_CADyn(t, q, dq, ddq, u, y_pred, param);
+    if do_est==2
+        d_out= add_timeseries(d_out, 'd_norm', '-', d_norm');
+        d_out= add_timeseries(d_out, 'p_xx', '-', p_xx');
+        d_out= add_timeseries(d_out, 'r_xx', '-', r_xx');
+        d_out= add_timeseries(d_out, 's_xx', '-', s_xx');
+    end
     x_end_est= [q(:, end); dq(:, end)];
 end
