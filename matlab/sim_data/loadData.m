@@ -1,4 +1,4 @@
-function d_in= loadData(file_path, wind_dir)
+function d_in= loadData(file_path, wind_dir, filter_369p)
 [~, file]= fileparts(file_path);
 
 d_in= collectBlades(loadFAST(file_path));
@@ -21,11 +21,15 @@ else
     d_in= d_in.addts(RtVSAvg);      
 end
 
-d_in.RootMyb.Data= notch_369p(d_in.RootMyb.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
-d_in.RootMxb.Data= notch_369p(d_in.RootMxb.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
-d_in.HSShftV.Data= notch_369p(d_in.HSShftV.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
-d_in.YawBrTAxp.Data= notch_369p(d_in.YawBrTAxp.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
-d_in.YawBrTAyp.Data= notch_369p(d_in.YawBrTAyp.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
+if exist('filter_369p', 'var') && filter_369p
+    d_in.GenTq.Data= notch_369p(d_in.GenTq.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
+    d_in.BlPitchC.Data= notch_369p(d_in.BlPitchC.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
+    d_in.RootMyb.Data= notch_369p(d_in.RootMyb.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
+    d_in.RootMxb.Data= notch_369p(d_in.RootMxb.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
+    d_in.HSShftV.Data= notch_369p(d_in.HSShftV.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
+    d_in.YawBrTAxp.Data= notch_369p(d_in.YawBrTAxp.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
+    d_in.YawBrTAyp.Data= notch_369p(d_in.YawBrTAyp.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
+end
 
 % F= tf(1, [Tm_avg 1]);
 % RootMyb_filt= timeseries('RootMyb_filt');
