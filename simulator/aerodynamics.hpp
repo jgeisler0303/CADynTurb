@@ -1,7 +1,9 @@
 #include <cmath>
 
 #define LUT(tab) (thetaFact*(lambdaFact*tab(lambdaIdx, thetaIdx) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx)) + (1.0-thetaFact)*(lambdaFact*tab(lambdaIdx, thetaIdx+1) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx+1)))
+
 #define DLAM_LUT(tab) ((thetaFact*(tab(lambdaIdx+1, thetaIdx)-tab(lambdaIdx, thetaIdx))/param.lambdaStep) + (1.0-thetaFact)*((tab(lambdaIdx+1, thetaIdx)-tab(lambdaIdx, thetaIdx))/param.lambdaStep))
+
 #define DTH_LUT(tab) (( (lambdaFact*tab(lambdaIdx, thetaIdx+1) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx+1))-(lambdaFact*tab(lambdaIdx, thetaIdx) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx)) )/param.thetaStep * -180.0/M_PI)
 
 void SYSTEM::calculateExternal() {
@@ -21,6 +23,11 @@ void SYSTEM::calculateExternal() {
     int thetaIdx= std::floor(thetaScaled);
     double lambdaFact= 1.0 - lambdaScaled + lambdaIdx;
     double thetaFact= 1.0 - thetaScaled + thetaIdx;
+
+    if(lambdaIdx<0) { lambdaIdx= 0; lambdaFact= 1.0; }
+    if(thetaIdx<0) { thetaIdx= 0; thetaFact= 1.0; }
+    if(lambdaIdx>(param.cm_lut.rows()-2)) { lambdaIdx= param.cm_lut.rows()-2; lambdaFact= 0.0; }
+    if(thetaIdx>(param.cm_lut.cols()-2)) { thetaIdx= param.cm_lut.cols()-2; thetaFact= 0.0; }
     
     cm= LUT(param.cm_lut);
     
@@ -125,6 +132,11 @@ void SYSTEM::calculateExternalWithDeriv() {
     int thetaIdx= std::floor(thetaScaled);
     double lambdaFact= 1.0 - lambdaScaled + lambdaIdx;
     double thetaFact= 1.0 - thetaScaled + thetaIdx;
+    
+    if(lambdaIdx<0) { lambdaIdx= 0; lambdaFact= 1.0; }
+    if(thetaIdx<0) { thetaIdx= 0; thetaFact= 1.0; }
+    if(lambdaIdx>(param.cm_lut.rows()-2)) { lambdaIdx= param.cm_lut.rows()-2; lambdaFact= 0.0; }
+    if(thetaIdx>(param.cm_lut.cols()-2)) { thetaIdx= param.cm_lut.cols()-2; thetaFact= 0.0; }
     
     double dFwind_dvw   =  2*Fwind_v; // 2*Fwind/vwind;
     double dFwind_dvtow = -2*Fwind_v; // -2*Fwind/vwind;
