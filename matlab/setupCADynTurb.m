@@ -18,6 +18,10 @@ if ~exist(fullfile(top_dir, 'matlab-toolbox'), 'dir')
     error('Please download matlab-toolbox to the folder %s. Go to the folder %s and do: "git clone https://github.com/OpenFAST/matlab-toolbox.git"', fullfile(top_dir, 'matlab-toolbox'), top_dir)
 end
 
+if ~exist(fullfile(top_dir, 'AMPoWS'), 'dir')
+    warning('If you want to generate the OpenFAST reference simulations, you need to download AMPoWS to the folder %s. Go to the folder %s and do: "git clone https://github.com/jgeisler0303/AMPoWS.git"', fullfile(top_dir, 'AMPoWS'), top_dir)
+end
+
 %% prepare path
 set_path
 
@@ -33,7 +37,7 @@ setenv('cagem_path', fullfile(CADynTurb_dir, '../../CADyn/gen/cagem.mac'))
 %% check environment
 maxima= getenv('maxima_path');
 if isempty(maxima)
-    error(['Please install Maxima. For Windows you can download it from <a href = "matlab:web(''https://sourceforge.net/projects/maxima/files/Maxima-Windows/'')">here</a>. For Ubuntu you should install "sudo apt install maxima-sbcl".' newline 'Then set the environment variable "maxima_path" to the full path of the maxima executable (batch file in windows). Do this by editing the script configCADynTurb accordingly.'])
+    error(['Please install Maxima. For Windows you can download it from <a href = "matlab:web(''https://sourceforge.net/projects/maxima/files/Maxima-Windows/'')">here</a>. For Ubuntu you should install "sudo apt install maxima".' newline 'Then set the environment variable "maxima_path" to the full path of the maxima executable (batch file in windows). Do this by editing the script configCADynTurb accordingly.'])
 end
 [res, msg]= system([maxima ' --version']);
 if res~=0 || ~contains(msg, 'Maxima')
@@ -81,7 +85,7 @@ if isempty(getenv('ACADOS_INSTALL_DIR')) && isempty(getenv('NO_ACADOS'))
         'If you don''t want to see this message again, set the environment variable "NO_ACADOS" in the configCADynTurb script to "yes".'])
 end
 if ~isempty(getenv('ACADOS_INSTALL_DIR'))
-    if ispc
+    if isunix
         acadoslib= fullfile(getenv('ACADOS_INSTALL_DIR'), 'lib/libacados.so');
     else
         acadoslib= fullfile(getenv('ACADOS_INSTALL_DIR'), 'lib/libacados.dll');
@@ -105,4 +109,5 @@ if ~isempty(getenv('ACADOS_INSTALL_DIR'))
     % current directory because MATLAB doesn't pass the LD_LIBRARY_PATH
     % correctly
     setenv('ACADOS_MEX_FLAGS', 'LDFLAGS=$LDFLAGS -Wl,--disable-new-dtags,-rpath,\$ORIGIN')
+    setenv('LDFLAGS', [getenv('LDFLAGS') ' -Wl,--disable-new-dtags,-rpath,\$ORIGIN'])
 end

@@ -13,7 +13,10 @@ addpath(fullfile(CADynTurb_dir, '../../matlab-toolbox/MATLAB2FAST'))
 addpath(fullfile(CADynTurb_dir, '../../matlab-toolbox/Utilities'))
 addpath(fullfile(CADynTurb_dir, '../../matlab-toolbox/Utilities/compatibility'))
 
-addpath(fullfile(CADynTurb_dir, '../../AMPoWS/Matlab/pre_processing/'))
+try
+    addpath(fullfile(CADynTurb_dir, '../../AMPoWS/Matlab/pre_processing/'))
+catch e
+end
 
 addpath(fullfile(CADynTurb_dir, '../../FEMBeam'))
 addpath(fullfile(CADynTurb_dir, '../../CADyn/gen'))
