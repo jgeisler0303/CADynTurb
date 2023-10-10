@@ -15,6 +15,11 @@ x_sim= x_ref;
 for ii= 2:N_sim
 	acados_model.set('x', x_sim(:, ii-1));
 	acados_model.set('u', u_ref(:, ii-1));
+    if isfield(param, 'vwind')
+        param.vwind= d_in.RtVAvgxh.Data(ii-1);
+        ap= acados_params(parameter_names, param);
+        acados_model.set('p', ap);
+    end
 
     acados_model.set('xdot', zeros(size(x_ref, 1), 1));
 	acados_model.solve();

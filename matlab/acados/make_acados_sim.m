@@ -2,8 +2,8 @@ function as= make_acados_sim(model_name, gen_dir, sim_opts)
 cd(gen_dir)
 acados_model_func= str2func([model_name '_acados']);
 model= acados_model_func();
-[~, ~]= mkdir('build');
-copy_acados_libs(fullfile(gen_dir, 'build'))
+% [~, ~]= mkdir('c_generated_code');
+% copy_acados_libs(fullfile(gen_dir, 'c_generated_code'))
 
 sim_model = acados_sim_model();
 sim_model.set('name', model.name);

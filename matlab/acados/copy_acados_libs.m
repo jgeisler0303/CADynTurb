@@ -4,6 +4,7 @@ if ~isunix, return, end
 copy_lib('libacados.so', target)
 copy_lib('libblasfeo.so', target)
 copy_lib('libhpipm.so', target)
+copy_lib('libqpOASES_e.so.3.1', target)
 
 function copy_lib(lib, target)
 if ~exist(fullfile(target, lib), 'file')
