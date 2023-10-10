@@ -1,6 +1,7 @@
 *.orig
 
 generated
+simulator/test_eigen
 
 *.mat
 octave-workspace
