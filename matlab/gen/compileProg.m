@@ -78,7 +78,7 @@ if ~isempty(libs) && iscell(libs)
     libs= strcat(' -l', libs);
     libs= strcat(libs{:});
 end
-if isunix 
+if isunix && ~(exist('win_on_linux', 'var') && win_on_linux)
     libs= [libs ' -ldl'];
 end
 

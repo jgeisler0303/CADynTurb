@@ -19,13 +19,13 @@ copyfile(mac_file, mac_file_gen)
 
 ext_file_src= strrep(mac_file, '.mac', '_Externals.hpp');
 ext_file_gen= fullfile(target_path, [model_name '_Externals.hpp']);
-if recompile(ext_file_gen, {ext_file_src})
+if any(strcmp(files_to_generate, 'cpp_direct')) && recompile(ext_file_gen, {ext_file_src})
     copyfile(ext_file_src, ext_file_gen)
 end
 
 acados_ext_file_gen= fullfile(target_path, [model_name '_acados_external.m']);
 acados_ext_file_src= strrep(mac_file, '.mac', '_acados_external.m');
-if recompile(acados_ext_file_gen, {acados_ext_file_src})
+if any(strcmp(files_to_generate, 'acados')) && recompile(acados_ext_file_gen, {acados_ext_file_src})
     copyfile(acados_ext_file_src, acados_ext_file_gen)
 end
 
