@@ -1,6 +1,7 @@
 #ifndef DISCON_INTERFACE_H_
 #define DISCON_INTERFACE_H_
 
+#include "stddef.h"
 #include <stdlib.h>
 #ifdef __linux__
     #include <dlfcn.h>
@@ -20,7 +21,7 @@
 
 #include "discon_swap.h"
 
-const int discon_string_len= 256;
+const int discon_string_len= 2048;
 
 class DISCON_Exception: public std::exception {
 public:
@@ -144,7 +145,7 @@ public:
             
         int32_t aviFail= 0;
         
-        DISCON(avrSwap->array, &aviFail, accInfile, accOutfile, avcMsg);
+        DISCON(avrSwap->swap, &aviFail, accInfile, accOutfile, avcMsg);
         if(aviFail<0)
             throw DISCON_Exception("Call to DISCON failed: \"" + std::string(avcMsg) + "\"", aviFail);
         
@@ -176,7 +177,7 @@ public:
     DISCON_Interface(std::string dll_name = "./DISCON.dll", std::string in_name = "", std::string out_name = "")
       : DISCON_DLL()
     {
-        for(int i= 0; i<256; ++i) array[i]= 0.0;
+        for(int i= 0; i<256; ++i) swap[i]= 0.0;
         
         open(dll_name);
         setInfile(in_name);
@@ -186,10 +187,9 @@ public:
         sim_status= 0;
         max_msg_char= discon_string_len-1;
         
-        logging_max= 0;
-        logging_idx= 0;
+        logging_max= sizeof(log)/sizeof(log[0]);
+        logging_idx= offsetof(avrSwap_t, log)/sizeof(swap[0]) + 1;
         outfile_max= discon_string_len-1;
-        
     }
     
     virtual ~DISCON_Interface() {
@@ -204,6 +204,10 @@ public:
     void setOutfile(std::string out_name = "") {
         strcpy(accOutfile, out_name.c_str());
         outfile_len= strlen(accOutfile);
+    }
+    
+    std::string getOutfile() {
+        return std::string(accOutfile);
     }
     
     int32_t init() {
@@ -244,6 +248,10 @@ public:
     
     std::string getMessage() {
         return std::string(avcMsg);
+    }
+    
+    void setMessage(std::string msg) {
+        strcpy(avcMsg, msg.c_str());
     }
     
 protected:

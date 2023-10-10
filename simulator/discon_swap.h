@@ -1,8 +1,10 @@
 #ifndef DISCON_SWAP_H_
 #define DISCON_SWAP_H_
 
+#define avr_size 256
+
 typedef struct { union {
-    float array[256];
+    float swap[avr_size];
     struct {
         float sim_status;       // 1, in, int, 0= first call at time zero, 1= all subsequent timesteps, -1= final call at the end of the simulation, 2= real time update step, dll may set value to -1 to request termination
         float current_time;     // 2, in, float, s
@@ -168,7 +170,7 @@ typedef struct { union {
         float yaw_angle;        // 162, in, float, rad
         float yaw_speed;        // 163, in, float, rad/s
         float yaw_acc;          // 164, in, float, rad/s^2
-        
+        float log[avr_size-164];
     };
 };} avrSwap_t;
 
