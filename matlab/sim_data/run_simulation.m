@@ -46,11 +46,16 @@ if exist('x0_est_', 'var') && ~isempty(x0_est_)
 end
 
 if do_est
-    q(:, 1)= x0_est(1:nq);
-    dq(:, 1)= x0_est((nq+1):end);
+    if ~isnan(x0_est)
+        q(:, 1)= x0_est(1:nq);
+        dq(:, 1)= x0_est((nq+1):end);
+    end
     ekf_config= get_ekf_config();
     if ~isfield(param, 'fixedQxx') || isempty(param.fixedQxx)
         param.fixedQxx= zeros(length(ekf_config.estimated_states), 1);
+    end
+    if ~isfield(param, 'fixedRxx') || isempty(param.fixedRxx)
+        param.fixedRxx= zeros(ny, 1);
     end
     u_offset= 1;
 else
@@ -68,6 +73,9 @@ Sigma_est= [];
 
 tic
 if do_est<2
+    [~, ~, ddq(:, 1)]= ...
+            sys_mex(q(:, 1), dq(:, 1), ddq(:, 1), u(:, 1), param, t(2)-t(1), opts);
+    
     for i= 2:nt
         if step_predict
             q_in= x_ref(1:nq, i-1);
@@ -77,7 +85,7 @@ if do_est<2
             dq_in= dq(:, i-1);
         end
         [q(:, i), dq(:, i), ddq(:, i), y_pred(:, i), AB, CD, res, cpu_time(i), int_err(i), n_steps(i), n_backsteps(i), n_sub_steps(i)]= ...
-            sys_mex(q_in, dq_in, u(:, i-u_offset), param, t(i)-t(i-1), opts);
+            sys_mex(q_in, dq_in, ddq(:, i-1), u(:, i-u_offset), param, t(i)-t(i-1), opts);
     
         if ~res
             break
@@ -89,7 +97,7 @@ if do_est<2
         end
     end
 else
-    [q, dq, ~, y_pred, Q, R, cpu_time, d_norm, p_xx, r_xx, s_xx, P_end]= ekf_mex(q(:, 1), dq(:, 1), u, y_meas, param, dt, ekf_config.x_ul, ekf_config.x_ll, Q, R, param.Tadapt, param.adaptScale, param.fixedQxx, opts, P0);
+    [q, dq, ~, y_pred, Q, R, cpu_time, d_norm, p_xx, r_xx, s_xx, P_end]= ekf_mex(q(:, 1), dq(:, 1), u, y_meas, param, dt, ekf_config.x_ul, ekf_config.x_ll, Q, R, param.Tadapt, param.adaptScale, param.fixedQxx, param.fixedRxx, opts, P0);
 end
 toc
 y_pred(:, 1)= y_pred(:, 2);

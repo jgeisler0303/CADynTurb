@@ -1,6 +1,6 @@
 function plot_state_est(d_in, d_est, sensors, state_idx, fact)
 
-ha= plot_timeseries_cmp(d_in, d_est, sensors, {}, {}, {}, 30);
+ha= plot_timeseries_cmp(d_in, d_est, sensors, {}, {}, {}, 0);
 idx= d_est.Time>30;
 
 for i= 1:length(sensors)

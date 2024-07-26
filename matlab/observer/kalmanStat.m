@@ -6,7 +6,7 @@ end
 idx= ref.Time>=t_start;
 
 stats= {'val'};
-sens= {'r_xx' 's_xx' 'p_xx' 'd_norm' 'acorr_rms' 'cc_vw_real' 'cc_vw_meas'};
+sens= {'r_xx' 's_xx' 'p_xx' 'd_norm' 'acorr_rms' 'cc_vw_est' 'cc_vw_meas'};
 t= table('Size', [length(sens) length(stats)], 'VariableTypes', repmat("double", 1, length(stats)), 'VariableNames', stats, 'RowNames', sens);
 
 
@@ -16,7 +16,7 @@ t('p_xx', 1)= {sqrt(mean(est.p_xx.Data(idx, :), 'all'))};
 t('d_norm', 1)= {mean(est.d_norm.Data(idx), 'all')};
 
 wind_cc= corrcoef(ref.RtVAvgxh.Data(idx), est.RtVAvgxh.Data(idx));
-t('cc_vw_real', 1)= {wind_cc(1, 2)};
+t('cc_vw_est', 1)= {wind_cc(1, 2)};
 
 if ismember('Wind1VelX', ref.gettimeseriesnames)
     vw_meas= ref.Wind1VelX.Data(idx);

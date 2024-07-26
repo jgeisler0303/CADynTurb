@@ -40,7 +40,7 @@ if ~exist('win_on_linux', 'var')
 end
 
 out_name_ext= out_name;
-if ispc
+if ispc || win_on_linux
     [~, ~, ext]= fileparts(out_name);
     if isempty(ext)
         out_name_ext= [out_name '.exe'];

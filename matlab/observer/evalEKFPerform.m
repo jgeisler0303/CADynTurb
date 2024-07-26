@@ -10,7 +10,7 @@ ekf_config= get_ekf_config();
 
 d= y_meas' - d_est.y.Data;
 maxlag= sum(d_in.Time<20); % 20s
-idx= d_in.Time>30;
+idx= d_in.Time>100;
 
 acorr_rms= zeros(size(y_meas, 1), 1);
 d_mean=  zeros(size(y_meas, 1), 1);
@@ -25,34 +25,39 @@ nexttile
 wind_cc= corrcoef(d_in.RtVAvgxh.Data(idx), d_est.RtVAvgxh.Data(idx));
 wind_cc= wind_cc(1, 2);
 
-plot(d_in.Time(idx), d_in.RtVAvgxh.Data(idx), d_est.Time(idx), d_est.RtVAvgxh.Data(idx))
+try
+    plot(d_in.Time(idx), d_in.RAWS4.Data(idx), d_est.Time(idx), d_est.RtVAvgxh.Data(idx))
+catch
+    plot(d_in.Time(idx), d_in.RtVAvgxh.Data(idx), d_est.Time(idx), d_est.RtVAvgxh.Data(idx))
+end    
 hold on
+
 plot(d_est.Time(idx), d_est.RtVAvgxh.Data(idx)+2*sqrt(d_est.p_xx.Data(idx, find(ekf_config.estimated_states==vwind_idx))), 'k')
 plot(d_est.Time(idx), d_est.RtVAvgxh.Data(idx)-2*sqrt(d_est.p_xx.Data(idx, find(ekf_config.estimated_states==vwind_idx))), 'k')
-try
-    h= plot(d_in.Time(idx), d_in.WindMeas1.Data(idx));
-    uistack(h, 'bottom')
-catch e
-end
+% try
+%     h= plot(d_in.Time(idx), d_in.WindMeas1.Data(idx));
+%     uistack(h, 'bottom')
+% catch e
+% end
 hold off
 grid on
-title(sprintf('corrcoeff: %f', wind_cc))
+title(sprintf('p_xx mean: %f', sqrt(mean(d_est.p_xx.Data(idx, find(ekf_config.estimated_states==vwind_idx))))))
 
 nexttile
 d_norm_mean= mean(d_est.d_norm.Data(idx));
 plot(d_est.Time(idx), d_est.d_norm.Data(idx), [d_est.Time(1) d_est.Time(end)], d_norm_mean*[1 1])
 grid on
-title(sprintf('mean: %f', d_norm_mean))
+title(sprintf('d_norm mean: %f', d_norm_mean))
 
 
 for i= 1:size(y_meas, 1)
     nexttile
     acorr= xcorr(d(idx, i), maxlag, 'normalized');
     acorr= acorr(ceil((length(acorr)+1)/2):end);
-    plot(acorr)
+    plot(d_in.Time(1:maxlag+1)-d_in.Time(1), acorr)
 
     acorr_rms(i)= rms(acorr(2:end));
-    title(sprintf('mean: %f, std: %f, rms: %f', mean(acorr(2:end)), std(acorr(2:end)), acorr_rms(i)))
+    title(sprintf('acorr mean: %f, std: %f, rms: %f', mean(acorr(2:end)), std(acorr(2:end)), acorr_rms(i)))
     grid on
 
     nexttile
@@ -64,5 +69,5 @@ for i= 1:size(y_meas, 1)
     grid on
     d_mean(i)= mean(d(idx, i));
     d_std(i)= std(d(idx, i));
-    title(sprintf('mean: %f, std: %f', d_mean(i), d_std(i)))
+    title(sprintf('s_xx mean: %f, std: %f', d_mean(i), d_std(i)))
 end

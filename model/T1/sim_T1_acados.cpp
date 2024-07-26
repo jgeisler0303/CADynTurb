@@ -135,7 +135,7 @@ int main(int argc, char* argv[]) {
             }
             if(argc_result.count("rpm0")) {
                 rpm0= argc_result["rpm0"].as<double>();
-                if(rpm0<p["ServoFile.GenSpd_MinxOM"]) rpm0= p["ServoFile.GenSpd_MinOM"];
+                if(rpm0<p["ServoFile.GenSpd_MinOM"]) rpm0= p["ServoFile.GenSpd_MinOM"];
                 if(rpm0>p["ServoFile.GenSpd_MaxOM"]) rpm0= p["ServoFile.GenSpd_MaxOM"];                
             } else {
                 rpm0= (p["ServoFile.GenSpd_MinOM"] + p["ServoFile.GenSpd_MaxOM"])/2.0;
