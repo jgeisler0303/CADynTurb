@@ -22,7 +22,35 @@ if any(strcmp(files_to_generate, 'cpp_direct'))
         };
     
     compileProg(sim_cpp, out_name, dependencies, {}, includes, {}, {}, {}, win_on_linux)
+
+    dependencies= {
+        [model_name '_direct.hpp']
+        [model_name '_param.hpp']
+        fullfile(fileparts(getenv('cagem_path')), '../src/NewmarkBeta.hpp')
+        fullfile(fileparts(getenv('cagem_path')), '../src/CADyn_mex.cpp')
+        };
+    if recompile([model_name '_mex.' mexext], dependencies)
+        fprintf('Compiling mex simulator\n')
+        makeCADynMex(model_name, '.', '', '', fullfile(base_dir, '../../simulator'))
+    else
+        fprintf('Skipping compilation of mex simulator\n')
+    end    
 end
+
+if any(strcmp(files_to_generate, 'descriptor_form'))
+    dependencies= {
+        [model_name '_descriptor_form.hpp']
+        [model_name '_param.hpp']
+        fullfile(fileparts(getenv('cagem_path')), '../src/CADyn_descriptor_mex.cpp')
+        };
+    if recompile([model_name '_descriptor_mex.' mexext], dependencies)
+        fprintf('Compiling mex simulator\n')
+        makeCADynMex(model_name, '.', 'CADyn_descriptor_mex.cpp', [model_name '_descriptor_mex'], fullfile(base_dir, '../../simulator'))
+    else
+        fprintf('Skipping compilation of mex simulator\n')
+    end    
+end
+
 if any(strcmp(files_to_generate, 'cpp_direct_gmres'))
     sim_cpp= fullfile(model_dir, ['sim_' model_name '_gmres.cpp']);
     out_name= fullfile(gen_dir, ['sim_' model_name '_gmres']);
@@ -33,18 +61,4 @@ if any(strcmp(files_to_generate, 'cpp_direct_gmres'))
         };
 
     compileProg(sim_cpp, out_name, dependencies, {}, includes, {}, {}, {}, win_on_linux)
-end
-
-%% compile mex simulator
-dependencies= {
-    [model_name '_direct.hpp']
-    [model_name '_param.hpp']
-    fullfile(fileparts(getenv('cagem_path')), '../src/NewmarkBeta.hpp')
-    fullfile(fileparts(getenv('cagem_path')), '../src/CADyn_mex.cpp')
-    };
-if recompile([model_name '_mex.' mexext], dependencies)
-    fprintf('Compiling mex simulator\n')
-    makeCADynMex(model_name, '.', '', '', fullfile(base_dir, '../../simulator'))
-else
-    fprintf('Skipping compilation of mex simulator\n')
 end
