@@ -1,4 +1,4 @@
-%%DISCON
+%% DISCON parameters
 DISCON_param.comm_interval= 0.01;
 DISCON_param.Ptch_Min= 0;
 DISCON_param.Ptch_Max= 90;
@@ -21,13 +21,13 @@ DISCON_param.time_to_output= 0;
 DISCON_param.version= 0.0;
 
 
-%%
+%% setup path
 addpath(fullfile(pwd, 'generated'))
 addpath(fullfile(pwd, '../../simulator'))
 model_indices
 load('params_config')
 
-%%
+%% simulation with Newmark T1 simulator
 t_end= 150;
 ts= 0.01;
 
@@ -76,13 +76,10 @@ for i= 2:nt
     u(in_Tgen_idx, i)= Tgen_set;
     u(in_theta_idx, i)= -theta_set; % sign of theta is reverse in controller and model
     [q(:, i), dq(:, i), ddq(:, i)]= T1_mex(q(:, i-1), dq(:, i-1), ddq(:, i-1), u(:, i), p_, ts);
-%     [~, x]= ode23s(@(t, x)ode(x(1:2), x(3:4), u(:, i), p_), [0 ts], [q(:, i-1); dq(:, i-1)]);
-%     q(:, i)= x(end, 1:2)';
-%     dq(:, i)= x(end, 3:4)';
 end
 DISCON_mex()
 
-%%
+%% simulation with MATLAB integrator and descriptor form model
 t_end= 150;
 ts= 0.01;
 
@@ -129,14 +126,13 @@ for i= 2:nt
     u1(in_vwind_idx, i)= vwind(i);
     u1(in_Tgen_idx, i)= Tgen_set;
     u1(in_theta_idx, i)= -theta_set; % sign of theta is reverse in controller and model
-%     [~, x]= ode23s(@(t, x)ode(x(1:2), x(3:4), u1(:, i), p_), [0 ts], [q1(:, i-1); dq1(:, i-1)]);
-%     q1(:, i)= x(end, 1:2)';
-%     dq1(:, i)= x(end, 3:4)';
-    [q1(:, i), dq1(:, i), k]= iRK1_symplect(q1(:, i-1), dq1(:, i-1), u1(:, i), p_, ts, k);
+    [~, x]= ode23s(@(t, x)ode(x(1:2), x(3:4), u1(:, i), p_), [0 ts], [q1(:, i-1); dq1(:, i-1)]);
+    q1(:, i)= x(end, 1:2)';
+    dq1(:, i)= x(end, 3:4)';
 end
 DISCON_mex()
 
-%%
+%% comparison plots
 tiledlayout(3, 1)
 nexttile
 plot(t, -u(in_theta_idx, :)/pi*180, t, -u1(in_theta_idx, :)/pi*180)
