@@ -1,3 +1,33 @@
+%%
+clc
+model_dir= fileparts(matlab.desktop.editor.getActiveFilename);
+run(fullfile(model_dir, '../../matlab/setupCADynTurb'))
+
+fst_file= '../../5MW_Baseline/5MW_Land_DLL_WTurb.fst';
+
+model_name= 'T1';
+gen_dir= fullfile(model_dir, 'generated');
+
+files_to_generate= {'cpp_direct', 'descriptor_form'};
+
+addpath(fullfile(CADynTurb_dir, '..', 'simulator'))
+
+%% generate and compile all source code
+clc
+cd(model_dir)
+load('params.mat')
+genCode([model_name '.mac'], gen_dir, files_to_generate, param, tw_sid, bd_sid);
+compileModel(model_name, model_dir, gen_dir, files_to_generate)
+
+%% Compile DISCON mex interface
+cd(fullfile(CADynTurb_dir, '..', 'simulator'))
+if ispc
+    mex -D_USE_MATH_DEFINES DISCON_mex.cpp
+else
+    mex DISCON_mex.cpp
+end
+cd(model_dir)
+
 %% DISCON parameters
 DISCON_param.comm_interval= 0.01;
 DISCON_param.Ptch_Min= 0;
@@ -22,8 +52,7 @@ DISCON_param.version= 0.0;
 
 
 %% setup path
-addpath(fullfile(pwd, 'generated'))
-addpath(fullfile(pwd, '../../simulator'))
+cd(gen_dir)
 model_indices
 load('params_config')
 
@@ -55,7 +84,7 @@ u(in_Tgen_idx, 1)= 0;
 u(in_theta_idx, 1)= 0;
 
 DISCON_mex() % terminate id necessary
-DISCON_mex(fullfile(pwd, '../../5MW_Baseline/DISCON.dll'), DISCON_param) % initialize
+DISCON_mex(fullfile(CADynTurb_dir, '../5MW_Baseline/DISCON.dll'), DISCON_param) % initialize
 [~, ~, ddq(:, 1)]= T1_mex(q(:, 1), dq(:, 1), ddq(:, 1), u(:, 1), p_, 0);
 
 for i= 2:nt
@@ -107,7 +136,7 @@ u1(in_Tgen_idx, 1)= 0;
 u1(in_theta_idx, 1)= 0;
 
 DISCON_mex() % terminate id necessary
-DISCON_mex(fullfile(pwd, '../../5MW_Baseline/DISCON.dll'), DISCON_param) % initialize
+DISCON_mex(fullfile(CADynTurb_dir, '../5MW_Baseline/DISCON.dll'), DISCON_param) % initialize
 k= zeros(4, 1);
 for i= 2:nt
     Tgen_meas= u1(in_Tgen_idx, i-1); % last setpoint, maybe not used by controller
