@@ -1,5 +1,5 @@
 function makeGpp(src, includes, options, defines, sources, linker_options, lib_dirs, libs)
-
+% TODO: double of compileProg?
 if ~exist('includes', 'var')
     includes= {};
 end
@@ -82,7 +82,7 @@ if ~isempty(libs)
 end
 args= strcat(args, {' '});
 args= [args{:}];
-[res, msg]= system(['g++ ' args ' -o ', src_file]);
+[res, msg]= system([getenv('CPP') ' ' args ' -o ', src_file]);
 
 if res
     error('Program was not properly compiled: %s', msg);

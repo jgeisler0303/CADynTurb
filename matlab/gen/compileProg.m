@@ -1,5 +1,5 @@
 function compileProg(sources, out_name, dependencies, defines, includes, lib_dirs, libs, flags, win_on_linux)
-
+% TODO: double of makeGpp?
 if ~iscell(sources)
     sources= {sources};
 end
@@ -89,13 +89,7 @@ end
 
 fprintf('Compiling standalone simulator "%s"\n', out_name)
 
-if exist('win_on_linux', 'var') && win_on_linux
-    compiler= 'i686-w64-mingw32-g++';
-else
-    compiler= 'g++';
-end
-
-command_str= [compiler ' ' flags ' ' defines ' ' includes ' ' sources ' ' lib_dirs ' ' libs ' -o ' out_name];
+command_str= [getenv('CPP') ' ' flags ' ' defines ' ' includes ' ' sources ' ' lib_dirs ' ' libs ' -o ' out_name];
 [res, msg]= system(command_str);
 if res~=0
     error('Compilation error: %s', msg)
