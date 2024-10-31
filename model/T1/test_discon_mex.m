@@ -44,7 +44,7 @@ DISCON_param.GenPwr_Dem= 0;
 DISCON_param.Ptch_SetPnt= 0;
 DISCON_param.yaw_ctrl_mode= 0;
 DISCON_param.num_blades= 3;
-DISCON_param.pitch_ctrl_mode= 0;
+DISCON_param.Ptch_Cntrl= 0;
 DISCON_param.gen_contractor= 1;
 DISCON_param.controller_state= 0;
 DISCON_param.time_to_output= 0;
@@ -63,7 +63,7 @@ ts= 0.01;
 nt= ceil(t_end/ts);
 t= 0:ts:t_end-ts;
 
-vwind= 11*ones(1, nt);
+vwind= 12*ones(1, nt);
 vwind(t>50 & t<100)= 12;
 % vwind= vwind*0.99; % adjustment for better match with OpenFAST
 

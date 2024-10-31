@@ -84,7 +84,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         }
         
         try {
-            DISCON= new DISCON_Interface(std::string(discon_path));
             if(nlhs==(in_idx_config_path+1)) {
                 if(!mxIsChar(prhs[in_idx_config_path]) || (mxGetM(prhs[in_idx_config_path]) != 1 )) { mexErrMsgIdAndTxt("DISCON:InvalidArgument", "Argument 'config_path' must be a character array"); return; }
                 char config_path[buflen];
@@ -95,7 +94,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                 }
                 
                 DISCON= new DISCON_Interface(std::string(discon_path), std::string(config_path));
-            }
+            } else
+                DISCON= new DISCON_Interface(std::string(discon_path));
             
             setDISCONParams(*DISCON, mxParams);
             
