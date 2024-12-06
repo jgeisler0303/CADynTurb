@@ -3,7 +3,8 @@ function d_acados= run_acados_simulation(acados_model, d_in, param)
 model_parameters
 ap= acados_params(parameter_names, param);
 acados_model.set('p', ap);
-acados_model.set('T', d_in.Time(2)-d_in.Time(1));
+% TODO: fix setting simstep
+% acados_model.set('T', d_in.Time(2)-d_in.Time(1));
 
 %% simulate system in loop
 clc
