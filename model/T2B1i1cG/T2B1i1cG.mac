@@ -4,12 +4,11 @@ SIMPLIFY: 1;
 SMALL_ELAST: 1;
 WITH_LINEAR: 1;
 WITH_ACCELERATIONS: 0;
-STATES: [tow_fa, tow_ss, bld1_flp, bld2_flp, bld3_flp, bld_edg, phi_rot, Dphi_gen, vwind, h_shear, v_shear, m_bld_mom];
-INPUTS: [Tgen, theta1, theta2, theta3, dvwind, dh_shear, dv_shear, dm_bld_mom];
-OUTPUTS: [tow_fa_acc, tow_ss_acc, gen_speed, bld1_edg_mom, bld1_flp_mom, bld2_edg_mom, bld2_flp_mom, bld3_edg_mom, bld3_flp_mom];
+STATES: [tow_fa, tow_ss, bld1_flp, bld2_flp, bld3_flp, bld_edg, phi_rot, phi_gen];
+INPUTS: [Tgen, theta1, theta2, theta3, vwind, h_shear, v_shear];
+OUTPUTS: [tow_fa_acc, tow_ss_acc, gen_speed, bld1_flp_mom, bld1_edg_mom, bld2_flp_mom, bld2_edg_mom, bld3_flp_mom, bld3_edg_mom];
 EXTERNAL: [cm1(), cm2(), cm3(), cmy_D23_1(), cmy_D23_2(), cmy_D23_3(), ct1(), ct2(), ct3(), cflp1(), cflp2(), cflp3(), cedg(), theta_deg1(), theta_deg2(), theta_deg3(), lam(), Trot1(tow_fa_d, phi_rot_d, bld1_flp_d, bld_edg_d, vwind, theta1, h_shear, v_shear, phi_rot), Trot2(tow_fa_d, phi_rot_d, bld2_flp_d, bld_edg_d, vwind, theta2, h_shear, v_shear, phi_rot), Trot3(tow_fa_d, phi_rot_d, bld3_flp_d, bld_edg_d, vwind, theta3, h_shear, v_shear, phi_rot), Fthrust1(tow_fa_d, phi_rot_d, bld1_flp_d, bld_edg_d, vwind, theta1, h_shear, v_shear, phi_rot), Fthrust2(tow_fa_d, phi_rot_d, bld2_flp_d, bld_edg_d, vwind, theta2, h_shear, v_shear, phi_rot), Fthrust3(tow_fa_d, phi_rot_d, bld3_flp_d, bld_edg_d, vwind, theta3, h_shear, v_shear, phi_rot), MyD23_1(tow_fa_d, phi_rot_d, bld1_flp_d, theta1, vwind, h_shear, v_shear, phi_rot), MyD23_2(tow_fa_d, phi_rot_d, bld2_flp_d, theta2, vwind, h_shear, v_shear, phi_rot), MyD23_3(tow_fa_d, phi_rot_d, bld3_flp_d, theta3, vwind, h_shear, v_shear, phi_rot), modalFlapForce1(tow_fa_d, phi_rot_d, bld1_flp_d, bld_edg_d, vwind, theta1, h_shear, v_shear, phi_rot), modalFlapForce2(tow_fa_d, phi_rot_d, bld2_flp_d, bld_edg_d, vwind, theta2, h_shear, v_shear, phi_rot), modalFlapForce3(tow_fa_d, phi_rot_d, bld3_flp_d, bld_edg_d, vwind, theta3, h_shear, v_shear, phi_rot), modalEdgeForce(tow_fa_d, phi_rot_d, bld1_flp_d, bld2_flp_d, bld3_flp_d, bld_edg_d, vwind, theta1, theta2, theta3), Ftow_y(tow_ss_d)];
-EXT_PARAM: [rho, lambdaMin, lambdaMax, lambdaStep, thetaMin, thetaMax, thetaStep, Arot, cm_lut[25, 91], ct_lut[25, 91], cmy_D23_lut[25, 91], cf_lut[25, 91], ce_lut[25, 91], dcm_dvf_v_lut[25, 91], dcm_dve_v_lut[25, 91], dcm_dkappa_v_lut[25, 91], dct_dvf_v_lut[25, 91], dct_dve_v_lut[25, 91], dct_dkappa_v_lut[25, 91], dcf_dvf_v_lut[25, 91], dcf_dve_v_lut[25, 91], dcf_dkappa_v_lut[25, 91], dce_dvf_v_lut[25, 91], dce_dve_v_lut[25, 91], dcmy_D23_dvf_v_lut[25, 91], dcmy_D23_dkappa_v_lut[25, 91], dcs_dvy_v_lut[25, 91]];
-F_EXT: [vwind_d-dvwind, h_shear_d-dh_shear, v_shear_d-dv_shear, dm_bld_mom-m_bld_mom_d-Tm_avg*m_bld_mom_dd];
+EXT_PARAM: [cone, tilt, rho, lambdaMin, lambdaMax, lambdaStep, thetaMin, thetaMax, thetaStep, Arot, cm_lut[25, 91], ct_lut[25, 91], cmy_D23_lut[25, 91], cf_lut[25, 91], ce_lut[25, 91], dcm_dvf_v_lut[25, 91], dcm_dve_v_lut[25, 91], dcm_dkappa_v_lut[25, 91], dct_dvf_v_lut[25, 91], dct_dve_v_lut[25, 91], dct_dkappa_v_lut[25, 91], dcf_dvf_v_lut[25, 91], dcf_dve_v_lut[25, 91], dcf_dkappa_v_lut[25, 91], dce_dvf_v_lut[25, 91], dce_dve_v_lut[25, 91], dcmy_D23_dvf_v_lut[25, 91], dcmy_D23_dkappa_v_lut[25, 91], dcs_dvy_v_lut[25, 91]];
 
 /* Gravity vector */
 gravity: [0, 0, -g];
@@ -74,7 +73,7 @@ mass[7]: 0;
 Ixx[7]: GenIner;
 Iyy[7]: 0;
 Izz[7]: 0;
-TrefG[7]:  Trotx(phi_rot*GBRatio+Dphi_gen);
+TrefG[7]:  Trotx(phi_gen);
 
 
 appliedForces():= (
@@ -111,7 +110,7 @@ appliedForces():= (
         appliedFe[i]: matrix([concat(modalFlapForce, i_)], [modalEdgeForce])
     ),
 
-    M_DT: -DTTorSpr*Dphi_gen/GBRatio - DTTorDmp*Dphi_gen_d/GBRatio,
+    M_DT: -DTTorSpr*(phi_gen/GBRatio-phi_rot) - DTTorDmp*(phi_gen_d/GBRatio-phi_rot_d),
 
     appliedM[7]: matrix([M_DT/GBRatio - Tgen], [0], [0]),
     appliedM[3]: matrix([-M_DT], [0], [0]),
@@ -123,5 +122,5 @@ appliedForces():= (
 );
 
 modelOutputs(sys):= (
-    [tow_fa_dd, tow_ss_dd, phi_rot_d*GBRatio+Dphi_gen_d, sys@constraints[1]-sin(theta1)*m_bld_mom, sys@constraints[2]-cos(theta1)*m_bld_mom, sys@constraints[3]-sin(theta2)*m_bld_mom, sys@constraints[4]-cos(theta2)*m_bld_mom, sys@constraints[5]-sin(theta3)*m_bld_mom, sys@constraints[6]-cos(theta3)*m_bld_mom]
+    [tow_fa_dd, tow_ss_dd, phi_gen_d, sys@constraints[2], sys@constraints[1], sys@constraints[4], sys@constraints[3], sys@constraints[6], sys@constraints[5]]
 );

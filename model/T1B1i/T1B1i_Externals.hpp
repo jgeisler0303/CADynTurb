@@ -6,7 +6,17 @@
 
 typedef decltype(std::declval<T1B1i>().param.cm_lut) MatCx;
 
-static double aeroForce(const int lambdaIdx, const double lambdaFact, const int thetaIdx, const double thetaFact, const Eigen::Ref<const MatCx> &cx_lut, const Eigen::Ref<const MatCx> &dcx_dvf_v_lut, const Eigen::Ref<const MatCx> &dcx_dkappa_v_lut, const double Fwind_v, const double vwind_eff, const double bld_flp_d, const double kappa) {
+static double aeroForce(const int lambdaIdx,
+                        const double lambdaFact,
+                        const int thetaIdx,
+                        const double thetaFact,
+                        const Eigen::Ref<const MatCx> &cx_lut,
+                        const Eigen::Ref<const MatCx> &dcx_dvf_v_lut,
+                        const Eigen::Ref<const MatCx> &dcx_dkappa_v_lut,
+                        const double Fwind_v,
+                        const double vwind_eff,
+                        const double bld_flp_d,
+                        const double kappa) {
     
     double cx_stat= LUT(cx_lut);
     double dcx_dvf_v= LUT(dcx_dvf_v_lut);
@@ -85,15 +95,39 @@ void T1B1i::calculateExternal() {
     modalFlapForce3= aeroForce(lambdaIdx, lambdaFact, thetaIdx3, thetaFact3, param.cf_lut, param.dcf_dvf_v_lut, param.dcf_dkappa_v_lut, Fwind_v3, vwind_eff3, states.bld3_flp_d, kappa3);
 }
 
-static void aeroForceAndDerivs(const int lambdaIdx, const double lambdaFact, const int thetaIdx, const double thetaFact, const double lambdaStep, const double thetaStep, const double u_, 
+static void aeroForceAndDerivs(const int lambdaIdx,
+                               const double lambdaFact,
+                               const int thetaIdx,
+                               const double thetaFact,
+                               const double lambdaStep,
+                               const double thetaStep,
+                               const double u_, 
                                const Eigen::Ref<const MatCx> &cx_lut,
                                const Eigen::Ref<const MatCx> &dcx_dvf_v_lut,
                                const Eigen::Ref<const MatCx> &dcx_dkappa_v_lut,
-                               double Fwind, double Fwind_v, double vwind_eff, const double bld_flp_d, const double phi_rot, const double bld_offset,
-                               const double h_shear, const double v_shear, const double torque_R,
-                               const double dlam_dvw, const double dlam_dvtow, const double dlam_dphi_rot_d,
-                               const double dFwind_dvtow, const double dFwind_dvw,
-                               double &X, double &dX_dtow_fa_d, double &dX_dphi_rot_d, double &dX_dbld_flp_d, double &dX_dh_shear, double &dX_dv_shear, double &dX_dvwind, double &dX_dtheta, double &dX_dphi_rot) {
+                               double Fwind,
+                               double Fwind_v,
+                               double vwind_eff,
+                               const double bld_flp_d,
+                               const double phi_rot,
+                               const double bld_offset,
+                               const double h_shear,
+                               const double v_shear,
+                               const double torque_R,
+                               const double dlam_dvw,
+                               const double dlam_dvtow,
+                               const double dlam_dphi_rot_d,
+                               const double dFwind_dvtow,
+                               const double dFwind_dvw,
+                               double &X,
+                               double &dX_dtow_fa_d,
+                               double &dX_dphi_rot_d,
+                               double &dX_dbld_flp_d,
+                               double &dX_dh_shear,
+                               double &dX_dv_shear,
+                               double &dX_dvwind,
+                               double &dX_dtheta,
+                               double &dX_dphi_rot) {
     
     Fwind= Fwind*u_*u_*u_*u_;
     Fwind_v= Fwind_v*u_*u_*u_;

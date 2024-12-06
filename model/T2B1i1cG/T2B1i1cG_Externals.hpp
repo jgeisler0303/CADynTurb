@@ -4,7 +4,7 @@
 #define DLAM_LUT(tab) ((thetaFact*(tab(lambdaIdx+1, thetaIdx)-tab(lambdaIdx, thetaIdx))/lambdaStep) + (1.0-thetaFact)*((tab(lambdaIdx+1, thetaIdx)-tab(lambdaIdx, thetaIdx))/lambdaStep))
 #define DTH_LUT(tab) (( (lambdaFact*tab(lambdaIdx, thetaIdx+1) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx+1))-(lambdaFact*tab(lambdaIdx, thetaIdx) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx)) )/thetaStep * -180.0/M_PI)
 
-typedef decltype(std::declval<turbine_T2B1i1cG_aero_estSystem>().param.cm_lut) MatCx;
+typedef decltype(std::declval<T2B1i1cG>().param.cm_lut) MatCx;
 
 static double aeroForce(const int lambdaIdx,
                         const double lambdaFact,
@@ -81,12 +81,12 @@ static double aeroForce_MyD23(const int lambdaIdx,
     torque_R)
 
 
-void turbine_T2B1i1cG_aero_estSystem::calculateExternal() {
+void T2B1i1cG::calculateExternal() {
     theta_deg1= -inputs.theta1/M_PI*180.0;
     theta_deg2= -inputs.theta2/M_PI*180.0;
     theta_deg3= -inputs.theta3/M_PI*180.0;
     
-    double vwind_eff= states.vwind-states.tow_fa_d;
+    double vwind_eff= inputs.vwind-states.tow_fa_d;
         
     lam= states.phi_rot_d*param.Rrot/vwind_eff;
     double Fwind_v= param.rho/2.0*param.Arot*vwind_eff;
@@ -116,15 +116,15 @@ void turbine_T2B1i1cG_aero_estSystem::calculateExternal() {
     int thetaIdx3= std::floor(thetaScaled3);
     double thetaFact3= 1.0 - thetaScaled3 + thetaIdx3;
 
+    // used in dcm_dve_v, dct_dve_v, etc.
     double theta_deg= 1.0/3.0*(theta_deg1+theta_deg2+theta_deg3);
     double thetaScaled= (theta_deg-param.thetaMin)/param.thetaStep;
     int thetaIdx= std::floor(thetaScaled);
     double thetaFact= 1.0 - thetaScaled + thetaIdx;
 
-    
-    double kappa1= -states.h_shear*sin(states.phi_rot) + states.v_shear*cos(states.phi_rot);
-    double kappa2= -states.h_shear*sin(states.phi_rot+2.0/3.0*M_PI) + states.v_shear*cos(states.phi_rot+2.0/3.0*M_PI);
-    double kappa3= -states.h_shear*sin(states.phi_rot+4.0/3.0*M_PI) + states.v_shear*cos(states.phi_rot+4.0/3.0*M_PI);
+    double kappa1= -inputs.h_shear*sin(states.phi_rot) + inputs.v_shear*cos(states.phi_rot);
+    double kappa2= -inputs.h_shear*sin(states.phi_rot+2.0/3.0*M_PI) + inputs.v_shear*cos(states.phi_rot+2.0/3.0*M_PI);
+    double kappa3= -inputs.h_shear*sin(states.phi_rot+4.0/3.0*M_PI) + inputs.v_shear*cos(states.phi_rot+4.0/3.0*M_PI);
 
     
     double dcm_dve_v= LUT(param.dcm_dve_v_lut);
@@ -345,12 +345,12 @@ static void aeroForceAndDerivs_MyD23(const int lambdaIdx,
     d ## var_name ## blade_num ## _dtheta ## blade_num,\
     d ## var_name ## blade_num ## _dphi_rot)
 
-void turbine_T2B1i1cG_aero_estSystem::calculateExternalWithDeriv() {
+void T2B1i1cG::calculateExternalWithDeriv() {
     theta_deg1= -inputs.theta1/M_PI*180.0;
     theta_deg2= -inputs.theta2/M_PI*180.0;
     theta_deg3= -inputs.theta3/M_PI*180.0;
     
-    double vwind_eff= states.vwind-states.tow_fa_d;
+    double vwind_eff= inputs.vwind-states.tow_fa_d;
     lam= states.phi_rot_d*param.Rrot/vwind_eff;
     double Fwind= param.rho/2.0*param.Arot*vwind_eff*vwind_eff;
     double Fwind_v= param.rho/2.0*param.Arot*vwind_eff;
@@ -380,26 +380,27 @@ void turbine_T2B1i1cG_aero_estSystem::calculateExternalWithDeriv() {
     int thetaIdx3= std::floor(thetaScaled3);
     double thetaFact3= 1.0 - thetaScaled3 + thetaIdx3;
     
+     // used in dcm_dve_v, dct_dve_v, etc.
     double theta_deg= 1.0/3.0*(theta_deg1+theta_deg2+theta_deg3);
     double thetaScaled= (theta_deg-param.thetaMin)/param.thetaStep;
     int thetaIdx= std::floor(thetaScaled);
     double thetaFact= 1.0 - thetaScaled + thetaIdx;
 
-    
+  
     double dFwind_dvw   =  2*Fwind_v; // 2*Fwind/vwind;
     double dFwind_dvtow = -2*Fwind_v; // -2*Fwind/vwind;
 
-    double kappa1= -states.h_shear*sin(states.phi_rot) + states.v_shear*cos(states.phi_rot);
-    double kappa2= -states.h_shear*sin(states.phi_rot+2.0/3.0*M_PI) + states.v_shear*cos(states.phi_rot+2.0/3.0*M_PI);
-    double kappa3= -states.h_shear*sin(states.phi_rot+4.0/3.0*M_PI) + states.v_shear*cos(states.phi_rot+4.0/3.0*M_PI);
+    double kappa1= -inputs.h_shear*sin(states.phi_rot) + inputs.v_shear*cos(states.phi_rot);
+    double kappa2= -inputs.h_shear*sin(states.phi_rot+2.0/3.0*M_PI) + inputs.v_shear*cos(states.phi_rot+2.0/3.0*M_PI);
+    double kappa3= -inputs.h_shear*sin(states.phi_rot+4.0/3.0*M_PI) + inputs.v_shear*cos(states.phi_rot+4.0/3.0*M_PI);
     
-    double dkappa1_dphi_rot= -states.h_shear*cos(states.phi_rot) - states.v_shear*sin(states.phi_rot);
-    double dkappa2_dphi_rot= -states.h_shear*cos(states.phi_rot+2.0/3.0*M_PI) - states.v_shear*sin(states.phi_rot+2.0/3.0*M_PI);
-    double dkappa3_dphi_rot= -states.h_shear*cos(states.phi_rot+4.0/3.0*M_PI) - states.v_shear*sin(states.phi_rot+4.0/3.0*M_PI);
+    double dkappa1_dphi_rot= -inputs.h_shear*cos(states.phi_rot) - inputs.v_shear*sin(states.phi_rot);
+    double dkappa2_dphi_rot= -inputs.h_shear*cos(states.phi_rot+2.0/3.0*M_PI) - inputs.v_shear*sin(states.phi_rot+2.0/3.0*M_PI);
+    double dkappa3_dphi_rot= -inputs.h_shear*cos(states.phi_rot+4.0/3.0*M_PI) - inputs.v_shear*sin(states.phi_rot+4.0/3.0*M_PI);
     
     
-    double dlam_dvw   = -lam/states.vwind;
-    double dlam_dvtow =  lam/states.vwind;
+    double dlam_dvw   = -lam/inputs.vwind;
+    double dlam_dvtow =  lam/inputs.vwind;
     double dlam_dphi_rot_d= lam/states.phi_rot_d;
 
     double dcm_dve_v= LUT(param.dcm_dve_v_lut);
