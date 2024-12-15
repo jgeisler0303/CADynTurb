@@ -41,13 +41,45 @@ setenv('cagem_path', fullfile(CADynTurb_dir, '../../CADyn/gen/cagem.mac'))
 %% check environment
 maxima= getenv('maxima_path');
 if isempty(maxima)
-    error(['Please install Maxima. For Windows you can download it from <a href = "matlab:web(''https://sourceforge.net/projects/maxima/files/Maxima-Windows/'')">here</a>. For Ubuntu you should install "sudo apt install maxima".' newline 'Then set the environment variable "maxima_path" to the full path of the maxima executable (batch file in windows). Do this by editing the script configCADynTurb accordingly.'])
+    if ispc
+        error(['Please install Maxima. You can download it from <a href = "matlab:web(''https://sourceforge.net/projects/maxima/files/Maxima-Windows/'')">here</a>.' newline 'Then set the environment variable "maxima_path" to the full path of the maxima batch file (this will be something like ""). Do this by editing the script configCADynTurb accordingly.'])
+    else
+        error(['Please install Maxima version 5.44 in the sblc flavor. You can download it from <a href = "matlab:web(''https://sourceforge.net/projects/maxima/files/Maxima-Linux/5.44.0-Linux/'')">here</a>. You have to download and install the files "maxima-sbcl_5.44.0-1_{arch}.{deb|rpm}" and "maxima-common_5.44.0-1_all.{deb|rpm}". After download, on Ubuntu install via "dpkg -i {debname}". Do not install the official Ubuntu package ("sudo apt install maxima")!.' newline 'Then set the environment variable "maxima_path" to the full path of the maxima executable ("/usr/bin/maxima"). Do this by editing the script configCADynTurb accordingly.'])        
+    end
 end
 [res, msg]= system([maxima ' --version']);
 if res~=0 || ~contains(msg, 'Maxima')
     error('The path "%s" does not point to a valid maxima executable', maxima)
 end
 
+%% check fpr maxima patch
+command_str= [maxima_path ' --batch-string="load(rducon)\$ declare(a, constant)\$ reduce_consts(a^2*x);"'];
+[status, res]= system(command_str);
+if contains(res, 'error')
+    if ispc
+        warning(['If you want to use pre-calculated constants (argument reduce_consts of function genCode) you have to edit the file "/usr/share/maxima/5.44.0/share/numeric/expense.lisp". Find the line "(defun multiplies-in-nth-power (nth)" and delete it and the following lines up to the line starting with ";;;". Then insert the follwing:' newline ...
+            '(defun multiplies-in-nth-power (n)' newline ...
+            '    "Calculate the number of multiplications required to compute a^n."' newline ...
+            '    (let ((multiplications 0)' newline ...
+            '    (power n))' newline ...
+            '        (while (> power 1)' newline ...
+            '        (if (evenp power)' newline ...
+            '            (progn' newline ...
+            '                (setq power (/ power 2))' newline ...
+            '                (incf multiplications)) ; Counting the squaring operation' newline ...
+            '            (progn' newline ...
+            '                (setq power (- power 1))' newline ...
+            '                (incf multiplications) ; Counting the multiplication to reduce the power' newline ...
+            '        )))' newline ...
+            '        (cond ((< multiplications $cost_float_power) multiplications)' newline ...
+            '            (t $cost_float_power))  ' newline ...   
+            '))'])
+    else
+        warning('If you want to use pre-calculated constants (argument reduce_consts of function genCode) you have to patch the file "/usr/share/maxima/5.44.0/share/numeric/expense.lisp" with the patch file in "matlab/gen" folder. (Run "sudo patch /usr/share/maxima/5.44.0/share/numeric/expense.lisp < %s/matlab/gen/expense.lisp.patch")', CADynTurb_dir)
+    end
+end
+
+%% Check for Aerodyn driver
 AD_driver= getenv('AD_DRIVER');
 if isempty(AD_driver)
     error(['Please download the AeroDyn standalone driver v3.3.0. For Windows you can download it from <a href = "matlab:web(''https://github.com/jgeisler0303/SimpleDynInflow/releases/download/AeroDyn_v3.3.0/AeroDyn_Driver_x64_Double.exe'')">here</a>. Additionally you need to install the Intel Fortran Compiler Runtime for Windows version 2023.2.4/2021.10.0 from <a href = "matlab:web(''https://www.intel.com/content/www/us/en/developer/articles/tool/compilers-redistributable-libraries-by-version.html'')">here</a>. For Ubuntu you can download this program from <a href = "matlab:web(''https://github.com/jgeisler0303/SimpleDynInflow/releases/download/AeroDyn_v3.3.0/aerodyn_driver'')">here</a>.' newline 'Then set the environment variable "AD_driver" to the full path of the AeroDyn driver executable. Do this by editing the script configCADynTurb accordingly.'])
@@ -98,9 +130,9 @@ if res~=0
         else
             include_dirs= [];
         end
-        error(['Please download version 3.3.8 of the eigen3 library from here: https://eigen.tuxfamily.org/index.php?title=Main_Page and copy the "Eigen" folder from the zip file to your gcc (MinGW) compilers include directory.' include_dirs])
+        error(['Please download version 3.3.9 (!) of the eigen3 library from here: https://eigen.tuxfamily.org/index.php?title=Main_Page and copy the "Eigen" and the "unsupported" folder from the zip file to your gcc (MinGW) compilers include directory.' include_dirs])
     else
-        error('Please download the eigen3 library from here: https://eigen.tuxfamily.org/index.php?title=Main_Page and copy everything from the zip file to your gcc include directory.')
+        error('Please download version 3.3.9 (!) of the eigen3 library from here: https://eigen.tuxfamily.org/index.php?title=Main_Page and copy the "Eigen" and the "unsupported" from the zip file to your gcc include directory (on Ubuntu that would be /usr/local/include).')
     end
 end
 

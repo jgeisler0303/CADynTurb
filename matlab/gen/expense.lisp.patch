@@ -1,0 +1,51 @@
+--- expense.lisp	2024-12-15 11:58:17.000000000 +0000
++++ expense.lisp.corrected	2024-12-13 18:05:33.960984624 +0000
+@@ -66,22 +66,23 @@
+          "A MACSYMA list of currently known CRAY-1 vector merge operations."
+          modified-commands '($block_optimize $expense))
+ 
+-(defun multiplies-in-nth-power (nth)
+-   (cond ((< nth 2) 0)
+-         (t
+-          (let ((slow (bignump nth)))
+-            (do ((exin nth (cond (slow (- exin (* pw2 rem)))
+-                                 (t (- exin (* pw2 rem)))))
+-                 (rem 0)
+-                 (in-cut -2 (+ 1 in-cut rem))
+-                 (pw2 1 (cond (slow (+ pw2 pw2))
+-                              (t (+ pw2 pw2)))))
+-                ((or (zerop exin) (> in-cut $cost_float_power))
+-                 (cond ((< in-cut $cost_float_power) in-cut)
+-                       (t $cost_float_power)))
+-              (declare (fixnum exin rem in-cut pw2))
+-              (setq rem (cond (slow (rem (quotient exin pw2) 2))
+-                              (t (/ (truncate exin pw2) 2)))))))))
++(defun multiplies-in-nth-power (n)
++        "Calculate the number of multiplications required to compute a^n."
++        (let ((multiplications 0)
++        (power n))
++            (while (> power 1)
++            (if (evenp power)
++                (progn
++                    (setq power (/ power 2))
++                    (incf multiplications)) ; Counting the squaring operation
++                (progn
++                    (setq power (- power 1))
++                    (incf multiplications) ; Counting the multiplication to reduce the power
++            )))
++            (cond ((< multiplications $cost_float_power) multiplications)
++                       (t $cost_float_power))     
++    ))
++
+ 
+ ;;; the following macro is courtesy of gjc.
+ 
+@@ -128,7 +129,7 @@
+                     (+ $cost_hyper_trig ($expense (cadr x))))
+                    ((member opr '(%cos %log %sin) :test #'eq)
+                     (+ $cost_sin_cos_log ($expense (cadr x))))
+-                   ((eq opr '%atan2)
++                   ((eq opr '$atan2)
+                     (+ $cost_hyper_trig ($expense (cadr x)) ($expense (caddr x))))
+                    (t
+                     (mformat nil "Beware: ~M is not in function base of EXPENSE~%" opr)

@@ -29,6 +29,12 @@ if exist('filter_369p', 'var') && filter_369p
     d_in.HSShftV.Data= notch_369p(d_in.HSShftV.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
     d_in.YawBrTAxp.Data= notch_369p(d_in.YawBrTAxp.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
     d_in.YawBrTAyp.Data= notch_369p(d_in.YawBrTAyp.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
+    d_in.RootMyb1.Data= notch_369p(d_in.RootMyb1.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
+    d_in.RootMxb1.Data= notch_369p(d_in.RootMxb1.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
+    d_in.RootMyb2.Data= notch_369p(d_in.RootMyb2.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
+    d_in.RootMxb2.Data= notch_369p(d_in.RootMxb2.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
+    d_in.RootMyb3.Data= notch_369p(d_in.RootMyb3.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
+    d_in.RootMxb3.Data= notch_369p(d_in.RootMxb3.Data, d_in.LSSTipVxa.Data/30*pi, d_in.Time(2)-d_in.Time(1));
 end
 
 % F= tf(1, [Tm_avg 1]);
