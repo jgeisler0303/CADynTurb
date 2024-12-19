@@ -3,7 +3,7 @@ CADynTurb_dir= fileparts(mfilename('fullpath'));
 top_dir= fileparts(fileparts(CADynTurb_dir));
 
 if any(CADynTurb_dir>127) || any(CADynTurb_dir==' ')
-    warning('The path of your CADynTurb installation contains ASCII characters >127 or spaces. This may cause problems, especially with AeroDyn or OpenFAST.')
+    error('The path of your CADynTurb installation contains ASCII characters >127 or spaces. This is currently not supported.')
 end
 
 if ~exist(fullfile(top_dir, 'CADyn'), 'dir')
@@ -114,7 +114,7 @@ else
 end
 setenv('CPP', mc(find(idx_gpp)).Details.CompilerExecutable)
 
-[res, msg]= system([getenv('CPP') ' ../simulator/test_eigen.cpp -o ../simulator/test_eigen']);
+[res, msg]= system([getenv('CPP') ' ' fullfile(CADynTurb_dir, '../simulator/test_eigen.cpp') ' -o ' fullfile(CADynTurb_dir, '../simulator/test_eigen')]);
 
 if res~=0
     if ispc
