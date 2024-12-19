@@ -53,7 +53,7 @@ if res~=0 || ~contains(msg, 'Maxima')
 end
 
 %% check fpr maxima patch
-command_str= [maxima_path ' --batch-string="load(rducon)\$ declare(a, constant)\$ reduce_consts(a^2*x);"'];
+command_str= [maxima ' --batch-string="load(rducon)\$ declare(a, constant)\$ reduce_consts(a^2*x);"'];
 [status, res]= system(command_str);
 if contains(res, 'error')
     if ispc
