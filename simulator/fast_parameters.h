@@ -14,7 +14,6 @@
 #include <array>
 #include <vector>
 #include <algorithm>
-#include <filesystem>
 
 class FAST_ParametersException: public std::exception {
 public:
@@ -60,7 +59,7 @@ public:
                 return;
         }
         
-        path= path.remove_filename();
+        path= remove_filename(path);
         if(path.empty()) path= "./";
         
         std::string line;
@@ -91,14 +90,8 @@ public:
                         iss >> value;
                         if(value[0]=='"') value= value.substr(1);
                         if(value.length()>0 && value.back()=='"') value= value.substr(0, value.length()-1);
+                        filenames.push_back(make_path_absolute(value));
                         
-                        std::filesystem::path fpath= value;
-                        if(fpath.is_relative()) {
-                            fpath= path;
-                            fpath+= value;
-                        }
-                
-                        filenames.push_back(fpath.string());
                     } else {
                         while(iss) {
                             iss >> value;
@@ -145,13 +138,7 @@ public:
                 if(value[0]=='"') value= value.substr(1);
                 if(value.length()>0 && value.back()=='"') value= value.substr(0, value.length()-1);
                 
-                std::filesystem::path fpath= value;
-                if(fpath.is_relative()) {
-                    fpath= path;
-                    fpath+= value;
-                }
-                
-                filenames.push_back(fpath.string());
+                filenames.push_back(make_path_absolute(value));
                 
                 continue;
             }
@@ -244,12 +231,7 @@ public:
     
     std::string getFilename(const std::string &name) {
         std::string value= getString(name);
-        std::filesystem::path fpath= value;
-        if(fpath.is_relative()) {
-            fpath= path;
-            fpath+= value;
-        }
-        return fpath.string();
+        return make_path_absolute(value);
     }
 
     const std::vector<std::vector<double>> &getTable(const std::string &name) {
@@ -260,6 +242,87 @@ public:
         //            return std::numeric_limits<double>::quiet_NaN();
         
         return tables[uname];
+    }
+    
+    bool is_path_relative(const std::string& the_path) {
+        if (the_path.empty()) {
+            return true; // An empty path is considered relative
+        }
+
+    #if defined(_WIN32) || defined(_WIN64)
+        // Windows-specific checks
+        // Check for drive letter (e.g., "C:\")
+        if (the_path.length() >= 2 && std::isalpha(the_path[0]) && the_path[1] == ':') {
+            return false;
+        }
+        // Check for UNC path (e.g., "\\server\share")
+        if (the_path.length() >= 2 && the_path[0] == '\\' && the_path[1] == '\\') {
+            return false;
+        }
+        // If it doesn't match the above patterns, it's relative
+        return true;
+
+    #else
+        // Unix-like systems
+        // An absolute path starts with '/'
+        return the_path[0] != '/';
+    #endif
+    }
+
+    // Function to concatenate two paths
+    std::string join_paths(const std::string& path1, const std::string& path2) {
+        if (path1.empty()) return path2;
+        if (path2.empty()) return path1;
+
+        #if defined(_WIN32) || defined(_WIN64)
+            char separator = '\\'; // Windows separator
+        #else
+            char separator = '/';  // Linux/Unix separator
+        #endif
+
+        // Remove trailing separator from path1 if present
+        std::string adjusted_path1 = path1;
+        if (adjusted_path1.back() == '/' || adjusted_path1.back() == '\\') {
+            adjusted_path1.pop_back();
+        }
+
+        // Remove leading separator from path2 if present
+        std::string adjusted_path2 = path2;
+        if (adjusted_path2.front() == '/' || adjusted_path2.front() == '\\') {
+            adjusted_path2.erase(0, 1);
+        }
+
+        // Join the two paths with the platform-specific separator
+        return adjusted_path1 + separator + adjusted_path2;
+    }
+
+    // Function to remove the filename from a given path
+    std::string remove_filename(const std::string& the_path) {
+        if (the_path.empty()) return the_path;
+
+        #if defined(_WIN32) || defined(_WIN64)
+            char separator = '\\'; // Windows separator
+        #else
+            char separator = '/';  // Linux/Unix separator
+        #endif
+
+        // Find the position of the last separator
+        std::size_t pos = the_path.find_last_of("/\\");
+
+        if (pos == std::string::npos) {
+            // No separator found, return an empty string
+            return "";
+        }
+
+        // Retain everything up to (and including) the last separator
+        return the_path.substr(0, pos + 1);
+    }
+
+    std::string make_path_absolute(const std::string& value) {
+        if(is_path_relative(value))
+            return join_paths(path, value);
+        else
+            return value;
     }
     
     friend std::ostream& operator<< (std::ostream& os, const FAST_Parameters& p) {
@@ -299,7 +362,7 @@ protected:
     
     std::vector<std::string> filenames;
     
-    std::filesystem::path path;
+    std::string path;
     std::string comment;
     
     static const std::map<std::string, int> table_labels;

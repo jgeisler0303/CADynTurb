@@ -13,7 +13,6 @@
 #include <limits>
 #include <array>
 #include <vector>
-#include <filesystem>
 #include <algorithm>
 #include "fast_parameters.h"
 
@@ -145,12 +144,7 @@ public:
             }
         } else {
             std::string value= getString(name);
-            std::filesystem::path fpath= value;
-            if(fpath.is_relative()) {
-                fpath= path;
-                fpath+= value;
-            }
-            return fpath.string();
+            return make_path_absolute(value);
         }
     }
 
