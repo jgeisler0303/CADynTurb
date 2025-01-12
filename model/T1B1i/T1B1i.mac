@@ -39,8 +39,8 @@ Ixx[3]: HubIner;
 Iyy[3]: HubIner;
 Izz[3]: HubIner;
 BodyRef[3]: 2;
-/* TrefG[3]:  Tdisp(HubCM+OverHang-NacCMxn, -NacCMyn, Twr2Shft-NacCMzn).Troty(tilt).Trotx(phi_rot); */
-TrefG[3]:  Tdisp(HubCM+OverHang-NacCMxn, -NacCMyn, Twr2Shft-NacCMzn).Trotx(phi_rot);
+TrefG[3]:  Tdisp(HubCM+OverHang-NacCMxn, -NacCMyn, Twr2Shft-NacCMzn).Troty(tilt).Trotx(phi_rot);
+/* TrefG[3]:  Tdisp(HubCM+OverHang-NacCMxn, -NacCMyn, Twr2Shft-NacCMzn).Trotx(phi_rot); */
 
 /* 4,5,6 Blades */
 load(filename_merge(load_pathname, "bd_sid.mac"));
@@ -49,22 +49,22 @@ load(filename_merge(load_pathname, "bd_sid.mac"));
 elastic_dof[4]: [bld1_flp];
 ebody[4]: blade;
 BodyRef[4]: 3;
-/* TrefG[4]:  Tdisp(-HubCM, 0, 0).Troty(cone).Trotz(theta1).Trotx(z[1]).Troty(z[2]); */
-TrefG[4]:  Tdisp(-HubCM, 0, 0).Trotz(theta1).Trotx(z[1]).Troty(z[2]);
+TrefG[4]:  Tdisp(-HubCM, 0, 0).Troty(cone).Trotz(theta1).Trotx(z[1]).Troty(z[2]);
+/* TrefG[4]:  Tdisp(-HubCM, 0, 0).Trotz(theta1).Trotx(z[1]).Troty(z[2]); */
 
 /* Blade 2 */
 elastic_dof[5]: [bld2_flp];
 ebody[5]: blade;
 BodyRef[5]: 3;
-/* TrefG[5]:  Tdisp(-HubCM, 0, 0).Trotx(%pi/3*2).Troty(cone).Trotz(theta2).Trotx(z[3]).Troty(z[4]); */
-TrefG[5]:  Tdisp(-HubCM, 0, 0).Trotx(%pi/3*2).Trotz(theta2).Trotx(z[3]).Troty(z[4]);
+TrefG[5]:  Tdisp(-HubCM, 0, 0).Trotx(%pi/3*2).Troty(cone).Trotz(theta2).Trotx(z[3]).Troty(z[4]);
+/* TrefG[5]:  Tdisp(-HubCM, 0, 0).Trotx(%pi/3*2).Trotz(theta2).Trotx(z[3]).Troty(z[4]); */
 
 /* Blade 3 */
 elastic_dof[6]: [bld3_flp];
 ebody[6]: blade;
 BodyRef[6]: 3;
-/* TrefG[6]:  Tdisp(-HubCM, 0, 0).Trotx(%pi/3*4).Troty(cone).Trotz(theta3).Trotx(z[5]).Troty(z[6]); */
-TrefG[6]:  Tdisp(-HubCM, 0, 0).Trotx(%pi/3*4).Trotz(theta3).Trotx(z[5]).Troty(z[6]);
+TrefG[6]:  Tdisp(-HubCM, 0, 0).Trotx(%pi/3*4).Troty(cone).Trotz(theta3).Trotx(z[5]).Troty(z[6]);
+/* TrefG[6]:  Tdisp(-HubCM, 0, 0).Trotx(%pi/3*4).Trotz(theta3).Trotx(z[5]).Troty(z[6]); */
 
 /* 7 Geno */
 BodyRef[7]: 2;
