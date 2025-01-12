@@ -6,7 +6,17 @@
 
 typedef decltype(std::declval<T1B1i_est>().param.cm_lut) MatCx;
 
-static double aeroForce(const int lambdaIdx, const double lambdaFact, const int thetaIdx, const double thetaFact, const Eigen::Ref<const MatCx> &cx_lut, const Eigen::Ref<const MatCx> &dcx_dvf_v_lut, const Eigen::Ref<const MatCx> &dcx_dkappa_v_lut, const double Fwind_v, const double vwind_eff, const double bld_flp_d, const double kappa) {
+static double aeroForce(const int lambdaIdx, 
+                        const double lambdaFact,
+                        const int thetaIdx,
+                        const double thetaFact,
+                        const Eigen::Ref<const MatCx> &cx_lut,
+                        const Eigen::Ref<const MatCx> &dcx_dvf_v_lut,
+                        const Eigen::Ref<const MatCx> &dcx_dkappa_v_lut,
+                        const double Fwind_v,
+                        const double vwind_eff,
+                        const double bld_flp_d,
+                        const double kappa) {
     
     double cx_stat= LUT(cx_lut);
     double dcx_dvf_v= LUT(dcx_dvf_v_lut);
@@ -25,19 +35,20 @@ void T1B1i_est::calculateExternal() {
     double cone1_= param.cone+states.bld1_flp/param.Rrot*1.3;
     double cone2_= param.cone+states.bld2_flp/param.Rrot*1.3;
     double cone3_= param.cone+states.bld3_flp/param.Rrot*1.3;
-    double tilt_= param.tilt + states.tow_fa*param.tower_frame_56_psi0_2_1;
+    double tilt_= param.tilt + states.tow_fa*param.tower_frame_11_psi0_2_1;
     double u_1= (sin(states.phi_rot)*sin(inputs.theta1)-sin(cone1_)*cos(states.phi_rot)*cos(inputs.theta1))*sin(param.tilt)+cos(cone1_)*cos(inputs.theta1)*cos(tilt_);
     double u_2= (sin(states.phi_rot+2.0/3.0*M_PI)*sin(inputs.theta2)-sin(cone2_)*cos(states.phi_rot+2.0/3.0*M_PI)*cos(inputs.theta2))*sin(tilt_)+cos(cone2_)*cos(inputs.theta2)*cos(tilt_);
     double u_3= (sin(states.phi_rot+4.0/3.0*M_PI)*sin(inputs.theta3)-sin(cone3_)*cos(states.phi_rot+4.0/3.0*M_PI)*cos(inputs.theta3))*sin(tilt_)+cos(cone3_)*cos(inputs.theta3)*cos(tilt_);
+
     double vwind_eff1= vwind_eff*u_1;
     double vwind_eff2= vwind_eff*u_2;
     double vwind_eff3= vwind_eff*u_3;
-    
+
     lam= states.phi_rot_d*param.Rrot/vwind_eff;
     double Fwind_v1= param.rho/2.0*param.Arot*u_1*u_1*vwind_eff1;
     double Fwind_v2= param.rho/2.0*param.Arot*u_2*u_2*vwind_eff2;
     double Fwind_v3= param.rho/2.0*param.Arot*u_3*u_3*vwind_eff3;
-    
+     
     if(lam>param.lambdaMax-param.lambdaStep) lam= param.lambdaMax-param.lambdaStep;
     if(lam<param.lambdaMin) lam= param.lambdaMin;
     if(theta_deg1>param.thetaMax-param.thetaStep) theta_deg1= param.thetaMax-param.thetaStep;
@@ -84,19 +95,43 @@ void T1B1i_est::calculateExternal() {
     modalFlapForce3= aeroForce(lambdaIdx, lambdaFact, thetaIdx3, thetaFact3, param.cf_lut, param.dcf_dvf_v_lut, param.dcf_dkappa_v_lut, Fwind_v3, vwind_eff3, states.bld3_flp_d, kappa3);
 }
 
-static void aeroForceAndDerivs(const int lambdaIdx, const double lambdaFact, const int thetaIdx, const double thetaFact, const double lambdaStep, const double thetaStep, const double u_x,
+static void aeroForceAndDerivs(const int lambdaIdx, 
+                               const double lambdaFact,
+                               const int thetaIdx,
+                               const double thetaFact,
+                               const double lambdaStep,
+                               const double thetaStep,
+                               const double u_, 
                                const Eigen::Ref<const MatCx> &cx_lut,
                                const Eigen::Ref<const MatCx> &dcx_dvf_v_lut,
                                const Eigen::Ref<const MatCx> &dcx_dkappa_v_lut,
-                               double Fwind, double Fwind_v, double vwind_eff, const double bld_flp_d, const double phi_rot, const double bld_offset,
-                               const double h_shear, const double v_shear, const double torque_R,
-                               const double dlam_dvw, const double dlam_dvtow, const double dlam_dphi_rot_d,
-                               const double dFwind_dvtow, const double dFwind_dvw,
-                               double &X, double &dX_dtow_fa_d, double &dX_dphi_rot_d, double &dX_dbld_flp_d, double &dX_dh_shear, double &dX_dv_shear, double &dX_dvwind, double &dX_dtheta, double &dX_dphi_rot) {
+                               double Fwind,
+                               double Fwind_v,
+                               double vwind_eff,
+                               const double bld_flp_d,
+                               const double phi_rot,
+                               const double bld_offset,
+                               const double h_shear,
+                               const double v_shear,
+                               const double torque_R,
+                               const double dlam_dvw,
+                               const double dlam_dvtow,
+                               const double dlam_dphi_rot_d,
+                               const double dFwind_dvtow,
+                               const double dFwind_dvw,
+                               double &X,
+                               double &dX_dtow_fa_d,
+                               double &dX_dphi_rot_d,
+                               double &dX_dbld_flp_d,
+                               double &dX_dh_shear,
+                               double &dX_dv_shear,
+                               double &dX_dvwind,
+                               double &dX_dtheta,
+                               double &dX_dphi_rot) {
     
-    Fwind= Fwind*u_x*u_x*u_x*u_x;
-    Fwind_v= Fwind_v*u_x*u_x*u_x;
-    vwind_eff= vwind_eff*u_x;
+    Fwind= Fwind*u_*u_*u_*u_;
+    Fwind_v= Fwind_v*u_*u_*u_;
+    vwind_eff= vwind_eff*u_;
 
     double kappa= -h_shear*sin(phi_rot+bld_offset) + v_shear*cos(phi_rot+bld_offset);
 
@@ -169,18 +204,18 @@ void T1B1i_est::calculateExternalWithDeriv() {
     double cone1_= param.cone+states.bld1_flp/param.Rrot*1.3;
     double cone2_= param.cone+states.bld2_flp/param.Rrot*1.3;
     double cone3_= param.cone+states.bld3_flp/param.Rrot*1.3;
-    double tilt_= param.tilt + states.tow_fa*param.tower_frame_56_psi0_2_1;
+    double tilt_= param.tilt + states.tow_fa*param.tower_frame_11_psi0_2_1;
     double u_1= (sin(states.phi_rot)*sin(inputs.theta1)-sin(cone1_)*cos(states.phi_rot)*cos(inputs.theta1))*sin(param.tilt)+cos(cone1_)*cos(inputs.theta1)*cos(tilt_);
     double u_2= (sin(states.phi_rot+2.0/3.0*M_PI)*sin(inputs.theta2)-sin(cone2_)*cos(states.phi_rot+2.0/3.0*M_PI)*cos(inputs.theta2))*sin(tilt_)+cos(cone2_)*cos(inputs.theta2)*cos(tilt_);
     double u_3= (sin(states.phi_rot+4.0/3.0*M_PI)*sin(inputs.theta3)-sin(cone3_)*cos(states.phi_rot+4.0/3.0*M_PI)*cos(inputs.theta3))*sin(tilt_)+cos(cone3_)*cos(inputs.theta3)*cos(tilt_);
 
-    aeroForceAndDerivs(lambdaIdx, lambdaFact, thetaIdx1, thetaFact1, param.lambdaStep, param.thetaStep, u_1,
+    aeroForceAndDerivs(lambdaIdx, lambdaFact, thetaIdx1, thetaFact1, param.lambdaStep, param.thetaStep,  u_1,
                        param.cm_lut, param.dcm_dvf_v_lut, param.dcm_dkappa_v_lut, 
                        Fwind, Fwind_v, vwind_eff, states.bld1_flp_d, states.phi_rot, 0.0, states.h_shear, states.v_shear, param.Rrot/3.0,
                        dlam_dvw, dlam_dvtow, dlam_dphi_rot_d,
                        dFwind_dvtow, dFwind_dvw, 
                        Trot1, dTrot1_dtow_fa_d, dTrot1_dphi_rot_d, dTrot1_dbld1_flp_d, dTrot1_dh_shear, dTrot1_dv_shear, dTrot1_dvwind, dTrot1_dtheta1, dTrot1_dphi_rot);
-    aeroForceAndDerivs(lambdaIdx, lambdaFact, thetaIdx2, thetaFact2, param.lambdaStep, param.thetaStep, u_2,
+    aeroForceAndDerivs(lambdaIdx, lambdaFact, thetaIdx2, thetaFact2, param.lambdaStep, param.thetaStep,  u_2,
                        param.cm_lut, param.dcm_dvf_v_lut, param.dcm_dkappa_v_lut, 
                        Fwind, Fwind_v, vwind_eff, states.bld2_flp_d, states.phi_rot, 2.0/3.0*M_PI, states.h_shear, states.v_shear, param.Rrot/3.0,
                        dlam_dvw, dlam_dvtow, dlam_dphi_rot_d,
