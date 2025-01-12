@@ -44,13 +44,13 @@ get_ekf_config= str2func([model_name '_ekf_config']);
 ekf_config= get_ekf_config();
 model_indices
 
-ix_vwind= find(ekf_config.estimated_states==vwind_idx);
+% ix_vwind= find(ekf_config.estimated_states==vwind_idx);
 ix_h_shear= find(ekf_config.estimated_states==h_shear_idx);
 ix_v_shear= find(ekf_config.estimated_states==v_shear_idx);
 param.fixedQxx= zeros(length(ekf_config.estimated_states), 1);
-param.fixedQxx(ix_vwind)= (10^-2.8)^2; % for 10ms
-param.fixedQxx(ix_h_shear)= eps; %(10^-4)^2; % for 10ms
-param.fixedQxx(ix_v_shear)= eps; %(10^-4)^2; % for 10ms
+% param.fixedQxx(ix_vwind)= (10^-2.8)^2; % for 10ms
+param.fixedQxx(ix_h_shear)= (10^-4)^2; % for 10ms
+param.fixedQxx(ix_v_shear)= (10^-4)^2; % for 10ms
 
 % param.adaptScale= [2 1];
 

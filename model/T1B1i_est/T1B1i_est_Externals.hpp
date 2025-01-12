@@ -30,7 +30,7 @@ void T1B1i_est::calculateExternal() {
     theta_deg2= -inputs.theta2/M_PI*180.0;
     theta_deg3= -inputs.theta3/M_PI*180.0;
     
-    double vwind_eff= states.vwind-states.tow_fa_d;
+    double vwind_eff= inputs.vwind-states.tow_fa_d;
         
     double cone1_= param.cone+states.bld1_flp/param.Rrot*1.3;
     double cone2_= param.cone+states.bld2_flp/param.Rrot*1.3;
@@ -164,7 +164,7 @@ void T1B1i_est::calculateExternalWithDeriv() {
     theta_deg2= -inputs.theta2/M_PI*180.0;
     theta_deg3= -inputs.theta3/M_PI*180.0;
     
-    double vwind_eff= states.vwind-states.tow_fa_d;
+    double vwind_eff= inputs.vwind-states.tow_fa_d;
     lam= states.phi_rot_d*param.Rrot/vwind_eff;
     double Fwind= param.rho/2.0*param.Arot*vwind_eff*vwind_eff;
     double Fwind_v= param.rho/2.0*param.Arot*vwind_eff;
@@ -197,8 +197,8 @@ void T1B1i_est::calculateExternalWithDeriv() {
     double dFwind_dvw   =  2*Fwind_v; // 2*Fwind/vwind;
     double dFwind_dvtow = -2*Fwind_v; // -2*Fwind/vwind;
     
-    double dlam_dvw   = -lam/states.vwind;
-    double dlam_dvtow =  lam/states.vwind;
+    double dlam_dvw   = -lam/inputs.vwind;
+    double dlam_dvtow =  lam/inputs.vwind;
     double dlam_dphi_rot_d= lam/states.phi_rot_d;
 
     double cone1_= param.cone+states.bld1_flp/param.Rrot*1.3;
