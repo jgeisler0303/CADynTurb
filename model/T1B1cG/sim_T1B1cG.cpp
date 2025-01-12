@@ -251,6 +251,10 @@ bool simulate(T1B1cG &system, FAST_Wind* wind, double ts, double tfinal, const s
     DISCON.gen_speed_meas= system.states.phi_gen_d;
     DISCON.power_out_meas= DISCON.gen_speed_meas * DISCON.gen_torque_meas;
     
+    DISCON.blade1_pitch= -system.inputs.theta;
+    DISCON.blade2_pitch= -system.inputs.theta;
+    DISCON.blade3_pitch= -system.inputs.theta;
+    
     DISCON.sp_pitch_partial= p["ServoFile.Ptch_SetPnt"]/180.0*M_PI;
     DISCON.ts_lut_idx= 0;
     DISCON.ts_lut_len= 0;
