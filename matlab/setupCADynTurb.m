@@ -106,6 +106,12 @@ if ispc
     if ~any(idx_gpp)
         error('Please install the MinGW64 Compiler via MATLAB Add-Ons and setup up the compiler for the MATLAB mex by running <a href = "matlab:mex -setup)">mex -setup</a>')
     end
+    syspath= getenv('PATH');
+    syspaths= split(syspath, ';');
+    cpppath= fileparts(mc(find(idx_gpp)).Details.CompilerExecutable);
+    if ~any(strcmp(cpppath, syspaths))
+        setenv('PATH', [cpppath ';' syspath])
+    end
 else
     idx_gpp= strcmp({mc.Name}, 'g++');
     if ~any(idx_gpp)
