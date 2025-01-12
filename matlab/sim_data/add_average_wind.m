@@ -63,7 +63,7 @@ function d= addBTS(bts_path, d)
 end
 
 function d= addWND(wnd_path, d, R)
-[velocity, y, z, nz, ny, dz, dy, dt, zHub, z1, SummVars]= readBLgrid(wnd_path);
+[velocity, y, z, nz, ny, dz, dy, dt, zHub, z1, SummVars]= readfile_WND(wnd_path);
 
 nt= size(velocity, 1);
 

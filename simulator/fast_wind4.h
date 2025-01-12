@@ -24,6 +24,7 @@ public:
     virtual ~FAST_Wind_Type4() {}
     
     void loadWindFile(const std::string& Filename) {
+		// based on readBLgrid.m, should be updated with improvements from readfile_WND.m
 		if(with_shear)
 			throw FAST_WindException("Loading shear information from Bladed wind files currently not supported");
 		
