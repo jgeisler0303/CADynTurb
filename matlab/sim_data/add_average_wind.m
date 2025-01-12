@@ -63,23 +63,42 @@ function d= addBTS(bts_path, d)
 end
 
 function d= addWND(wnd_path, d, R)
-[velocity, y, z, nz, ny, dz, dy, dt, zHub, z1, SummVars]= readfile_WND(wnd_path);
+    [velocity, y, z, nz, ny, dz, dy, dt, zHub, z1, SummVars]= readfile_WND(wnd_path);
+    
+    nt= size(velocity, 1);
 
-nt= size(velocity, 1);
+    % get points in rotor disc
+    [Y, Z]= meshgrid(y, z-zHub);
+    
+    DistanceFromHub= (Z(:).^2+Y(:).^2).^0.5;
+    PointsInRotorDisc= DistanceFromHub <= R;
+    
+    % calculate REWS = mean of all u components in rotor disc
+    U3D= squeeze(velocity(:, 1, :, :));       % [nt,ny,nz]
+    U2D= reshape(U3D, nt, []);               % [nt,ny*nz]
+    
+    vel_shear= [ones(sum(PointsInRotorDisc), 1) Y(PointsInRotorDisc(:)) Z(PointsInRotorDisc(:))-zHub]\squeeze(velocity(:, 1, PointsInRotorDisc(:)))';
+    
+    wind= vel_shear(1, :)'; % mean(U2D(:, PointsInRotorDisc), 2);
+    hshear= vel_shear(2, :)';
+    vshear= vel_shear(3, :)';
+    
+    tv= (0:nt-1)*dt;
+    
+    time= d.Time; % + ((ny-1)*dy/2)/u_hub;
+    d.RtVAvgxh.Data= interp1(tv, wind, time);
 
-% get points in rotor disc
-[Y, Z]= meshgrid(y, z-zHub);
-
-DistanceFromHub= (Z(:).^2+Y(:).^2).^0.5;
-PointsInRotorDisc= DistanceFromHub <= R;
-
-% calculate REWS = mean of all u components in rotor disc
-U3D= squeeze(velocity(:, 1, :, :));       % [nt,ny,nz]
-U2D= reshape(U3D, nt, []);               % [nt,ny*nz]
-
-wind= mean(U2D(:, PointsInRotorDisc), 2);
-tv= (0:nt-1)*dt;
-
-time= d.Time; % + ((ny-1)*dy/2)/u_hub;
-d.RtVAvgxh.Data= interp1(tv, wind, time);
+    RtHSAvg= timeseries('RtHSAvg');
+    RtHSAvg.Time= time;
+    RtHSAvg.Data=interp1(tv, hshear, time);
+    RtHSAvg.DataInfo.Units= 'm/s/m';
+    RtHSAvg.TimeInfo.Units= 's';
+    d= d.addts(RtHSAvg);
+    
+    RtVSAvg= timeseries('RtVSAvg');
+    RtVSAvg.Time= time;
+    RtVSAvg.Data=interp1(tv, vshear, time);
+    RtVSAvg.DataInfo.Units= 'm/s/m';
+    RtVSAvg.TimeInfo.Units= 's';
+    d= d.addts(RtVSAvg);
 end
