@@ -3,23 +3,34 @@ if ~exist('R', 'var')
     R= 92/2;
 end
 
-bts_file= regexprep(fst_file, 'NacYaw-(neg)?(\d+)_', '');
-bts_file= strrep(bts_file, '1p1', 'NTM');
-bts_file= strrep(bts_file, 'coh', 'NTM');
-bts_file= strrep(bts_file, 'shear', 'NTM');
-bts_file= strrep(bts_file, 'maininput', 'turbsim_shear.bts');
+if strcmp(wind_dir(end-3:end), '.bts')
+    bts_path= wind_dir;
+elseif strcmp(wind_dir(end-3:end), '.wnd')
+    wnd_path= wind_dir;
+    bts_path= strrep(wnd_path, '.wnd', '.bts');
+else
+    bts_file= regexprep(fst_file, 'NacYaw-(neg)?(\d+)_', '');
+    bts_file= strrep(bts_file, '1p1', 'NTM');
+    bts_file= strrep(bts_file, 'coh', 'NTM');
+    bts_file= strrep(bts_file, 'shear', 'NTM');
+    bts_file= strrep(bts_file, 'maininput', 'turbsim_shear.bts');
+    
+    bts_path= fullfile(wind_dir, bts_file);
+end
 
-bts_path= fullfile(wind_dir, bts_file);
 if exist(bts_path, 'file')
     d= addBTS(bts_path, d);
 else
-    toks= regexp(bts_file, 'URef-(\d*)_RandSeed1-(\d*)_', 'tokens', 'once');
-    if length(toks)~=2
-        error ('Wind file name has no wind speed and randseed')
+    if ~exist(wnd_path, 'file')
+        toks= regexp(bts_file, 'URef-(\d*)_RandSeed1-(\d*)_', 'tokens', 'once');
+        if length(toks)~=2
+            error ('Wind file name has no wind speed and randseed')
+        end
+        vw= str2double(toks{1});
+        rs= str2double(toks{2});
+        wnd_path= fullfile(wind_dir, sprintf('URef_%02d_Seed_%02d%02d.wnd', vw, vw, rs));
     end
-    vw= str2double(toks{1});
-    rs= str2double(toks{2});
-    wnd_path= fullfile(wind_dir, sprintf('URef_%02d_Seed_%02d%02d.wnd', vw, vw, rs));
+
     if exist(wnd_path, 'file')
         d= addWND(wnd_path, d, R);
     else
