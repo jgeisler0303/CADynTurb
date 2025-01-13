@@ -69,10 +69,14 @@ function d= addWND(wnd_path, d, R)
 
     % get points in rotor disc
     [Y, Z]= meshgrid(y, z-zHub);
-    
-    DistanceFromHub= (Z(:).^2+Y(:).^2).^0.5;
-    PointsInRotorDisc= DistanceFromHub <= R;
-    
+    if nz<=4 || ny<=4
+        PointsInRotorDisc= true(nz*ny, 1);
+    else
+        
+        DistanceFromHub= (Z(:).^2+Y(:).^2).^0.5;
+        PointsInRotorDisc= DistanceFromHub <= R;
+    end
+
     % calculate REWS = mean of all u components in rotor disc
     U3D= squeeze(velocity(:, 1, :, :));       % [nt,ny,nz]
     U2D= reshape(U3D, nt, []);               % [nt,ny*nz]
