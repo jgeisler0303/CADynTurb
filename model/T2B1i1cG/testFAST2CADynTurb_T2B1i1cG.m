@@ -8,7 +8,7 @@ fst_file= '../../5MW_Baseline/5MW_Land_DLL_WTurb.fst';
 model_name= 'T2B1i1cG';
 gen_dir= fullfile(model_dir, 'generated');
 
-files_to_generate= {'cpp_direct'};
+files_to_generate= {'cpp_direct', 'descriptor_form'};
 
 %% calculate parameters
 [param, ~, tw_sid, bd_sid]= FAST2CADynTurb(fst_file, {[1 2]}, [1 2]);
