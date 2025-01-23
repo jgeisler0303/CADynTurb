@@ -98,5 +98,6 @@ function d= addWind(d, velocity, y, z, dt, t_offset, R)
     RtVSAvg.Data=interp1(tv, vshear, time);
     RtVSAvg.DataInfo.Units= 'm/s/m';
     RtVSAvg.TimeInfo.Units= 's';
+
     d= d.addts(RtVSAvg);    
 end
