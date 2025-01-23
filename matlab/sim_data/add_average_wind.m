@@ -1,4 +1,5 @@
 function d= add_average_wind(d, wind_dir, fst_file, R)
+% TODO: does not consider OverHang
 if ~exist('R', 'var')
     R= 92/2;
 end
@@ -19,9 +20,9 @@ else
 end
 
 if exist(bts_path, 'file')
-    d= addBTS(bts_path, d);
+    d= addBTS(bts_path, d, R);
 else
-    if ~exist(wnd_path, 'file')
+    if ~exist('wnd_path', 'var') || ~exist(wnd_path, 'file')
         toks= regexp(bts_file, 'URef-(\d*)_RandSeed1-(\d*)_', 'tokens', 'once');
         if length(toks)~=2
             error ('Wind file name has no wind speed and randseed')
@@ -39,47 +40,63 @@ else
 end
 end
 
-function d= addBTS(bts_path, d)
-    [velocity, ~, ~, ~, ~, ~, ny, dz, dy, dt,~, ~, u_hub]= readfile_BTS(bts_path);
-    tv= (0:(size(velocity, 1)-1))*dt;
-    time= d.Time + ((ny-1)*dy/2)/u_hub;
-    d.RtVAvgxh.Data= interp1(tv, (velocity(:, 1, 1, 1)+velocity(:, 1, 2, 1)+velocity(:, 1, 1, 2)+velocity(:, 1, 2, 2))/4, time);
+function d= addBTS(bts_path, d, R)
+    [velocity, ~, y, z, ~, ~, ny, ~, dy, dt, zHub, ~, u_hub]= readfile_BTS(bts_path);
+
+    % assume the wind file is not periodic, otherwise the offset should be 0
+    t_offset= ((ny-1)*dy/2)/u_hub;
+    d= addWind(d, velocity, y, z-zHub, dt, t_offset, R);
+end
+
+function d= addWND(wnd_path, d, R)
+    [velocity, y, z, ~, ~, ~, ~, dt, zHub, ~, ~]= readfile_WND(wnd_path);
+    
+    % assume the wind file is periodic, otherwise the offset should be ((ny-1)*dy/2)/u_hub
+    t_offset= 0;
+    d= addWind(d, velocity, y, z-zHub, dt, t_offset, R);
+end
+
+function d= addWind(d, velocity, y, z, dt, t_offset, R)
+    % get points in rotor disc
+    [Z, Y]= meshgrid(z, y);
+    
+    if length(y)<=5 || length(z)<=5 || isempty(R)
+        PointsInRotorDisc= true(size(Z(:)));
+    else
+        DistanceFromHub= (Z(:).^2+Y(:).^2).^0.5;
+        PointsInRotorDisc= DistanceFromHub <= R;
+    end
+
+    nt= size(velocity, 1);
+    U3D= squeeze(velocity(:, 1, :, :));       % [nt,ny,nz]
+    U2D= reshape(U3D, nt, []);               % [nt,ny*nz]
+
+    % make Y and Z zero mean
+    Y= Y-mean(Y(:));
+    Z= Z-mean(Z(:));
+    vel_shear= [ones(sum(PointsInRotorDisc), 1) Y(PointsInRotorDisc) Z(PointsInRotorDisc)]\U2D(:, PointsInRotorDisc)';
+    
+    wind= vel_shear(1, :)'; % mean(U2D(:, PointsInRotorDisc), 2);
+    hshear= vel_shear(2, :)';
+    vshear= vel_shear(3, :)';
+
+    tv= (0:nt-1)*dt;
+    
+    time= d.Time + t_offset; % + ((ny-1)*dy/2)/u_hub;
+    % TODO: extend periodic wind
+    d.RtVAvgxh.Data= interp1(tv, wind, time);
 
     RtHSAvg= timeseries('RtHSAvg');
-    RtHSAvg.Time= d.Time;
-    shear= 0.5*((velocity(:, 1, 2, 1)-velocity(:, 1, 1, 1))/dy + (velocity(:, 1, 2, 2)-velocity(:, 1, 1, 2))/dy);
-    RtHSAvg.Data=interp1(tv, shear, time);
+    RtHSAvg.Time= time;
+    RtHSAvg.Data=interp1(tv, hshear, time);
     RtHSAvg.DataInfo.Units= 'm/s/m';
     RtHSAvg.TimeInfo.Units= 's';
     d= d.addts(RtHSAvg);
     
     RtVSAvg= timeseries('RtVSAvg');
-    RtVSAvg.Time= d.Time;
-    shear= 0.5*((velocity(:, 1, 1, 2)-velocity(:, 1, 1, 1))/dz + (velocity(:, 1, 2, 2)-velocity(:, 1, 2, 1))/dz);
-    RtVSAvg.Data=interp1(tv, shear, time);
+    RtVSAvg.Time= time;
+    RtVSAvg.Data=interp1(tv, vshear, time);
     RtVSAvg.DataInfo.Units= 'm/s/m';
     RtVSAvg.TimeInfo.Units= 's';
-    d= d.addts(RtVSAvg);
-end
-
-function d= addWND(wnd_path, d, R)
-[velocity, y, z, nz, ny, dz, dy, dt, zHub, z1, SummVars]= readfile_WND(wnd_path);
-
-nt= size(velocity, 1);
-
-% get points in rotor disc
-[Y, Z]= meshgrid(y, z-zHub);
-
-DistanceFromHub= (Z(:).^2+Y(:).^2).^0.5;
-PointsInRotorDisc= DistanceFromHub <= R;
-
-% calculate REWS = mean of all u components in rotor disc
-U3D= squeeze(velocity(:, 1, :, :));       % [nt,ny,nz]
-U2D= reshape(U3D, nt, []);               % [nt,ny*nz]
-
-wind= mean(U2D(:, PointsInRotorDisc), 2);
-tv= (0:nt-1)*dt;
-
-time= d.Time; % + ((ny-1)*dy/2)/u_hub;
-d.RtVAvgxh.Data= interp1(tv, wind, time);
+    d= d.addts(RtVSAvg);    
 end
