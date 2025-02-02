@@ -82,19 +82,19 @@ function d= addWind(d, velocity, y, z, dt, t_offset, R)
 
     tv= (0:nt-1)*dt;
     
-    time= d.Time + t_offset; % + ((ny-1)*dy/2)/u_hub;
+    time= d.Time + t_offset;
     % TODO: extend periodic wind
     d.RtVAvgxh.Data= interp1(tv, wind, time);
 
     RtHSAvg= timeseries('RtHSAvg');
-    RtHSAvg.Time= time;
+    RtHSAvg.Time= d.Time;
     RtHSAvg.Data=interp1(tv, hshear, time);
     RtHSAvg.DataInfo.Units= 'm/s/m';
     RtHSAvg.TimeInfo.Units= 's';
     d= d.addts(RtHSAvg);
     
     RtVSAvg= timeseries('RtVSAvg');
-    RtVSAvg.Time= time;
+    RtVSAvg.Time= d.Time;
     RtVSAvg.Data=interp1(tv, vshear, time);
     RtVSAvg.DataInfo.Units= 'm/s/m';
     RtVSAvg.TimeInfo.Units= 's';

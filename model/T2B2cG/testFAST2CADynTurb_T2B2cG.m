@@ -1,9 +1,10 @@
 %%
 clc
 model_dir= fileparts(matlab.desktop.editor.getActiveFilename);
-run(fullfile(model_dir, '../../matlab/setupCADynTurb'))
+CADynTurb_dir= fullfile(model_dir, '../..');
+run(fullfile(CADynTurb_dir, 'matlab/setupCADynTurb'))
 
-fst_file= '../../5MW_Baseline/5MW_Land_DLL_WTurb.fst';
+fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
 
 model_name= 'T2B2cG';
 gen_dir= fullfile(model_dir, 'generated');
@@ -22,7 +23,7 @@ compileModel(model_name, model_dir, gen_dir, files_to_generate)
 
 %% compare stand-alone simulator with OpenFAST
 cd(gen_dir)
-fast_file= fullfile(model_dir, '../../ref_sim/sim_no_inflow/impulse_URef-12_maininput.fst');
+fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow/impulse_URef-12_maininput.fst');
 wind_dir= '';
 options= '-a 0.99';
 

@@ -1,9 +1,10 @@
 %% set configuration variables
 clc
 model_dir= fileparts(matlab.desktop.editor.getActiveFilename);
-run(fullfile(model_dir, '../../matlab/setupCADynTurb'))
+CADynTurb_dir= fullfile(model_dir, '../..');
+run(fullfile(CADynTurb_dir, 'matlab/setupCADynTurb'))
 
-fst_file= '../../5MW_Baseline/5MW_Land_DLL_WTurb.fst';
+fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
 
 model_name= 'T1B1i_est';
 gen_dir= fullfile(model_dir, 'generated');
@@ -19,21 +20,16 @@ clc
 cd(model_dir)
 genCode([model_name '.mac'], gen_dir, files_to_generate, param, tw_sid, bd_sid, 1);
 writeModelParams(param, gen_dir);
-makeCADynMex(model_name, gen_dir, '', '', fullfile(model_dir, '../../simulator'))
+makeCADynMex(model_name, gen_dir, '', '', fullfile(CADynTurb_dir, 'simulator'))
 
 %% compile ekf mex
 clc
 cd(gen_dir)
-copyfile(fullfile(model_dir, [model_name '_ekf_config.m']), gen_dir)
-makeEKFMexSource(model_name)
-makeMex(fullfile(gen_dir, [model_name '_ekf_mex.cpp']), ...
-    {'.', fullfile(model_dir, '../../../CADyn/src'), fullfile(model_dir, '../../simulator')}, ...
-    '', ...
-    '$CXXFLAGS -std=c++11 -Wall -fdiagnostics-show-option -O2 -march=native');
+makeCADynEKFMex(model_name, model_dir, gen_dir)
 
 %% get reference simulations 1p1
-sim_dir= fullfile(model_dir, '../../ref_sim/sim_dyn_inflow');
-wind_dir= fullfile(model_dir, '../../ref_sim/wind');
+sim_dir= fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow');
+wind_dir= fullfile(CADynTurb_dir, 'ref_sim/wind');
 
 ref_sims= get_ref_sims(sim_dir, '1p1*_maininput.outb');
 

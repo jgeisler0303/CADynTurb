@@ -1,8 +1,11 @@
 function d_acados= run_acados_simulation(acados_model, d_in, param)
 
 model_parameters
+% [param, precalcNames]= model_name  _pre_calc(param);
 ap= acados_params(parameter_names, param);
 acados_model.set('p', ap);
+has_wind_param= any(strcmp('vwind', parameter_names));
+
 % TODO: fix setting simstep
 % acados_model.set('T', d_in.Time(2)-d_in.Time(1));
 
@@ -16,7 +19,7 @@ x_sim= x_ref;
 for ii= 2:N_sim
 	acados_model.set('x', x_sim(:, ii-1));
 	acados_model.set('u', u_ref(:, ii-1));
-    if isfield(param, 'vwind')
+    if has_wind_param
         param.vwind= d_in.RtVAvgxh.Data(ii-1);
         ap= acados_params(parameter_names, param);
         acados_model.set('p', ap);

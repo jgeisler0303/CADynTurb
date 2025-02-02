@@ -22,4 +22,5 @@ sim.solver_options.integrator_type = 'IRK';
 
 %% create integrator
 sim_solver = AcadosSimSolver(sim);
+sim_solver.sim.model= model;
 

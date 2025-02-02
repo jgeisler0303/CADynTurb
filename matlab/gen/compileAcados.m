@@ -27,7 +27,7 @@ sources= {
     fullfile('c_generated_code', [model_name '_acados_model'], [model_name '_acados_impl_dae_fun_jac_x_xdot_u.c'])
     fullfile('c_generated_code', [model_name '_acados_model'], [model_name '_acados_impl_dae_fun_jac_x_xdot_z.c'])
     fullfile('c_generated_code', [model_name '_acados_model'], [model_name '_acados_impl_dae_fun.c'])
-    fullfile('c_generated_code', [model_name '_acados_model'], [model_name '_acados_impl_dae_hess.c'])
+    % fullfile('c_generated_code', [model_name '_acados_model'], [model_name '_acados_impl_dae_hess.c'])
     fullfile('c_generated_code', [model_name '_acados_model'], [model_name '_acados_impl_dae_jac_x_xdot_u_z.c'])
     };
 
@@ -41,7 +41,7 @@ libs= {
     'hpipm'
     };
 
-flags= '-fpermissive -g -std=c++17 -Wl,--disable-new-dtags,-rpath,.';
+flags= ['-fpermissive -g -std=c++17 -Wl,--disable-new-dtags,-rpath,' getenv('ACADOS_INSTALL_DIR') '/lib'];
 
 out_name= fullfile(gen_dir, ['sim_' model_name '_acados']);
 

@@ -1,12 +1,13 @@
 %%
 clc
 model_dir= fileparts(matlab.desktop.editor.getActiveFilename);
-run(fullfile(model_dir, '../../matlab/setupCADynTurb'))
+CADynTurb_dir= fullfile(model_dir, '../..');
+run(fullfile(CADynTurb_dir, 'matlab/setupCADynTurb'))
 
 model_name= 'T1_opt';
 gen_dir= fullfile(model_dir, 'generated');
 
-files_to_generate= {'acados'};
+files_to_generate= {'cpp_direct', 'acados'};
 
 %% generate and compile all source code
 clc
@@ -16,12 +17,12 @@ genCode([model_name '.mac'], gen_dir, files_to_generate, [], [], [], 1, 0);
 %% set parameters
 clc
 cd(gen_dir)
-
-% [param, precalcNames]= InvPendCADyn_pre_calc(param);
+load('params_config.mat')
 
 model_parameters
-% ap= acados_params([parameter_names; precalcNames'], param);
-ap= acados_params(parameter_names, param);
+[param, precalcNames]= T1_opt_pre_calc(p_);
+
+ap= acados_params([parameter_names; precalcNames'], param);
 
 %% make acados OCP
 clc

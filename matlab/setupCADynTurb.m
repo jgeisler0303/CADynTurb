@@ -1,6 +1,8 @@
+if strcmp(getenv('CADYNTURB_SETUP'), 'SUCCESS'), return, end
+
 %% check path
-CADynTurb_dir= fileparts(mfilename('fullpath'));
-top_dir= fileparts(fileparts(CADynTurb_dir));
+CADynTurb_dir= fileparts(fileparts(mfilename('fullpath')));
+top_dir= fileparts(CADynTurb_dir);
 
 if any(CADynTurb_dir>127) || any(CADynTurb_dir==' ')
     error('The path of your CADynTurb installation contains ASCII characters >127 or spaces. This is currently not supported.')
@@ -36,7 +38,7 @@ try
 catch e
 end
 
-setenv('cagem_path', fullfile(CADynTurb_dir, '../../CADyn/gen/cagem.mac'))
+setenv('cagem_path', fullfile(CADynTurb_dir, '../CADyn/gen/cagem.mac'))
 
 %% check environment
 maxima= getenv('maxima_path');
@@ -120,7 +122,7 @@ else
 end
 setenv('CPP', mc(find(idx_gpp)).Details.CompilerExecutable)
 
-[res, msg]= system([getenv('CPP') ' ' fullfile(CADynTurb_dir, '../simulator/test_eigen.cpp') ' -o ' fullfile(CADynTurb_dir, '../simulator/test_eigen')]);
+[res, msg]= system([getenv('CPP') ' ' fullfile(CADynTurb_dir, 'simulator/test_eigen.cpp') ' -o ' fullfile(CADynTurb_dir, 'simulator/test_eigen')]);
 
 if res~=0
     if ispc
@@ -143,7 +145,7 @@ if res~=0
 end
 
 %% check reference simulations
-if ~exist(fullfile(CADynTurb_dir, '../ref_sim/sim_dyn_inflow'), 'dir') || ~exist(fullfile(CADynTurb_dir, '../ref_sim/sim_no_inflow'), 'dir')
+if ~exist(fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow'), 'dir') || ~exist(fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow'), 'dir')
     warning(['No reference simulations with dynamic inflow condition found. To create them please click <a href= "matlab:makeRefSim">here</a>.' newline ...
         'If you don''t want to see this warning again, just create empty directories "ref_sim/sim_dyn_inflow" and "ref_sim/sim_no_inflow" in the CADynTurb directory.'])
 end
@@ -180,6 +182,17 @@ if ~isempty(getenv('ACADOS_INSTALL_DIR'))
     % the following is necessary to make the dynamic linker search for libs in the
     % current directory because MATLAB doesn't pass the LD_LIBRARY_PATH
     % correctly
-    setenv('ACADOS_MEX_FLAGS', 'LDFLAGS=$LDFLAGS -Wl,--disable-new-dtags,-rpath,\$ORIGIN')
-    setenv('LDFLAGS', [getenv('LDFLAGS') ' -Wl,--disable-new-dtags,-rpath,\$ORIGIN'])
+    Rpath= ['-Wl,--disable-new-dtags,-rpath,\$ORIGIN,-rpath,' getenv('ACADOS_INSTALL_DIR') '/lib'];
+    if ~contains(getenv('LDFLAGS'), Rpath)
+        setenv('ACADOS_MEX_FLAGS', ['LDFLAGS=$LDFLAGS ' Rpath])
+        % this doesn't seem to work:
+        setenv('LDFLAGS', [getenv('LDFLAGS') ' ' Rpath])
+        % apparently, this gets copied into new mex-files, but it doesnt
+        % take immediate effect
+        % it makes the libraries in the current folder findable
+        setenv('LD_RUN_PATH', ['.:' getenv('ACADOS_INSTALL_DIR') '/lib'])
+    end
 end
+
+%%
+setenv('CADYNTURB_SETUP', 'SUCCESS')

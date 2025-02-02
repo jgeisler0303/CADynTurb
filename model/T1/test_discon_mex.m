@@ -1,16 +1,17 @@
 %%
 clc
 model_dir= fileparts(matlab.desktop.editor.getActiveFilename);
-run(fullfile(model_dir, '../../matlab/setupCADynTurb'))
+CADynTurb_dir= fullfile(model_dir, '../..');
+run(fullfile(CADynTurb_dir, 'matlab/setupCADynTurb'))
 
-fst_file= '../../5MW_Baseline/5MW_Land_DLL_WTurb.fst';
+fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
 
 model_name= 'T1';
 gen_dir= fullfile(model_dir, 'generated');
 
 files_to_generate= {'cpp_direct', 'descriptor_form'};
 
-addpath(fullfile(CADynTurb_dir, '..', 'simulator'))
+addpath(fullfile(CADynTurb_dir, 'simulator'))
 
 %% generate and compile all source code
 clc
@@ -20,7 +21,7 @@ genCode([model_name '.mac'], gen_dir, files_to_generate, param, tw_sid, bd_sid);
 compileModel(model_name, model_dir, gen_dir, files_to_generate)
 
 %% Compile DISCON mex interface
-cd(fullfile(CADynTurb_dir, '..', 'simulator'))
+cd(fullfile(CADynTurb_dir, 'simulator'))
 if ispc
     mex -D_USE_MATH_DEFINES DISCON_mex.cpp
 else
@@ -63,7 +64,7 @@ ts= 0.01;
 nt= ceil(t_end/ts);
 t= 0:ts:t_end-ts;
 
-vwind= 12*ones(1, nt);
+vwind= 11*ones(1, nt);
 vwind(t>50 & t<100)= 12;
 % vwind= vwind*0.99; % adjustment for better match with OpenFAST
 
@@ -84,7 +85,7 @@ u(in_Tgen_idx, 1)= 0;
 u(in_theta_idx, 1)= 0;
 
 DISCON_mex() % terminate id necessary
-DISCON_mex(fullfile(CADynTurb_dir, '../5MW_Baseline/DISCON.dll'), DISCON_param) % initialize
+DISCON_mex(fullfile(CADynTurb_dir, '5MW_Baseline/DISCON.dll'), DISCON_param) % initialize
 [~, ~, ddq(:, 1)]= T1_mex(q(:, 1), dq(:, 1), ddq(:, 1), u(:, 1), p_, 0);
 
 for i= 2:nt
@@ -136,7 +137,7 @@ u1(in_Tgen_idx, 1)= 0;
 u1(in_theta_idx, 1)= 0;
 
 DISCON_mex() % terminate id necessary
-DISCON_mex(fullfile(CADynTurb_dir, '../5MW_Baseline/DISCON.dll'), DISCON_param) % initialize
+DISCON_mex(fullfile(CADynTurb_dir, '5MW_Baseline/DISCON.dll'), DISCON_param) % initialize
 k= zeros(4, 1);
 for i= 2:nt
     Tgen_meas= u1(in_Tgen_idx, i-1); % last setpoint, maybe not used by controller
