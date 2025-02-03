@@ -14,20 +14,31 @@
 #define stringify(x)  #x
 #define expand_and_stringify(x) stringify(x ## _direct.hpp)
 #define INCL_FILE_STR(x) expand_and_stringify(x)
-#include INCL_FILE_STR(SYSTEM)
+#include INCL_FILE_STR(MODEL_NAME)
 
-#define SYSTEMParameters SYSTEM ## Parameters
+#include "simulator_standard_sensors.hpp"
+#include "simulator_extra_sensors.hpp"
 
-bool simulate(SYSTEM &system, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name, FAST_Parent_Parameters &p, double rpm0);
-bool DISCON_Step(double t, DISCON_Interface &DISCON, SYSTEM &system);
-void initTorquePitch(double vwind, double om_rot, double &torque, double &pitch, SYSTEMParameters &sys_param, FAST_Parent_Parameters &p);
+/* definition to expand macro then apply to pragma message */
+//#define VALUE_TO_STRING(x) #x
+//#define VALUE(x) VALUE_TO_STRING(x)
+//#define VAR_NAME_VALUE(var) #var "="  VALUE(var)
+//#pragma message(VAR_NAME_VALUE(MODEL_NAME))
 
-class ExtraSensors;
+#define CONCAT(a, b) a ## b
+#define expand_and_CONCAT(a, b) CONCAT(a, b)
+#define ModelParam_type expand_and_CONCAT(MODEL_NAME, Parameters)
+
+template<class T>
+bool simulate(T &system, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name, FAST_Parent_Parameters &p, double rpm0);
+template<class T>
+bool DISCON_Step(double t, DISCON_Interface &DISCON, T &system);
+void initTorquePitch(double vwind, double om_rot, double &torque, double &pitch, ModelParam_type &sys_param, FAST_Parent_Parameters &p);
 
 double wind_adjust;
 
 int main(int argc, char* argv[]) {
-    SYSTEM system;
+    MODEL_NAME system;
     FAST_Wind* wind;
     double simtime;
     double simstep;
@@ -157,125 +168,116 @@ int main(int argc, char* argv[]) {
     exit (EXIT_SUCCESS);
 }
 
-// Macro overloading example
-// #define FOO1(a) func1(a)
-// #define FOO2(a, b) func2(a, b)
-// #define FOO3(a, b, c) func3(a, b, c)
-// 
-// #define EXPAND(x) x
-// #define GET_MACRO(_1, _2, _3, NAME, ...) NAME
-// #define FOO(...) EXPAND(GET_MACRO(__VA_ARGS__, FOO3, FOO2, FOO1)(__VA_ARGS__))
-
+template<class SYS>
+void updateDISCON(SYS &system, DISCON_Interface &DISCON) {
+    DISCON.wind_speed_hub= system.inputs.vwind;
+    DISCON.gen_torque_meas= system.inputs.Tgen;
+    DISCON.rot_speed_meas= system.states.phi_rot_d;
+    if constexpr (has_phi_gen_d<typename SYS::states_t>::value) {
+        DISCON.gen_speed_meas= system.states.phi_gen_d;
+    } else {
+        DISCON.gen_speed_meas= system.states.phi_rot_d*system.param.GBRatio;
+    }
+    DISCON.power_out_meas= DISCON.gen_speed_meas * DISCON.gen_torque_meas;
     
-#define LIST_OF_SENSORS(MACRO)                                                                                      \
-    MACRO(states, bld_flp,   { out.addChannel("Q_BF1", "m", &system.states.bld_flp); } )                            \
-    MACRO(states, bld_edg,  { out.addChannel("Q_BE1", "m", &system.states.bld_edg); } )                             \
-    MACRO(states, bld_flp_d,  { out.addChannel("QD_BF1", "m/s", &system.states.bld_flp_d); } )                      \
-    MACRO(states, bld_edg_d,  { out.addChannel("QD_BE1", "m/s", &system.states.bld_edg_d); } )                      \
-    MACRO(externals, theta_deg,  { out.addChannel("PtchPMzc", "deg", &system.theta_deg); } )                        \
-    MACRO(states, phi_rot_d,  { out.addChannel("LSSTipVxa", "rpm", &system.states.phi_rot_d, 30.0/M_PI); } )        \
-    MACRO(states, phi_rot_dd,  { out.addChannel("LSSTipAxa", "deg/s^2", &system.states.phi_rot_dd, 180.0/M_PI); } ) \
-    MACRO(states, phi_gen_d,  { out.addChannel("HSShftV", "rpm", &system.states.phi_gen_d, 30.0/M_PI); } )          \
-    MACRO(states, phi_gen_dd,  { out.addChannel("HSShftA", "deg/s^2", &system.states.phi_gen_dd, 180.0/M_PI); } )   \
-    MACRO(states, tow_fa,  { out.addChannel("YawBrTDxp", "m", &system.states.tow_fa);                               \
-                            out.addChannel("Q_TFA1", "m", &system.states.tow_fa); } )                               \
-    MACRO(states, tow_ss,  { out.addChannel("YawBrTDyp", "m", &system.states.tow_ss);                               \
-                            out.addChannel("Q_TSS1", "m", &system.states.tow_ss, -1.0); } )                         \
-    MACRO(states, tow_fa_d,  { out.addChannel("YawBrTVxp", "m/s", &system.states.tow_fa_d);                         \
-                            out.addChannel("QD_TFA1", "m/s", &system.states.tow_fa_d); } )                          \
-    MACRO(states, tow_ss_d,  { out.addChannel("YawBrTVyp", "m/s", &system.states.tow_ss_d);                         \
-                            out.addChannel("QD_TSS1", "m/s", &system.states.tow_ss_d, -1.0); } )                    \
-    MACRO(states, tow_fa_dd,  { out.addChannel("YawBrTAxp", "m/s^2", &system.states.tow_fa_dd); } )                 \
-    MACRO(states, tow_ss_dd,  { out.addChannel("YawBrTAyp", "m/s^2", &system.states.tow_ss_dd); } )                 \
-    MACRO(states, tow_fa,  { out.addChannel("YawBrRDyt", "deg", &system.states.tow_fa, system.param.TwTrans2Roll*180.0/M_PI); } )       \
-    MACRO(states, tow_fa,  { out.addChannel("YawBrRDxt", "deg", &system.states.tow_ss, system.param.TwTrans2Roll*180.0/M_PI); } )       \
-    MACRO(states, tow_fa,  { out.addChannel("YawBrRVyp", "deg/s", &system.states.tow_fa_d, system.param.TwTrans2Roll*180.0/M_PI); } )   \
-    MACRO(states, tow_fa,  { out.addChannel("YawBrRVxp", "deg/s", &system.states.tow_ss_d, system.param.TwTrans2Roll*180.0/M_PI); } )   \
-    MACRO(externals, Fthrust,  { out.addChannel("RootFxc", "kN", &system.Fthrust, 1.0/3000.0);                      \
-                            out.addChannel("LSShftFxa", "kN", &system.Fthrust, 1.0/1000.0); } )                     \
-    MACRO(externals, Trot,  { out.addChannel("RootMxc", "kNm", &system.Trot, 1.0/3000.0);                           \
-                            out.addChannel("LSShftMxa", "kNm", &system.Trot, 1.0/1000.0); } )                       \
-    MACRO(inputs, Tgen,  { out.addChannel("HSShftTq", "kNm", &system.inputs.Tgen, 1.0/1000.0);                      \
-                            out.addChannel("GenTq", "kNm", &system.inputs.Tgen, 1.0/1000.0); } )                    \
-    MACRO(inputs, vwind,  { out.addChannel("RtVAvgxh", "m/s", &system.inputs.vwind); } )                            \
-    MACRO(externals, lam,  { out.addChannel("RtTSR", "-", &system.lam); } )                                         \
-    MACRO(externals, cm,  { out.addChannel("RtAeroCq", "-", &system.cm); } )                                        \
-    MACRO(externals, ct,  { out.addChannel("RtAeroCt", "-", &system.ct); } )                                        \
-    MACRO(externals, cflp,  { out.addChannel("RotCf", "-", &system.cflp); } )                                       \
-    MACRO(externals, cedg,  { out.addChannel("RotCe", "-", &system.cedg); } )                                       \
-    MACRO(inputs, theta,  { out.addChannel("BlPitchC", "deg", &system.inputs.theta,  -180.0/M_PI); } )              \
-    MACRO(outputs, bld_edg_mom,  { out.addChannel("RootMxb", "kNm", &system.outputs.bld_edg_mom, 1.0/1000.0); } )   \
-    MACRO(outputs, bld_flp_mom,  { out.addChannel("RootMyb", "kNm", &system.outputs.bld_flp_mom, 1.0/1000.0); } )   \
-    MACRO(outputs, bld_flp_acc,  { out.addChannel("Spn1ALxb1", "m/s^2", &system.outputs.bld_flp_acc); } )           \
-    MACRO(outputs, bld_edg_acc,  { out.addChannel("Spn1ALyb1", "m/s^2", &system.outputs.bld_edg_acc); } )           
-
-#define DECLARE_SENSOR(SUB_CLASS, MEMBER, CODE)                                        \
-    template <typename T>                                                               \
-    class has_member_##SUB_CLASS##_##MEMBER                                             \
-    {                                                                                   \
-        template <typename U> static void test(FAST_Output &out, SYSTEM &system, decltype(U::SUB_CLASS##_t::MEMBER)) {    \
-            CODE;                                                                       \
-        }                                                                               \
-        template <typename U> static void  test(...) {}                                 \
-    public:                                                                             \
-        static void doit(FAST_Output &out, SYSTEM &system) {test<T>(FAST_Output &out, SYSTEM &system, 0); }                                               \
+    if constexpr (has_theta1<typename SYS::inputs_t>::value) {
+        DISCON.blade1_pitch= -system.inputs.theta1;
+        DISCON.blade2_pitch= -system.inputs.theta2;
+        DISCON.blade3_pitch= -system.inputs.theta3;
+    } else {
+        DISCON.blade1_pitch= -system.inputs.theta;
+        DISCON.blade2_pitch= -system.inputs.theta;
+        DISCON.blade3_pitch= -system.inputs.theta;
     }
 
-LIST_OF_SENSORS( DECLARE_SENSOR )
-#undef DECLARE_SENSOR
+    if constexpr (has_tow_fa_dd<typename SYS::states_t>::value) {
+        DISCON.f_a_acc= system.states.tow_fa_dd;
+    } else {
+        DISCON.f_a_acc= 0.0;
+    }
+    if constexpr (has_tow_ss_dd<typename SYS::states_t>::value) {
+        DISCON.s_s_acc= system.states.tow_ss_dd;
+    } else {
+        DISCON.s_s_acc= 0.0;
+    }
     
-void setupOutputs(FAST_Output &out, SYSTEM &system) {
+    DISCON.rotor_pos= system.states.phi_rot;
     
-#define REGISTER_SENSOR(SUB_CLASS, MEMBER, CODE) has_member_##SUB_CLASS##_##MEMBER<SYSTEM>::doit(out, system);
-LIST_OF_SENSORS( REGISTER_SENSOR )
-#undef REGISTER_SENSOR
-
+    DISCON.yaw_error_meas= 0;
+    DISCON.abs_yaw= 0;
+    
+    DISCON.blade1_oop_moment= 0;
+    DISCON.blade2_oop_moment= 0;
+    DISCON.blade3_oop_moment= 0;
+    DISCON.blade1_ip_moment= 0;
+    DISCON.blade2_ip_moment= 0;
+    DISCON.blade3_ip_moment= 0;
+    
+//     DISCON.shaft_torque
+//     DISCON.fx_hub_f
+//     DISCON.fy_hub_f
+//     DISCON.fz_hub_f
 }
 
-bool simulate(SYSTEM &system, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name, FAST_Parent_Parameters &p, double rpm0) {
+template<class SYS>
+bool simulate(SYS &system, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name, FAST_Parent_Parameters &p, double rpm0) {
     FAST_Output out(tfinal/ts+2);
     
     out.setTime(0.0, ts);
     setupOutputs(out, system);
-    ExtraSensors extraSensors(out, system);
+    ExtraSensors<SYS> extraSensors(out, system);
     
     system.t= 0.0;
 
     system.inputs.vwind= wind_adjust*wind->getWind(system.t);
+    if constexpr (has_h_shear<typename SYS::inputs_t>::value) {
+        wind->getShear(system.t, system.inputs.h_shear, system.inputs.v_shear);
+    }
     
-    system.states.phi_gen_d= rpm0/30.0*M_PI;
-    system.states.phi_rot_d= system.states.phi_gen_d/system.param.GBRatio;
+    double phi_gen_d= rpm0/30.0*M_PI;
+    if constexpr (has_phi_gen_d<typename SYS::states_t>::value) {
+        system.states.phi_gen_d= phi_gen_d;
+    }
+        
+    system.states.phi_rot_d= phi_gen_d/system.param.GBRatio;
     
-//     double theta_deg;
-//     double torque;
-//     initTorquePitch(system.inputs.vwind, system.states.phi_rot_d, torque, theta_deg, system.param, p);
+    double theta_deg;
+    double torque;
+    initTorquePitch(system.inputs.vwind, system.states.phi_rot_d, torque, theta_deg, system.param, p);
     
-//     system.inputs.Tgen= torque;
-//     system.inputs.theta= -theta_deg/180.0*M_PI;
-    system.inputs.Tgen= 0;
-    system.inputs.theta= 0/180.0*M_PI;
-    
+    system.inputs.Tgen= torque;
+    if constexpr (has_theta1<typename SYS::inputs_t>::value) {
+        system.inputs.theta1= -theta_deg/180.0*M_PI;
+        system.inputs.theta2= -theta_deg/180.0*M_PI;
+        system.inputs.theta3= -theta_deg/180.0*M_PI;
+    } else {
+        system.inputs.theta= -theta_deg/180.0*M_PI;
+    }    
     system.states.phi_rot= 0.0;
-    system.states.phi_gen= -system.inputs.Tgen*system.param.GBRatio/system.param.DTTorSpr;
+    if constexpr (has_phi_gen<typename SYS::states_t>::value) {
+        system.states.phi_gen= -system.inputs.Tgen*system.param.GBRatio*system.param.GBRatio/system.param.DTTorSpr;
+    }
     
-//     system.doflocked[system.states_idx.phi_rot]= true;
-//     system.doflocked[system.states_idx.phi_gen]= true;
-//     
-//     try {
-//         system.staticEquilibrium();
-//     } catch (const std::exception& e) {
-//         fprintf(stderr, "Static equilibrium could not be found: %s\n", e.what());
-//         exit (EXIT_FAILURE);
-//     }
-//     
-//     system.doflocked[system.states_idx.phi_rot]= false;
-//     system.doflocked[system.states_idx.phi_gen]= false;
+    system.doflocked[system.states_idx.phi_rot]= true;
+    if constexpr (has_phi_gen<typename SYS::states_t>::value) {
+        system.doflocked[system.states_idx.phi_gen]= true;
+    }
     
+    try {
+        system.staticEquilibrium();
+    } catch (const std::exception& e) {
+        fprintf(stderr, "Static equilibrium could not be found: %s\n", e.what());
+        exit (EXIT_FAILURE);
+    }
+    
+    system.doflocked[system.states_idx.phi_rot]= false;
+    if constexpr (has_phi_gen<typename SYS::states_t>::value) {
+        system.doflocked[system.states_idx.phi_gen]= false;
+    }
     
     DISCON_Interface DISCON(discon_path, p.getFilename("ServoFile.DLL_InFile"));
     
     DISCON.comm_interval= ts;
-    DISCON.wind_speed_hub= system.inputs.vwind;
     DISCON.min_pitch= p["ServoFile.Ptch_Min"]/180.0*M_PI;
     DISCON.max_pitch= p["ServoFile.Ptch_Max"]/180.0*M_PI;
     DISCON.min_pitch_rate= p["ServoFile.PtchRate_Min"]/180.0*M_PI;
@@ -287,14 +289,6 @@ bool simulate(SYSTEM &system, FAST_Wind* wind, double ts, double tfinal, const s
     DISCON.gen_speed_dem= p["ServoFile.GenSpd_Dem"]/30.0*M_PI;
     DISCON.gen_torque_sp= p["ServoFile.GenTrq_Dem"];
     DISCON.power_dem= p["ServoFile.GenPwr_Dem"];
-    DISCON.gen_torque_meas= system.inputs.Tgen;
-    DISCON.rot_speed_meas= system.states.phi_rot_d;
-    DISCON.gen_speed_meas= system.states.phi_gen_d;
-    DISCON.power_out_meas= DISCON.gen_speed_meas * DISCON.gen_torque_meas;
-    
-    DISCON.blade1_pitch= -system.inputs.theta;
-    DISCON.blade2_pitch= -system.inputs.theta;
-    DISCON.blade3_pitch= -system.inputs.theta;
     
     DISCON.sp_pitch_partial= p["ServoFile.Ptch_SetPnt"]/180.0*M_PI;
     DISCON.ts_lut_idx= 0;
@@ -317,6 +311,8 @@ bool simulate(SYSTEM &system, FAST_Wind* wind, double ts, double tfinal, const s
     DISCON.setOutfile("discon.out");
     DISCON.version= 0.0;
    
+    updateDISCON(system, DISCON);
+    
     if(DISCON.init())
         printf("%s\n", DISCON.getMessage().c_str());
     
@@ -326,7 +322,7 @@ bool simulate(SYSTEM &system, FAST_Wind* wind, double ts, double tfinal, const s
     printf("Starting simulation\n");
     system.newmarkOneStep(0.0);
     system.calcOut();
-    extraSensors.update();
+    extraSensors.update(system);
     
     out.collectData();
     
@@ -334,25 +330,34 @@ bool simulate(SYSTEM &system, FAST_Wind* wind, double ts, double tfinal, const s
     bool res= true;
     double h= ts;
     while(system.t<tfinal)    {
-        if(!DISCON_Step(ts*ipas, DISCON, system)) {
-            printf("DISCON finished at t= %f\n", ts*ipas);
+         try {
+            if(!DISCON_Step(ts*ipas, DISCON, system)) {
+                printf("DISCON finished at t= %f\n", ts*ipas);
+                res= false;
+                break;
+            }
+        } catch (const std::exception& e) {
             res= false;
+            fprintf(stderr, "Error in DISCON at t= %f: %s\n", ts*ipas, e.what());
             break;
         }
         
         ipas++;
         system.inputs.vwind= wind_adjust*wind->getWind(system.t);
+        if constexpr (has_h_shear<typename SYS::inputs_t>::value) {
+            wind->getShear(system.t, system.inputs.h_shear, system.inputs.v_shear);
+        }
         
         try {
             system.newmarkInterval(ts*ipas, h, ts);
         } catch (const std::exception& e) {
             res= false;
-            fprintf(stderr, "Error in Integrator: %s\n", e.what());
+            fprintf(stderr, "Error in Integrator at t= %f: %s\n", ts*ipas, e.what());
             break;
         }
 
         system.calcOut();
-        extraSensors.update();
+        extraSensors.update(system);
 
         try {
             out.collectData();
@@ -371,44 +376,22 @@ bool simulate(SYSTEM &system, FAST_Wind* wind, double ts, double tfinal, const s
     return res;
 }
 
-bool DISCON_Step(double t, DISCON_Interface &DISCON, SYSTEM &system) {
+template<class SYS>
+bool DISCON_Step(double t, DISCON_Interface &DISCON, SYS &system) {
     DISCON.current_time= t;
-    
-    DISCON.wind_speed_hub= system.inputs.vwind;
-    DISCON.yaw_error_meas= 0;
-    DISCON.abs_yaw= 0;
-    DISCON.gen_torque_meas= system.inputs.Tgen;
-    DISCON.rot_speed_meas= system.states.phi_rot_d;
-    DISCON.gen_speed_meas= system.states.phi_gen_d;
-    DISCON.power_out_meas= DISCON.gen_speed_meas * DISCON.gen_torque_meas;
-    
-    DISCON.blade1_pitch= -system.inputs.theta;
-    DISCON.blade2_pitch= -system.inputs.theta;
-    DISCON.blade3_pitch= -system.inputs.theta;
-    
-    DISCON.f_a_acc= system.states.tow_fa_dd;
-    DISCON.s_s_acc= system.states.tow_ss_dd;
-    
-    DISCON.rotor_pos= system.states.phi_rot;
-    
-    DISCON.blade1_oop_moment= 0;
-    DISCON.blade2_oop_moment= 0;
-    DISCON.blade3_oop_moment= 0;
-    DISCON.blade1_ip_moment= 0;
-    DISCON.blade2_ip_moment= 0;
-    DISCON.blade3_ip_moment= 0;
-    
-    
-//     DISCON.shaft_torque
-//     DISCON.fx_hub_f
-//     DISCON.fy_hub_f
-//     DISCON.fz_hub_f
+    updateDISCON(system, DISCON);
     
     if(DISCON.run())
         printf("%s\n", DISCON.getMessage().c_str());
     
 //     system.inputs.theta= -(1.0/3.0)*(DISCON.blade1_dem + DISCON.blade2_dem + DISCON.blade3_dem);
-    system.inputs.theta= -DISCON.pitch_coll_dem;
+    if constexpr (has_theta1<typename SYS::inputs_t>::value) {
+        system.inputs.theta1= -DISCON.pitch_coll_dem;
+        system.inputs.theta2= -DISCON.pitch_coll_dem;
+        system.inputs.theta3= -DISCON.pitch_coll_dem;
+    } else {
+        system.inputs.theta= -DISCON.pitch_coll_dem;
+    }
     system.inputs.Tgen= DISCON.gen_torque_dem;
     
     if(((int)DISCON.safety_code_dem) != 0)
@@ -417,13 +400,13 @@ bool DISCON_Step(double t, DISCON_Interface &DISCON, SYSTEM &system) {
     return DISCON.sim_status!=-1;
 }
 
-typedef decltype(std::declval<SYSTEM>().param.cm_lut) MatCx;
+typedef decltype(std::declval<MODEL_NAME>().param.cm_lut) MatCx;
 
 double interp1(const MatCx &tab, double lambdaFact, int lambdaIdx, double thetaFact, int thetaIdx) {
     return thetaFact*(lambdaFact*tab(lambdaIdx, thetaIdx) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx)) + (1.0-thetaFact)*(lambdaFact*tab(lambdaIdx, thetaIdx+1) + (1.0-lambdaFact)*tab(lambdaIdx+1, thetaIdx+1));
 }
 
-double Trot(double vwind, double om_rot, double pitch, SYSTEMParameters *param) {
+double Trot(double vwind, double om_rot, double pitch, ModelParam_type *param) {
     double lam= om_rot*param->Rrot/vwind;
     double Fwind= param->rho/2.0*param->Arot*vwind*vwind;
     
@@ -444,7 +427,7 @@ double Trot(double vwind, double om_rot, double pitch, SYSTEMParameters *param) 
 }
 
 struct trq_zero_data {
-    SYSTEMParameters *param;
+    ModelParam_type *param;
     double vwind;
     double om_rot;
     double ref_trq;
@@ -456,7 +439,7 @@ double trq_zero(double pitch, void *data) {
     return Trot(tz_data->vwind, tz_data->om_rot, pitch, tz_data->param) - tz_data->ref_trq;
 }
 
-void initTorquePitch(double vwind, double om_rot, double &torque, double &theta_deg, SYSTEMParameters &sys_param, FAST_Parent_Parameters &p) {
+void initTorquePitch(double vwind, double om_rot, double &torque, double &theta_deg, ModelParam_type &sys_param, FAST_Parent_Parameters &p) {
     theta_deg= 0.0;
     torque= Trot(vwind, om_rot, theta_deg, &sys_param) / sys_param.GBRatio;
     if(torque<0.0) torque= 0.0;
@@ -477,170 +460,3 @@ void initTorquePitch(double vwind, double om_rot, double &torque, double &theta_
     int it= brent(&trq_zero, theta_deg, sys_param.thetaMin, sys_param.thetaMax, &tz_data);
     printf("Found initial torque: %f, initial pitch: %f after %d interations.\n", torque, theta_deg, it);
 }
-
-// RotPwr
-template<typename T, typename = void>
-class RotPwr_t {
-public:
-    RotPwr_t(FAST_Output&, T&) {}
-    void update() {}
-};
-
-template<typename T>
-class RotPwr_t<T, typename std::enable_if<std::is_object<decltype(T::Trot)>::value && std::is_object<decltype(T::states_t::phi_rot_d)>::value>::type> {
-public:
-    RotPwr_t(FAST_Output &out, T &system): system(system) {
-        out.addChannel("RotPwr", "kW", &value, 1.0/1000.0);
-    }
-    
-    void update() {
-        value= system.Trot*system.states.phi_rot_d;
-    }
-    
-    T& system;
-    real_type value;
-};
-
-// HSShftPwr
-template<typename T, typename = void>
-class HSShftPwr_t {
-public:
-    HSShftPwr_t(FAST_Output&, T&) {}
-    void update() {}
-};
-
-template<typename T>
-class HSShftPwr_t<T, typename std::enable_if<std::is_object<decltype(T::inputs_t::Tgen)>::value && std::is_object<decltype(T::states_t::phi_gen_d)>::value>::type> {
-public:
-    HSShftPwr_t(FAST_Output &out, T &system): system(system) {
-        out.addChannel("HSShftPwr", "kW", &value, 1.0/1000.0);
-    }
-    
-    void update() {
-        value= system.inputs.Tgen*system.states.phi_gen_d;
-    }
-    
-    T& system;
-    real_type value;
-};
-    
-// Q_DrTr
-template<typename T, typename = void>
-class Q_DrTr_t {
-public:
-    Q_DrTr_t(FAST_Output&, T&) {}
-    void update() {}
-};
-
-template<typename T>
-class Q_DrTr_t<T, typename std::enable_if<std::is_object<decltype(T::states_t::phi_rot)>::value && std::is_object<decltype(T::states_t::phi_gen)>::value>::type> {
-public:
-    Q_DrTr_t(FAST_Output &out, T &system): system(system) {
-        out.addChannel("Q_DrTr", "rad", &value);
-    }
-    
-    void update() {
-        value= system.states.phi_rot - system.states.phi_gen/system.param.GBRatio;
-    }
-    
-    T& system;
-    real_type value;
-};
-
-// QD_DrTr
-template<typename T, typename = void>
-class QD_DrTr_t {
-public:
-    QD_DrTr_t(FAST_Output&, T&) {}
-    void update() {}
-};
-
-template<typename T>
-class QD_DrTr_t<T, typename std::enable_if<std::is_object<decltype(T::states_t::phi_rot_d)>::value && std::is_object<decltype(T::states_t::phi_gen_d)>::value>::type> {
-public:
-    QD_DrTr_t(FAST_Output &out, T &system): system(system) {
-        out.addChannel("QD_DrTr", "rad/s", &value);  
-    }
-    
-    void update() {
-        value= system.states.phi_rot_d - system.states.phi_gen_d/system.param.GBRatio;
-    }
-    
-    T& system;
-    real_type value;
-};
-
-// Q_GeAz
-template<typename T, typename = void>
-class Q_GeAz_t {
-public:
-    Q_GeAz_t(FAST_Output&, T&) {}
-    void update() {}
-};
-
-template<typename T>
-class Q_GeAz_t<T, typename std::enable_if<std::is_object<decltype(T::states_t::phi_gen)>::value>::type> {
-public:
-    Q_GeAz_t(FAST_Output &out, T &system): system(system) {
-        out.addChannel("Q_GeAz", "rad", &value);
-    }
-    
-    void update() {
-        value= std::fmod(system.states.phi_gen/system.param.GBRatio+M_PI*3.0/2.0, 2*M_PI);
-    }
-    
-    T& system;
-    real_type value;
-};
-
-// LSSTipPxa
-template<typename T, typename = void>
-class LSSTipPxa_t {
-public:
-    LSSTipPxa_t(FAST_Output&, T&) {}
-    void update() {}
-};
-
-template<typename T>
-class LSSTipPxa_t<T, typename std::enable_if<std::is_object<decltype(T::states_t::phi_rot)>::value>::type> {
-public:
-    LSSTipPxa_t(FAST_Output &out, T &system): system(system) {
-        out.addChannel("LSSTipPxa", "deg", &value, 180.0/M_PI);
-    }
-    
-    void update() {
-        value= std::fmod(system.states.phi_rot, 2*M_PI);        
-    }
-    
-    T& system;
-    real_type value;
-};
-    
-class ExtraSensors {
-public:
-    ExtraSensors(FAST_Output &out, SYSTEM &system):
-        RotPwr(out, system),
-        HSShftPwr(out, system),
-        Q_DrTr(out, system),
-        QD_DrTr(out, system),
-        Q_GeAz(out, system),
-        LSSTipPxa(out, system)      
-    {}
-    
-    void updateExtraSensors() {
-        RotPwr.update();
-        HSShftPwr.update();
-        Q_DrTr.update();
-        QD_DrTr.update();
-        Q_GeAz.update();
-        LSSTipPxa.update();   
-    }
-    
-    RotPwr_t<SYSTEM> RotPwr;
-    HSShftPwr_t<SYSTEM> HSShftPwr;
-    Q_DrTr_t<SYSTEM> Q_DrTr;
-    QD_DrTr_t<SYSTEM> QD_DrTr;
-    Q_GeAz_t<SYSTEM> Q_GeAz;
-    LSSTipPxa_t<SYSTEM> LSSTipPxa;
-};
-

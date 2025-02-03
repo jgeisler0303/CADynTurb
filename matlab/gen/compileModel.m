@@ -10,19 +10,21 @@ old_dir= pwd;
 cleanupObj = onCleanup(@()cd(old_dir));
 cd(gen_dir)
 
-%% compile stand alone simulator
 includes= ['-I' fullfile(fileparts(getenv('cagem_path')), '../src') ' -I' gen_dir ' -I' fullfile(base_dir, '../../simulator')];
 if any(strcmp(files_to_generate, 'cpp_direct'))
-    sim_cpp= fullfile(model_dir, ['sim_' model_name '.cpp']);
+    % compile stand alone simulator
+    sim_cpp= fullfile(base_dir, ['../../simulator/standalone_simulator.cpp']);
     out_name= fullfile(gen_dir, ['sim_' model_name]);
     dependencies= {
         [model_name '_direct.hpp']
         [model_name '_param.hpp']
         fullfile(fileparts(getenv('cagem_path')), '../src/NewmarkBeta.hpp')
         };
-    
-    compileProg(sim_cpp, out_name, dependencies, {}, includes, {}, {}, {}, win_on_linux)
+    defines= {['MODEL_NAME=' model_name]};
 
+    compileProg(sim_cpp, out_name, dependencies, defines, includes, {}, {}, {}, win_on_linux)
+
+    %% compile mex simulator
     dependencies= {
         [model_name '_direct.hpp']
         [model_name '_param.hpp']

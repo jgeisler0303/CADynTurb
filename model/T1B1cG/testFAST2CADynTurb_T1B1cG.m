@@ -37,4 +37,4 @@ d_sim= sim_standalone(fullfile(gen_dir, ['sim_' model_name]), fast_file, sim_fil
 
 d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir);
 
-plot_timeseries_cmp(d_sim, d_FAST, {'RtVAvgxh', 'BlPitchC', 'HSShftV', 'GenTq', 'YawBrTDxp', 'Q_BF1'});
+plot_timeseries_cmp(d_sim, d_FAST, {'RtVAvgxh', 'BlPitchC', 'HSShftV', 'Q_DrTr', 'YawBrTDxp', 'Q_BF1'});

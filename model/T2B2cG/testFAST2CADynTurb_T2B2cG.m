@@ -12,8 +12,13 @@ gen_dir= fullfile(model_dir, 'generated');
 files_to_generate= {'cpp_direct'};
 
 %% calculate parameters
-[param, ~, tw_sid, bd_sid]= FAST2CADynTurb(fst_file, {[1 2]}, [1 2]);
-save('params', 'param', 'tw_sid', 'bd_sid')
+cd(model_dir)
+if exist('./params.mat', 'file')
+    load('params.mat')
+else
+    [param, ~, tw_sid, bd_sid]= FAST2CADynTurb(fst_file, {[1 2]}, [1 2]);
+    save('params', 'param', 'tw_sid', 'bd_sid')
+end
 
 %% generate and compile all source code
 cd(model_dir)
