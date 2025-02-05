@@ -7,22 +7,32 @@ run(fullfile(CADynTurb_dir, 'matlab/setupCADynTurb'))
 model_name= 'T1_opt';
 gen_dir= fullfile(model_dir, 'generated');
 
-files_to_generate= {'cpp_direct', 'acados'};
+files_to_generate= {'model_indices.m', 'model_parameters.m', '_acados.m', '_pre_calc.m'};
+
+%% calculate parameters
+clc
+cd(model_dir)
+if exist('./params.mat', 'file')
+    load('params.mat')
+else
+    [param, ~, tw_sid, bd_sid]= FAST2CADynTurb(fst_file, {[1 -2]}, 1);
+    param.vwind= 12;
+    save('params', 'param', 'tw_sid', 'bd_sid')
+end
 
 %% generate and compile all source code
 clc
 cd(model_dir)
-genCode([model_name '.mac'], gen_dir, files_to_generate, [], [], [], 1, 0);
+genCode([model_name '.mac'], gen_dir, files_to_generate, param, tw_sid, bd_sid, [0 1]);
 
 %% set parameters
 clc
 cd(gen_dir)
-load('params_config.mat')
 
 model_parameters
-[param, precalcNames]= T1_opt_pre_calc(p_);
-
-ap= acados_params([parameter_names; precalcNames'], param);
+% [param, precalcNames]= T1_opt_pre_calc(p_);
+% ap= acados_params([parameter_names; precalcNames'], param);
+ap= acados_params(parameter_names, param);
 
 %% make acados OCP
 clc
@@ -31,15 +41,12 @@ cd(gen_dir)
 % solver settings
 N = 80;
 T = 8; % time horizon length
-x0 = [0; 0; 0; 1.2];
+x0 = [0.4; 0; 0; 1.2];
 
 
 % model dynamics
 acados_model_func= str2func([model_name '_acados']);
 model= acados_model_func();
-model.cost_expr_ext_cost_0= model.u(2)^2;
-model.cost_expr_ext_cost= 10*model.x(3)^2 + (model.x(4)-1.2)^2 + 0.1*model.u(2)^2;
-model.cost_expr_ext_cost_e= 10*(model.x(4)-1.2)^2;
 
 nx = length(model.x); % state size
 nu = length(model.u); % input size
@@ -49,14 +56,44 @@ ocp = AcadosOcp();
 ocp.model = model;
 
 % cost
-% initial cost term
-ocp.cost.cost_type_0 = 'EXTERNAL';
-
-% path cost term
-ocp.cost.cost_type = 'EXTERNAL';
-
-% terminal cost term
-ocp.cost.cost_type_e = 'EXTERNAL';
+if 0
+    % this seems to always yield a seg fault in ocp_nlp_approximate_qp_matrices
+    % initial cost term
+    ocp.cost.cost_type_0 = 'EXTERNAL';
+    ocp.model.cost_expr_ext_cost_0= model.u(2)^2;
+    
+    % path cost term
+    ocp.cost.cost_type = 'EXTERNAL';
+    ocp.model.cost_expr_ext_cost= 10*model.x(3)^2 + (model.x(4)-1.2)^2 + 0.1*model.u(2)^2;
+    
+    % terminal cost term
+    ocp.cost.cost_type_e = 'EXTERNAL';
+    ocp.model.cost_expr_ext_cost_e= (model.x(4)-1.2)^2;
+else
+    % cost in nonlinear least squares form
+    W_x = diag([0, 0, 10, 1]); % setting to [0, 0, 10, 10] yields a seg fault in ocp_nlp_approximate_qp_matrices
+    W_u = diag([0 0.001]);
+    
+    % initial cost term
+    ocp.cost.cost_type_0 = 'NONLINEAR_LS';
+    ocp.cost.W_0 = W_u;
+    ocp.cost.yref_0 = zeros(nu, 1);
+    ocp.model.cost_y_expr_0 = model.u;
+    
+    % path cost term
+    ocp.cost.cost_type = 'NONLINEAR_LS';
+    ocp.cost.W = blkdiag(W_x, W_u);
+    ocp.cost.yref = zeros(nx+nu, 1);
+    ocp.cost.yref(4)= 1.2;
+    ocp.model.cost_y_expr = vertcat(model.x, model.u);
+    
+    % terminal cost term
+    ocp.cost.cost_type_e = 'NONLINEAR_LS';
+    ocp.model.cost_y_expr_e = model.x;
+    ocp.cost.yref_e = zeros(nx, 1);
+    ocp.cost.yref_e(4)= 1.2;
+    ocp.cost.W_e = W_x;
+end
 
 % define constraints
 
@@ -108,7 +145,7 @@ ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
 
 % create solver
 
-ocp.parameter_values= ap;
+% ocp.parameter_values= ap;
 ocp_solver = AcadosOcpSolver(ocp);
 
 %% solve OCP

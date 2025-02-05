@@ -9,7 +9,7 @@ fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
 model_name= 'T1B1cG';
 gen_dir= fullfile(model_dir, 'generated');
 
-files_to_generate= {'cpp_direct'};
+files_to_generate= {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m'};
 
 %% calculate parameters
 cd(model_dir)

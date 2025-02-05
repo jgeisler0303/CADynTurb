@@ -11,7 +11,7 @@ cleanupObj = onCleanup(@()cd(old_dir));
 cd(gen_dir)
 
 includes= ['-I' fullfile(fileparts(getenv('cagem_path')), '../src') ' -I' gen_dir ' -I' fullfile(base_dir, '../../simulator')];
-if any(strcmp(files_to_generate, 'cpp_direct'))
+if any(strcmp(files_to_generate, '_direct.hpp'))
     % compile stand alone simulator
     sim_cpp= fullfile(base_dir, ['../../simulator/standalone_simulator.cpp']);
     out_name= fullfile(gen_dir, ['sim_' model_name]);
@@ -39,7 +39,7 @@ if any(strcmp(files_to_generate, 'cpp_direct'))
     end    
 end
 
-if any(strcmp(files_to_generate, 'descriptor_form'))
+if any(strcmp(files_to_generate, '_descriptor_form.hpp'))
     dependencies= {
         [model_name '_descriptor_form.hpp']
         [model_name '_param.hpp']
@@ -53,7 +53,7 @@ if any(strcmp(files_to_generate, 'descriptor_form'))
     end    
 end
 
-if any(strcmp(files_to_generate, 'cpp_direct_gmres'))
+if any(strcmp(files_to_generate, '_direct_gmres.hpp'))
     sim_cpp= fullfile(model_dir, ['sim_' model_name '_gmres.cpp']);
     out_name= fullfile(gen_dir, ['sim_' model_name '_gmres']);
     dependencies= {

@@ -9,7 +9,7 @@ fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
 model_name= 'T1';
 gen_dir= fullfile(model_dir, 'generated');
 
-files_to_generate= {'cpp_direct', 'descriptor_form'};
+files_to_generate= {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m', '_descriptor_form.hpp'};
 
 addpath(fullfile(CADynTurb_dir, 'simulator'))
 

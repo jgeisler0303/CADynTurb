@@ -90,6 +90,7 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "\nAll parameters have to be set. Exiting.\n");
         exit (EXIT_FAILURE);            
     }
+    system.precalcConsts();
     
     if(argc_result.count("fast")) {
         try {

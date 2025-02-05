@@ -9,7 +9,7 @@ fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
 model_name= 'T1';
 gen_dir= fullfile(model_dir, 'generated');
 
-files_to_generate= {'cpp_direct', 'acados'};
+files_to_generate= {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m', '_acados.m', '_pre_calc.m', '_descriptor_form.hpp', '_lin.m', '_nonlin.m'};
 
 %% calculate parameters
 cd(model_dir)
@@ -23,7 +23,7 @@ end
 %% generate and compile all source code
 clc
 cd(model_dir)
-genCode([model_name '.mac'], gen_dir, files_to_generate, param, tw_sid, bd_sid);
+genCode([model_name '.mac'], gen_dir, files_to_generate, param, tw_sid, bd_sid, [0 1]);
 writeModelParams(param, gen_dir);
 compileModel(model_name, model_dir, gen_dir, files_to_generate)
 
