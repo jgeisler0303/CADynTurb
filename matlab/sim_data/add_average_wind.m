@@ -98,6 +98,28 @@ function d= addWind(d, velocity, y, z, dt, t_offset, R)
     RtVSAvg.Data=interp1(tv, vshear, time);
     RtVSAvg.DataInfo.Units= 'm/s/m';
     RtVSAvg.TimeInfo.Units= 's';
-
     d= d.addts(RtVSAvg);    
+
+    % Add Average wind direction
+    V3D= squeeze(velocity(:, 2, :, :));       % [nt,ny,nz]
+    V2D= reshape(V3D, nt, []);               % [nt,ny*nz]
+    % TODO: add misalignment
+    wind_dir= mean(atan(V2D(:, PointsInRotorDisc)./U2D(:, PointsInRotorDisc)), 2);
+    RtVDAvg= timeseries('RtVDAvg');
+    RtVDAvg.Time= d.Time;
+    RtVDAvg.Data=interp1(tv, wind_dir, time);
+    RtVDAvg.DataInfo.Units= 'rad';
+    RtVDAvg.TimeInfo.Units= 's';
+    d= d.addts(RtVDAvg);    
+    
+    W3D= squeeze(velocity(:, 3, :, :));       % [nt,ny,nz]
+    W2D= reshape(W3D, nt, []);               % [nt,ny*nz]
+    % TODO: add upflow
+    up_flow= mean(atan(W2D(:, PointsInRotorDisc)./U2D(:, PointsInRotorDisc)), 2);
+    RtUFAvg= timeseries('RtUFAvg');
+    RtUFAvg.Time= d.Time;
+    RtUFAvg.Data=interp1(tv, up_flow, time);
+    RtUFAvg.DataInfo.Units= 'rad';
+    RtUFAvg.TimeInfo.Units= 's';
+    d= d.addts(RtUFAvg);    
 end
