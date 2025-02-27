@@ -22,7 +22,7 @@ typedef double real_type;
 #define WITH_CONSTANTS
 #include "T1_param.hpp"
 
-bool simulate(sim_solver_capsule *capsule, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name, T1Parameters &param, FAST_Parent_Parameters &p, double rpm0);
+bool simulate(T1_acados_sim_solver_capsule *capsule, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name, T1Parameters &param, FAST_Parent_Parameters &p, double rpm0);
 bool DISCON_Step(double t, DISCON_Interface &DISCON, double *states, double *inputs, T1Parameters &param);
 void initTorquePitch(double vwind, double om_rot, double &torque, double &theta_deg, T1Parameters &sys_param, FAST_Parent_Parameters &p);
 
@@ -31,7 +31,7 @@ double LSSTipPxa;
 double wind_adjust;
 
 int main(int argc, char* argv[]) {
-    sim_solver_capsule *capsule = T1_acados_acados_sim_solver_create_capsule();
+    T1_acados_sim_solver_capsule *capsule = T1_acados_acados_sim_solver_create_capsule();
     FAST_Wind* wind;
     double simtime;
     double simstep;
@@ -209,7 +209,7 @@ void setupOutputs(FAST_Output &out, double *states, double *inputs) {
     out.addChannel("HSShftPwr", "kW", &HSShftPwr, 1.0/1000.0);
 }
 
-bool simulate(sim_solver_capsule *capsule, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name, T1Parameters &param, FAST_Parent_Parameters &p, double rpm0) {
+bool simulate(T1_acados_sim_solver_capsule *capsule, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name, T1Parameters &param, FAST_Parent_Parameters &p, double rpm0) {
     double states[n_states];
     double inputs[n_inputs];
 

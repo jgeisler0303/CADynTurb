@@ -1,6 +1,8 @@
+if strcmp(getenv('CADYNTURB_SETUP'), 'SUCCESS'), return, end
+
 %% check path
-CADynTurb_dir= fileparts(mfilename('fullpath'));
-top_dir= fileparts(fileparts(CADynTurb_dir));
+CADynTurb_dir= fileparts(fileparts(mfilename('fullpath')));
+top_dir= fileparts(CADynTurb_dir);
 
 if any(CADynTurb_dir>127) || any(CADynTurb_dir==' ')
     error('The path of your CADynTurb installation contains ASCII characters >127 or spaces. This is currently not supported.')
@@ -36,7 +38,7 @@ try
 catch e
 end
 
-setenv('cagem_path', fullfile(CADynTurb_dir, '../../CADyn/gen/cagem.mac'))
+setenv('cagem_path', fullfile(CADynTurb_dir, '../CADyn/gen/cagem.mac'))
 
 %% check environment
 maxima= getenv('maxima_path');
@@ -52,32 +54,33 @@ if res~=0 || ~contains(msg, 'Maxima')
     error('The path "%s" does not point to a valid maxima executable', maxima)
 end
 
-%% check fpr maxima patch
-command_str= [maxima ' --batch-string="load(rducon)\$ declare(a, constant)\$ reduce_consts(a^2*x);"'];
-[status, res]= system(command_str);
-if contains(res, 'error')
-    if ispc
-        warning(['If you want to use pre-calculated constants (argument reduce_consts of function genCode) you have to edit the file "' fileparts(fileparts(maxima)) '\share\maxima\5.46.0\share\numeric\expense.lisp". Find the line "(defun multiplies-in-nth-power (nth)" and delete it and the following lines up to the line starting with ";;;". Then insert the follwing:' newline ...
-            '(defun multiplies-in-nth-power (n)' newline ...
-            '    "Calculate the number of multiplications required to compute a^n."' newline ...
-            '    (let ((multiplications 0)' newline ...
-            '    (power n))' newline ...
-            '        (while (> power 1)' newline ...
-            '        (if (evenp power)' newline ...
-            '            (progn' newline ...
-            '                (setq power (/ power 2))' newline ...
-            '                (incf multiplications)) ; Counting the squaring operation' newline ...
-            '            (progn' newline ...
-            '                (setq power (- power 1))' newline ...
-            '                (incf multiplications) ; Counting the multiplication to reduce the power' newline ...
-            '        )))' newline ...
-            '        (cond ((< multiplications $cost_float_power) multiplications)' newline ...
-            '            (t $cost_float_power))  ' newline ...   
-            '))'])
-    else
-        warning('If you want to use pre-calculated constants (argument reduce_consts of function genCode) you have to patch the file "/usr/share/maxima/5.44.0/share/numeric/expense.lisp" with the patch file in "matlab/gen" folder. (Run "sudo patch /usr/share/maxima/5.44.0/share/numeric/expense.lisp < %s/matlab/gen/expense.lisp.patch")', CADynTurb_dir)
-    end
-end
+%% currently disabled because rducon seems to be broken
+% check for maxima patch
+% command_str= [maxima ' --batch-string="load(rducon)\$ declare(a, constant)\$ reduce_consts(a^2*x);"'];
+% [status, res]= system(command_str);
+% if contains(res, 'error')
+%     if ispc
+%         warning(['If you want to use pre-calculated constants (argument reduce_consts of function genCode) you have to edit the file "' fileparts(fileparts(maxima)) '\share\maxima\5.46.0\share\numeric\expense.lisp". Find the line "(defun multiplies-in-nth-power (nth)" and delete it and the following lines up to the line starting with ";;;". Then insert the follwing:' newline ...
+%             '(defun multiplies-in-nth-power (n)' newline ...
+%             '    "Calculate the number of multiplications required to compute a^n."' newline ...
+%             '    (let ((multiplications 0)' newline ...
+%             '    (power n))' newline ...
+%             '        (while (> power 1)' newline ...
+%             '        (if (evenp power)' newline ...
+%             '            (progn' newline ...
+%             '                (setq power (/ power 2))' newline ...
+%             '                (incf multiplications)) ; Counting the squaring operation' newline ...
+%             '            (progn' newline ...
+%             '                (setq power (- power 1))' newline ...
+%             '                (incf multiplications) ; Counting the multiplication to reduce the power' newline ...
+%             '        )))' newline ...
+%             '        (cond ((< multiplications $cost_float_power) multiplications)' newline ...
+%             '            (t $cost_float_power))  ' newline ...   
+%             '))'])
+%     else
+%         warning('If you want to use pre-calculated constants (argument reduce_consts of function genCode) you have to patch the file "/usr/share/maxima/5.44.0/share/numeric/expense.lisp" with the patch file in "matlab/gen" folder. (Run "sudo patch /usr/share/maxima/5.44.0/share/numeric/expense.lisp < %s/matlab/gen/expense.lisp.patch")', CADynTurb_dir)
+%     end
+% end
 
 %% Check for Aerodyn driver
 AD_driver= getenv('AD_DRIVER');
@@ -120,7 +123,7 @@ else
 end
 setenv('CPP', mc(find(idx_gpp)).Details.CompilerExecutable)
 
-[res, msg]= system([getenv('CPP') ' ' fullfile(CADynTurb_dir, '../simulator/test_eigen.cpp') ' -o ' fullfile(CADynTurb_dir, '../simulator/test_eigen')]);
+[res, msg]= system([getenv('CPP') ' ' fullfile(CADynTurb_dir, 'simulator/test_eigen.cpp') ' -o ' fullfile(CADynTurb_dir, 'simulator/test_eigen')]);
 
 if res~=0
     if ispc
@@ -143,7 +146,7 @@ if res~=0
 end
 
 %% check reference simulations
-if ~exist(fullfile(CADynTurb_dir, '../ref_sim/sim_dyn_inflow'), 'dir') || ~exist(fullfile(CADynTurb_dir, '../ref_sim/sim_no_inflow'), 'dir')
+if ~exist(fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow'), 'dir') || ~exist(fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow'), 'dir')
     warning(['No reference simulations with dynamic inflow condition found. To create them please click <a href= "matlab:makeRefSim">here</a>.' newline ...
         'If you don''t want to see this warning again, just create empty directories "ref_sim/sim_dyn_inflow" and "ref_sim/sim_no_inflow" in the CADynTurb directory.'])
 end
@@ -180,6 +183,17 @@ if ~isempty(getenv('ACADOS_INSTALL_DIR'))
     % the following is necessary to make the dynamic linker search for libs in the
     % current directory because MATLAB doesn't pass the LD_LIBRARY_PATH
     % correctly
-    setenv('ACADOS_MEX_FLAGS', 'LDFLAGS=$LDFLAGS -Wl,--disable-new-dtags,-rpath,\$ORIGIN')
-    setenv('LDFLAGS', [getenv('LDFLAGS') ' -Wl,--disable-new-dtags,-rpath,\$ORIGIN'])
+    Rpath= ['-Wl,--disable-new-dtags,-rpath,\$ORIGIN,-rpath,' getenv('ACADOS_INSTALL_DIR') '/lib'];
+    if ~contains(getenv('LDFLAGS'), Rpath)
+        setenv('ACADOS_MEX_FLAGS', ['LDFLAGS=$LDFLAGS ' Rpath])
+        % this doesn't seem to work:
+        setenv('LDFLAGS', [getenv('LDFLAGS') ' ' Rpath])
+        % apparently, this gets copied into new mex-files, but it doesnt
+        % take immediate effect
+        % it makes the libraries in the current folder findable
+        setenv('LD_RUN_PATH', ['.:' getenv('ACADOS_INSTALL_DIR') '/lib'])
+    end
 end
+
+%%
+setenv('CADYNTURB_SETUP', 'SUCCESS')

@@ -92,5 +92,5 @@ fprintf('Compiling standalone simulator "%s"\n', out_name)
 command_str= [getenv('CPP') ' ' flags ' ' defines ' ' includes ' ' sources ' ' lib_dirs ' ' libs ' -o ' out_name];
 [res, msg]= system(command_str);
 if res~=0
-    error('Compilation error: %s', msg)
+    error('Message of %s:\n\n%s', command_str, msg)
 end

@@ -1,27 +1,38 @@
 %%
 clc
-model_dir= fileparts(matlab.desktop.editor.getActiveFilename);
-run(fullfile(model_dir, '../../matlab/setupCADynTurb'))
+model_dir= '/home/jgeisler/Temp/CADynTurb_Suite/CADynTurb/model/T1_opt'; % fileparts(matlab.desktop.editor.getActiveFilename);
+CADynTurb_dir= fullfile(model_dir, '../..');
+run(fullfile(CADynTurb_dir, 'matlab/setupCADynTurb'))
 
 model_name= 'T1_opt';
 gen_dir= fullfile(model_dir, 'generated');
 
-files_to_generate= {'acados'};
+files_to_generate= {'model_indices.m', 'model_parameters.m', '_acados.m', '_pre_calc.m'};
+
+%% calculate parameters
+clc
+cd(model_dir)
+if exist('./params.mat', 'file')
+    load('params.mat')
+else
+    [param, ~, tw_sid, bd_sid]= FAST2CADynTurb(fst_file, {[1 -2]}, 1);
+    param.vwind= 12;
+    save('params', 'param', 'tw_sid', 'bd_sid')
+end
+param.power_max= 5000e3;
+param.rpm_max= 1200;
+param.rpm_min= 800;
+param.pit_min= 0;
+
+param.w_cost= [50 50 5 5e-5  0.00001 5 50];
+% param.w_cost= [50000 50 5 5e-5  0.00001 5 50];
+param= calc_cx_poly('cp', param);
+param= calc_cx_poly('ct', param);
 
 %% generate and compile all source code
 clc
 cd(model_dir)
-genCode([model_name '.mac'], gen_dir, files_to_generate, [], [], [], 1, 0);
-
-%% set parameters
-clc
-cd(gen_dir)
-
-% [param, precalcNames]= InvPendCADyn_pre_calc(param);
-
-model_parameters
-% ap= acados_params([parameter_names; precalcNames'], param);
-ap= acados_params(parameter_names, param);
+genCode([model_name '.mac'], gen_dir, files_to_generate, param, tw_sid, bd_sid, [0 1]);
 
 %% make acados OCP
 clc
@@ -30,15 +41,11 @@ cd(gen_dir)
 % solver settings
 N = 80;
 T = 8; % time horizon length
-x0 = [0; 0; 0; 1.2];
-
+x0 = [0.4; 40e3; 0; 0; 1.3];
 
 % model dynamics
 acados_model_func= str2func([model_name '_acados']);
-model= acados_model_func();
-model.cost_expr_ext_cost_0= model.u(2)^2;
-model.cost_expr_ext_cost= 10*model.x(3)^2 + (model.x(4)-1.2)^2 + 0.1*model.u(2)^2;
-model.cost_expr_ext_cost_e= 10*(model.x(4)-1.2)^2;
+model= acados_model_func(param);
 
 nx = length(model.x); % state size
 nu = length(model.u); % input size
@@ -48,23 +55,25 @@ ocp = AcadosOcp();
 ocp.model = model;
 
 % cost
-% initial cost term
+% initial cost term set in acados_model_func
 ocp.cost.cost_type_0 = 'EXTERNAL';
-
-% path cost term
+% path cost term set in acados_model_func
 ocp.cost.cost_type = 'EXTERNAL';
-
-% terminal cost term
+% terminal cost term set in acados_model_func
 ocp.cost.cost_type_e = 'EXTERNAL';
 
 % define constraints
-
 % bound on u
-ocp.constraints.lbu = [0 0];
-ocp.constraints.ubu = [45e3 90];
+max_trq_rate= 40e3*0.1;
+max_pit_rate= 7/180*pi;
+ocp.constraints.lbu = [-max_trq_rate -max_pit_rate];
+ocp.constraints.ubu = [ max_trq_rate  max_pit_rate];
 ocp.constraints.idxbu = [0 1];
 
 % bound on x
+ocp.constraints.lbx = [0 -pi/2];
+ocp.constraints.ubx = [45e3 0];
+ocp.constraints.idxbx = [1 2];
 
 % initial state
 ocp.constraints.x0 = x0;
@@ -85,7 +94,7 @@ ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
 % ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'; % 'EXACT'
 % ocp.solver_options.regularize_method = 'CONVEXIFY';
 % % NO_REGULARIZE, PROJECT, PROOJECT_REDUC_HESS, MIRROR, CONVEXIFY
-% ocp.solver_options.nlp_solver_max_iter = 50;
+ocp.solver_options.nlp_solver_max_iter = 200;
 % ocp.solver_options.nlp_solver_tol_stat = 1e-8;
 % ocp.solver_options.nlp_solver_tol_eq = 1e-8;
 % ocp.solver_options.nlp_solver_tol_ineq = 1e-8;
@@ -107,33 +116,45 @@ ocp.solver_options.hessian_approx = 'GAUSS_NEWTON';
 
 % create solver
 
-ocp.parameter_values= ap;
+% ocp.parameter_values= ap;
 ocp_solver = AcadosOcpSolver(ocp);
 
 %% solve OCP
+param.vwind= 6;
 ocp_solver.reset();
 
 ocp_solver.set('qp_print_level', 0) % console output only
-ocp_solver.set('nlp_solver_max_iter', 500)
+ocp_solver.set('nlp_solver_max_iter', 100)
 
-% x0= [0.0, 0.9*pi, 0.0, 0.0]';
-% ocp_solver.set('constr_x0', x0)
-% ocp_solver.set('constr_ubu', 40)
-% ocp_solver.set('constr_lbu', -40)
-% for i= 1:N-1
-%     ocp_solver.set('constr_ubx', 0.9, i)
-%     ocp_solver.set('constr_lbx', -0.9, i)
+x0= simX(:, end);
+ocp_solver.set('constr_x0', x0)
+
+% for i= 0:N-1
+%     ocp_solver.set('constr_ubu', [45e3 0], i)
+%     ocp_solver.set('constr_lbu', [0 -pi/2], i)
 % end
 
-x_traj_init = zeros(nx, N+1);
-x_traj_init(2, :)= linspace(0, T*1.2, N+1);
-x_traj_init(4, :)= 1.2;
+x_traj_init = repmat(x0, 1, N+1);
+% x_traj_init(2, :)= linspace(0, T*x0(4), N+1);
 u_traj_init = zeros(nu, N);
-u_traj_init(1, :)= 4e4;
+% u_traj_init(1, :)= 4e4;
+
 ocp_solver.set('init_x', x_traj_init);
 ocp_solver.set('init_u', u_traj_init);
 ocp_solver.set('init_pi', zeros(nx, N)) % multipliers for dynamics equality constraints
+
+model_parameters
+% [param, precalcNames]= T1_opt_pre_calc(p_);
+% ap= acados_params([parameter_names; precalcNames'], param);
+ap= acados_params(parameter_names, param);
 ocp_solver.set('p', ap)
+
+param_moveblock= param;
+for i= 50:80
+    param_moveblock.w_cost([1 2 5:7])= param_moveblock.w_cost([1 2 5:7])*1.2;
+    ap= acados_params(parameter_names, param_moveblock);
+    ocp_solver.set('p', ap, i)
+end
 
 tic
 ocp_solver.solve();

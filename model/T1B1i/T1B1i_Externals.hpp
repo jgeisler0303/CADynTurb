@@ -26,6 +26,7 @@ static double aeroForce(const int lambdaIdx,
 }
 
 void T1B1i::calculateExternal() {
+    // TODO: add apparent angle due to tilt and cone
     theta_deg1= -inputs.theta1/M_PI*180.0;
     theta_deg2= -inputs.theta2/M_PI*180.0;
     theta_deg3= -inputs.theta3/M_PI*180.0;
@@ -36,6 +37,8 @@ void T1B1i::calculateExternal() {
     double cone2_= param.cone+states.bld2_flp/param.Rrot*1.3;
     double cone3_= param.cone+states.bld3_flp/param.Rrot*1.3;
     double tilt_= param.tilt + states.tow_fa*param.tower_frame_11_psi0_2_1;
+    
+    // TODO: where does this come from? Should be the shortening of the blade by projection to the plan perpendicular to the upwind direction x
     double u_1= (sin(states.phi_rot)*sin(inputs.theta1)-sin(cone1_)*cos(states.phi_rot)*cos(inputs.theta1))*sin(param.tilt)+cos(cone1_)*cos(inputs.theta1)*cos(tilt_);
     double u_2= (sin(states.phi_rot+2.0/3.0*M_PI)*sin(inputs.theta2)-sin(cone2_)*cos(states.phi_rot+2.0/3.0*M_PI)*cos(inputs.theta2))*sin(tilt_)+cos(cone2_)*cos(inputs.theta2)*cos(tilt_);
     double u_3= (sin(states.phi_rot+4.0/3.0*M_PI)*sin(inputs.theta3)-sin(cone3_)*cos(states.phi_rot+4.0/3.0*M_PI)*cos(inputs.theta3))*sin(tilt_)+cos(cone3_)*cos(inputs.theta3)*cos(tilt_);
@@ -74,6 +77,7 @@ void T1B1i::calculateExternal() {
     int thetaIdx3= std::floor(thetaScaled3);
     double thetaFact3= 1.0 - thetaScaled3 + thetaIdx3;
     
+    // TODO: add apparent shear due to tilt and cone
     double kappa1= -inputs.h_shear*sin(states.phi_rot) + inputs.v_shear*cos(states.phi_rot);
     double kappa2= -inputs.h_shear*sin(states.phi_rot+2.0/3.0*M_PI) + inputs.v_shear*cos(states.phi_rot+2.0/3.0*M_PI);
     double kappa3= -inputs.h_shear*sin(states.phi_rot+4.0/3.0*M_PI) + inputs.v_shear*cos(states.phi_rot+4.0/3.0*M_PI);

@@ -11,7 +11,7 @@ if ~exist(dn, 'dir')
     mkdir(dn);
 end
 if ~exist('files_to_generate', 'var')
-    files_to_generate= {'cpp_direct'};
+    files_to_generate= {'_direct.hpp'};
 end
 
 base_dir= fileparts(mfilename('fullpath'));
@@ -26,7 +26,7 @@ cd(gen_dir)
 
 %% compile stand alone simulator
 includes= ['-I' fullfile(fileparts(getenv('cagem_path')), '../src') ' -I' gen_dir ' -I' fullfile(base_dir, '../simulator')];
-if any(strcmp(files_to_generate, 'cpp_direct'))
+if any(strcmp(files_to_generate, '_direct.hpp'))
     % TODO: use compileProg?
     fprintf('Compiling standalone simulator\n')
     sim_cpp= fullfile(model_dir, ['sim_' model_name '.cpp']);
@@ -38,7 +38,7 @@ if any(strcmp(files_to_generate, 'cpp_direct'))
         system([getenv('CPP') ' -g -std=c++17 -D _USE_MATH_DEFINES ', includes, ' ', sim_cpp, ' -o ' out_name]);
     end
 end
-if any(strcmp(files_to_generate, 'cpp_direct_gmres'))
+if any(strcmp(files_to_generate, '_direct_gmres.hpp'))
     fprintf('Compiling GMRES standalone simulator\n')
     sim_cpp= fullfile(model_dir, ['sim_' model_name '_gmres.cpp']);
     out_name= fullfile(gen_dir, ['sim_' model_name '_gmres']);
