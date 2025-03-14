@@ -62,7 +62,7 @@ int brent(double(*f)(double, void *), double &xs, double a, double b, void *data
 
                 s= e;
                 e= d;
-                if(( 2*p<3*m*q-abs(tol*q) ) && (p<abs(s*q/2))) {
+                if(( 2*p<3*m*q-fabs(tol*q) ) && (p<fabs(s*q/2))) {
                     d= p/q;
                 } else {
                     d= m;
