@@ -6,10 +6,10 @@ ekf_config= get_ekf_config();
 model_indices
 
 
-fid= fopen([model_name '_ekf_mex.cpp'], 'w');
+fid= fopen([model_name '_ekf.hpp'], 'w');
 
 fprintf(fid, '#include "%s_direct.hpp"\n', model_name);
-fprintf(fid, '#define SYSTEM %s\n', model_name);
+fprintf(fid, '#define EKF_SYSTEM %s\n', model_name);
 fprintf(fid, '\n');
 fprintf(fid, 'const int estimated_q[]= {\n');
 for i= 1:ekf_config.n_estimated_dofs
@@ -34,6 +34,12 @@ fprintf(fid, '};\n');
 fprintf(fid, '\n');
 fprintf(fid, '#define EKF_STATES %d\n', length(ekf_config.estimated_states));
 fprintf(fid, '\n');
-fprintf(fid, '#include "CADynEKF_mex.hpp"\n');
+fprintf(fid, 'const double x_ul[]= {%s};\n', sprintf('%g, ', ekf_config.x_ul));
+fprintf(fid, 'const double x_ll[]= {%s};\n', sprintf('%g, ', ekf_config.x_ll));
 
+fclose(fid);
+
+fid= fopen([model_name '_ekf_mex.cpp'], 'w');
+fprintf(fid, '#include "%s_ekf.hpp"\n', model_name);
+fprintf(fid, '#include "CADynEKF_mex.hpp"\n');
 fclose(fid);

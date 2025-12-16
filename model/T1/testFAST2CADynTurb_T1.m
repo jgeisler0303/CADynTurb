@@ -19,8 +19,7 @@ else
     [param, ~, tw_sid, bd_sid]= FAST2CADynTurb(fst_file, {[1 -2]}, 1);
     save('params', 'param', 'tw_sid', 'bd_sid')
 end
-param= calc_cx_poly('cp', param, 5000, 1200, 800);
-param= calc_cx_poly('ct', param, 5000, 1200, 800);
+
 
 %% generate and compile all source code
 clc

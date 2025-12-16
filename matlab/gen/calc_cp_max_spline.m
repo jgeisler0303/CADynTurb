@@ -1,9 +1,12 @@
-function [xs, ys]= calc_cp_max_spline(param)
+function [xs, ys, theta_opt_poly, lambda_opt]= calc_cp_max_spline(param)
 
 wind_min= 3;
 lam_max= 1.2*param.rpm_max/param.GBRatio/30*pi*param.Rrot / wind_min;
 lam= linspace(0, lam_max, 10000);
-cp_max= max(param.cp, [], 1);
+[cp_max, idx_max]= max(param.cp, [], 1);
+[~, idx_lam_opt]= max(cp_max);
+lambda_opt= param.lambda(idx_lam_opt);
+
 cp_max_= interp1(param.lambda, cp_max, lam, 'linear', 'extrap');
 
 [~, idx_lam_max]= max(cp_max);
@@ -16,4 +19,12 @@ w(lam>param.lambda(1) & lam<param.lambda(end))= 1;
 w(lam>lam_max-2 & lam<lam_max+2)= 10;
 w(lam>lam_max-1 & lam<lam_max+1)= 50;
 ys= fminsearch(@(ys)rms(w.*(cp_max_-spline(xs, ys, lam))) + 0.1*rms(diff(ys, 3)), interp1(lam, cp_max_, xs));
+
+lambda= param.lambda(:);
+lambda2= lambda.*lambda;
+lambda3= lambda2.*lambda;
+theta_opt= param.theta(idx_max);
+theta_opt_poly= [lambda3 lambda2 lambda lambda*0+1]\theta_opt(:);
+% plot(param.lambda,theta_opt, param.lambda, theta_min)
+
 

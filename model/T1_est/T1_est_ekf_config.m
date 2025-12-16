@@ -1,4 +1,4 @@
-function ekf_config= T2B2cG_est_ekf_config
+function ekf_config= T1_est_ekf_config
 model_indices
 ekf_config.x_ul= [  2;                  % tower FA deflection
                 40; % wind speed

@@ -85,6 +85,10 @@ end
 if isempty(flags)
     flags= '-g -std=c++17';
 end
+if iscell(flags)
+    flags= strcat({' '}, flags);
+    flags= strcat(flags{:});
+end
 
 
 fprintf('Compiling standalone simulator "%s"\n', out_name)

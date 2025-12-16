@@ -7,18 +7,13 @@ model= acados_model_func(param);
 
 sim = AcadosSim();
 sim.model = model;
-sim.solver_options.Tsim = 0.01; % simulation time
-sim.solver_options.integrator_type = 'IRK';
 
-% if ~exist('sim_opts', 'var')
-%     sim_opts = acados_sim_opts();
-%     sim_opts.set('compile_interface', 'auto');
-%     sim_opts.set('num_stages', 2);
-%     sim_opts.set('num_steps', 1);
-%     sim_opts.set('newton_iter', 2);
-%     sim_opts.set('method', 'irk');
-%     sim_opts.set('sens_forw', 'true');
-% end
+if exist('sim_opts', 'var')
+    sim.solver_options= sim_opts;
+else
+    sim.solver_options.Tsim = 0.01; % simulation time
+    sim.solver_options.integrator_type = 'IRK';
+end
 
 %% create integrator
 sim_solver = AcadosSimSolver(sim);

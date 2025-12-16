@@ -43,7 +43,7 @@ void DISCON_Step(DISCON_Interface& DISCON, double &theta_out, double &Tgen_out, 
 void setDISCONParams(DISCON_Interface& DISCON, const mxArray *mxParams);
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-    if((nrhs<(in_idx_discon_parameter+1) || nrhs>in_idx1_last) && nrhs!=0 && nrhs!=in_idx2_last) { mexErrMsgIdAndTxt("DISCON:InvalidArgument", "Wrong number of arguments. Expecting 0 or (dll_path {, config_path}) or (t, vwind, Tgen, om_rot, om_gen, theta, tow_fa_acc, tow_ss_acc, phi_rot)"); return; }
+    if((nrhs<(in_idx_discon_parameter+1) || nrhs>in_idx1_last) && nrhs!=0 && nrhs!=in_idx2_last) { mexErrMsgIdAndTxt("DISCON:InvalidArgument", "Wrong number of arguments. Expecting 0 or (dll_path {param, config_path}) or (t, vwind, Tgen, om_rot, om_gen, theta, tow_fa_acc, tow_ss_acc, phi_rot)"); return; }
     
     // Terminate DLL
     if(nrhs==0) {
@@ -84,7 +84,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         }
         
         try {
-            if(nlhs==(in_idx_config_path+1)) {
+            if(nrhs==(in_idx_config_path+1)) {
                 if(!mxIsChar(prhs[in_idx_config_path]) || (mxGetM(prhs[in_idx_config_path]) != 1 )) { mexErrMsgIdAndTxt("DISCON:InvalidArgument", "Argument 'config_path' must be a character array"); return; }
                 char config_path[buflen];
                 int status = mxGetString(prhs[in_idx_config_path], config_path, (mwSize) buflen);
@@ -92,7 +92,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                     mexErrMsgIdAndTxt( "DISCON:InvalidArgument", "Failed to copy config_path into %d byte buffer.", buflen);
                     return;
                 }
-                
+
                 DISCON= new DISCON_Interface(std::string(discon_path), std::string(config_path));
             } else
                 DISCON= new DISCON_Interface(std::string(discon_path));
@@ -100,7 +100,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
             setDISCONParams(*DISCON, mxParams);
             
             if(DISCON->init())
-                printf("%s\n", DISCON->getMessage().c_str());
+                mexPrintf("%s\n", DISCON->getMessage().c_str());
         } catch (const std::exception& e) {
             mexErrMsgIdAndTxt("DISCON:Init", "DISCON Error: %s", e.what());
             return;

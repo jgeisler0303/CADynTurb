@@ -219,8 +219,8 @@ public:
         if(sim_status==0) {
             strcpy(avcMsg, "");
             fail_code= call(this, accInfile, accOutfile, avcMsg);
-            
-            sim_status= 1;
+            if(sim_status!=-1)
+                sim_status= 1;
         }
         return fail_code;
     }
