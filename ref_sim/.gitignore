@@ -1,7 +1,2 @@
-sim_dyn_inflow
-sim_no_inflow_lin_shear
-sim_no_inflow_no3p
-sim_no_inflow_no_cone
-sim_no_inflow_tshadow
-sim_no_inflow
+sim_*
 wind

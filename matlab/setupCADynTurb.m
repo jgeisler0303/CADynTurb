@@ -194,6 +194,10 @@ if ~isempty(getenv('ACADOS_INSTALL_DIR'))
         setenv('LD_RUN_PATH', ['.:' getenv('ACADOS_INSTALL_DIR') '/lib'])
     end
 end
-
+%% setup CADynM
+if exist(fullfile(CADynTurb_dir, '..', 'CADynM'), 'dir')
+    addpath(fullfile(CADynTurb_dir, '..', 'CADynM', 'toolbox'))
+    addpath(fullfile(CADynTurb_dir, '..', 'CADynM', 'toolbox', 'utils'))
+end
 %%
 setenv('CADYNTURB_SETUP', 'SUCCESS')

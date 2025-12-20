@@ -20,6 +20,14 @@ else
     save('params', 'param', 'tw_sid', 'bd_sid')
 end
 
+%% CADynM model
+param.tw_sid= tw_sid;
+T1 = modelT1(param);
+eom = T1.getEOM;
+matlabTemplateEngine('generated/model_parametersM.m', 'model_parameters.m.mte', T1)
+matlabTemplateEngine('generated/model_indicesM.m', 'model_indices.m.mte', T1)
+matlabTemplateEngine('generated/T1_paramM.hpp', 'param.hpp.mte', T1)
+matlabTemplateEngine('generated/T1_directM.hpp', 'direct.hpp.mte', T1)
 
 %% generate and compile all source code
 clc
