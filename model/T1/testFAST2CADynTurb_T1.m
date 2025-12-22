@@ -23,7 +23,10 @@ end
 %% CADynM model
 param.tw_sid= tw_sid;
 T1 = modelT1(param);
+% TODO it seems that higher order elastic deformation terms are not
+% properly removed
 eom = T1.getEOM;
+T1.removeUnusedParameters();
 matlabTemplateEngine('generated/model_parametersM.m', 'model_parameters.m.mte', T1)
 matlabTemplateEngine('generated/model_indicesM.m', 'model_indices.m.mte', T1)
 matlabTemplateEngine('generated/T1_paramM.hpp', 'param.hpp.mte', T1)

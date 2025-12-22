@@ -9,6 +9,18 @@ T1.addExternal('theta_deg');
 T1.addExternal('lam');
 T1.addExternal('Trot', [T1.dof.tow_fa_d, T1.dof.phi_rot_d, T1.inputs.vwind, T1.inputs.theta]);
 T1.addExternal('Fthrust', [T1.dof.tow_fa_d, T1.dof.phi_rot_d, T1.inputs.vwind, T1.inputs.theta]);
+% TODO fix vector parameters
+T1.addExternalParameter('cm_lut', [], params.cm_lut);
+T1.addExternalParameter('ct_lut', [], params.ct_lut);
+T1.addExternalParameter('Arot', [], params.Arot);
+T1.addExternalParameter('Rrot', [], params.Rrot);
+T1.addExternalParameter('lambdaMax', [], params.lambdaMax);
+T1.addExternalParameter('lambdaMin', [], params.lambdaMin);
+T1.addExternalParameter('lambdaStep', [], params.lambdaStep);
+T1.addExternalParameter('rho', [], params.rho);
+T1.addExternalParameter('thetaMax', [], params.thetaMax);
+T1.addExternalParameter('thetaMin', [], params.thetaMin);
+T1.addExternalParameter('thetaStep', [], params.thetaStep);
 
 T1.addOutput('tow_fa_acc', T1.dof.tow_fa_dd);
 T1.addOutput('gen_speed', T1.dof.phi_rot_d*T1.params.GBRatio);
