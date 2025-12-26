@@ -1,7 +1,7 @@
 function T1 = modelT1(params)
 % Simulation of a simplified horizontal axis wind turbine
 
-T1 = MultiBodySystem('T1', {'tow_fa' 'phi_rot'}, {'vwind' 'Tgen' 'theta'});
+T1 = MultiBodySystem('T1_M', {'tow_fa' 'phi_rot'}, {'vwind' 'Tgen' 'theta'});
 T1.addParameter(params);
 T1.addExternal('cm');
 T1.addExternal('ct');

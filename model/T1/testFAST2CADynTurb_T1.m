@@ -21,16 +21,24 @@ else
 end
 
 %% CADynM model
+% If you want to use this experimental feature, please clone
+% https://github.com/jgeisler0303/CADynM in a directory parallel to CADynTurb
+clc
+cd(model_dir)
+
 param.tw_sid= tw_sid;
 T1 = modelT1(param);
-% TODO it seems that higher order elastic deformation terms are not
-% properly removed
 eom = T1.getEOM;
 T1.removeUnusedParameters();
-matlabTemplateEngine('generated/model_parametersM.m', 'model_parameters.m.mte', T1)
-matlabTemplateEngine('generated/model_indicesM.m', 'model_indices.m.mte', T1)
-matlabTemplateEngine('generated/T1_paramM.hpp', 'param.hpp.mte', T1)
-matlabTemplateEngine('generated/T1_directM.hpp', 'direct.hpp.mte', T1)
+matlabTemplateEngine('generated/model_M_parameters.m', 'model_parameters.m.mte', T1)
+matlabTemplateEngine('generated/model_M_indices.m', 'model_indices.m.mte', T1)
+matlabTemplateEngine('generated/T1_M_param.hpp', 'param.hpp.mte', T1)
+matlabTemplateEngine('generated/T1_M_direct.hpp', 'direct.hpp.mte', T1)
+
+%% Build mex-file for CADynM generated model
+cd(gen_dir)
+clc
+makeCADynMex([model_name '_M'], '.', '', '', fullfile(CADynTurb_dir, 'simulator'))
 
 %% generate and compile all source code
 clc
@@ -53,7 +61,15 @@ d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir);
 
 plot_timeseries_cmp(d_sim, d_FAST, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'});
 
-%%
+%% sim mex model (feedforward)
+cd(gen_dir)
+clc
+opts= struct('StepTol', 1e-8, 'AbsTol', 1e-6, 'RelTol', 1e-6, 'hminmin', 1E-8, 'jac_recalc_step', 4, 'max_steps', 10);
+d_mex= run_simulation(model_name, d_sim, param, opts);
+d_mexM= run_simulation([model_name '_M'], d_sim, param, opts);
+plot_timeseries_multi({d_FAST, d_sim, d_mex, d_mexM}, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'},{'FAST', 'sim', 'CADyn mex', 'CADYnM mex'});
+
+%% end script here if acados is not installed
 if isempty(getenv('ACADOS_INSTALL_DIR'))
     return
 end
