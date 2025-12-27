@@ -54,14 +54,20 @@ for i = 1:3
     hub.addChild(blade)
 end
 
+
 % Geno (effectively fixed to hub but with gear ratio)
 geno = RigidBody('generator', [], 0, diag([T1.params.GenIner, 0, 0]));
 geno.rotateLocalAxis('x', T1.dof.phi_rot*T1.params.GBRatio)
 nacelle.addChild(geno)
 
-T1.applyForce([T1.externals.Fthrust, 0, 0], hub)
-T1.applyMoment([T1.externals.Trot, 0, 0], hub)
-T1.applyMoment([-T1.inputs.Tgen, 0, 0], geno)
-
+% at least for forces given in local coordinates, the kinematic modeling
+% must be completed
 T1.completeSetup()
+
+% Applied forces and moments
+hub.applyForce([T1.externals.Fthrust, 0, 0])
+hub.applyMoment([T1.externals.Trot, 0, 0])
+geno.applyMoment([-T1.inputs.Tgen, 0, 0])
+
+
 

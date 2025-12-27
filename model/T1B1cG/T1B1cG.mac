@@ -77,14 +77,15 @@ appliedForces():= (
     /* Thrust */
         OoPforce: Fthrust/3,
     /* flapwise */
-        RMG: applyForceInLocal(unitZ*thrustForceRadius, cos(theta)*unitX*OoPforce, T0G[i]),
-        appliedF[i]: RMG[1],
-        appliedM[i]: RMG[2],
+        RMG_OoP: applyForceInLocal(unitZ*thrustForceRadius, cos(theta)*unitX*OoPforce, T0G[i]),
+        appliedF[i]: RMG_OoP[1],
+        appliedM[i]: RMG_OoP[2],
 
     /* edgewise */
-        RMG: applyForceInLocal(unitZ*thrustForceRadius, -sin(theta)*unitY*OoPforce, T0G[i]),
-        appliedF[i]: appliedF[i] + RMG[1],
-        appliedM[i]: appliedM[i] + RMG[2],
+        RMG_IP: applyForceInLocal(unitZ*thrustForceRadius, -sin(theta)*unitY*OoPforce, T0G[i]),
+        appliedF[i]: appliedF[i] + RMG_IP[1],
+        appliedM[i]: appliedM[i] + RMG_IP[2],
+        print("OoPForce: ", RMG_OoP[1]+RMG_IP[1]),
 
 
     /* Torque */

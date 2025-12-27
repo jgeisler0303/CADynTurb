@@ -20,9 +20,30 @@ else
     save('params', 'param', 'tw_sid', 'bd_sid')
 end
 
+%% CADynM model
+% If you want to use this experimental feature, please clone
+% https://github.com/jgeisler0303/CADynM in a directory parallel to CADynTurb
+clc
+cd(model_dir)
+
+param.tw_sid= tw_sid;
+param.bd_sid= bd_sid;
+T1B1cG = modelT1B1cG(param);
+eom = T1B1cG.getEOM;
+T1B1cG.removeUnusedParameters();
+matlabTemplateEngine('generated/model_M_parameters.m', 'model_parameters.m.mte', T1B1cG)
+matlabTemplateEngine('generated/model_M_indices.m', 'model_indices.m.mte', T1B1cG)
+matlabTemplateEngine('generated/T1B1cG_M_param.hpp', 'param.hpp.mte', T1B1cG)
+matlabTemplateEngine('generated/T1B1cG_M_direct.hpp', 'direct.hpp.mte', T1B1cG)
+
+%% Build mex-file for CADynM generated model
+cd(gen_dir)
+clc
+makeCADynMex([model_name '_M'], '.', '', '', fullfile(CADynTurb_dir, 'simulator'))
+
 %% generate and compile all source code
 cd(model_dir)
-genCode([model_name '.mac'], gen_dir, files_to_generate, param, tw_sid, bd_sid);
+genCode([model_name '.mac'], gen_dir, files_to_generate, param, tw_sid, bd_sid, [], false);
 writeModelParams(param, gen_dir);
 compileModel(model_name, model_dir, gen_dir, files_to_generate)
 
@@ -38,3 +59,12 @@ d_sim= sim_standalone(fullfile(gen_dir, ['sim_' model_name]), fast_file, sim_fil
 d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir);
 
 plot_timeseries_cmp(d_sim, d_FAST, {'RtVAvgxh', 'BlPitchC', 'HSShftV', 'Q_DrTr', 'YawBrTDxp', 'Q_BF1'});
+
+%% sim mex model (feedforward)
+cd(gen_dir)
+clc
+opts= struct('StepTol', 1e-8, 'AbsTol', 1e-6, 'RelTol', 1e-6, 'hminmin', 1E-8, 'jac_recalc_step', 4, 'max_steps', 10);
+d_mex= run_simulation(model_name, d_sim, param, opts);
+d_mexM= run_simulation([model_name '_M'], d_sim, param, opts);
+plot_timeseries_multi({d_FAST, d_sim, d_mex, d_mexM}, {'HSShftV', 'LSSTipVxa', 'YawBrTDxp', 'Q_BF1'},{'FAST', 'sim', 'CADyn mex', 'CADYnM mex'});
+
