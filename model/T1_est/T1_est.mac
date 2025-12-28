@@ -14,11 +14,6 @@ F_EXT: [vwind_d-dvwind];
 /* Gravity vector */
 gravity: [0, 0, -g];
 
-Trotx_lin(a):= subst([x= a], ratsimp(taytorat(taylor(Trotx(x), x, 0, 1))));
-Troty_lin(a):= subst([x= a], ratsimp(taytorat(taylor(Troty(x), x, 0, 1))));
-Trotz_lin(a):= subst([x= a], ratsimp(taytorat(taylor(Trotz(x), x, 0, 1))));
-
-
 /* 1 Tower */
 load(filename_merge(load_pathname, "tw_sid.mac"));
 elastic_dof[1]: [tow_fa];
