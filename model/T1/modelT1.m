@@ -24,6 +24,8 @@ T1.addExternalParameter('thetaStep', [], params.thetaStep);
 
 T1.addOutput('tow_fa_acc', T1.dof.tow_fa_dd);
 T1.addOutput('gen_speed', T1.dof.phi_rot_d*T1.params.GBRatio);
+% just to preserve this state in the acados simulation
+T1.addOutput('out_phi_rot', T1.dof.phi_rot);
 
 T1.gravity(3) = -T1.params.g;
 

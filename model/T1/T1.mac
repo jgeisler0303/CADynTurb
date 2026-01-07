@@ -6,7 +6,7 @@ WITH_LINEAR: 1;
 WITH_ACCELERATIONS: 0;
 STATES: [tow_fa, phi_rot];
 INPUTS: [vwind, Tgen, theta];
-OUTPUTS: [tow_fa_acc, gen_speed];
+OUTPUTS: [tow_fa_acc, gen_speed, phi_rot];
 EXTERNAL: [cm(), ct(), theta_deg(), lam(), Trot(tow_fa_d, phi_rot_d, vwind, theta), Fthrust(tow_fa_d, phi_rot_d, vwind, theta)];
 EXT_PARAM: [rho, Rrot, lambdaMin, lambdaMax, lambdaStep, thetaMin, thetaMax, thetaStep, Arot, cm_lut[25, 91], ct_lut[25, 91]];
 
@@ -87,5 +87,5 @@ appliedForces():= (
 );
 
 modelOutputs(sys):= (
-    [tow_fa_dd, phi_rot_d*GBRatio]
+    [tow_fa_dd, phi_rot_d*GBRatio, phi_rot]
 );

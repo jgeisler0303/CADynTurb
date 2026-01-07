@@ -30,10 +30,12 @@ param.tw_sid= tw_sid;
 T1 = modelT1(param);
 eom = T1.getEOM;
 T1.removeUnusedParameters();
-matlabTemplateEngine('generated/model_M_parameters.m', 'model_parameters.m.mte', T1)
-matlabTemplateEngine('generated/model_M_indices.m', 'model_indices.m.mte', T1)
-matlabTemplateEngine('generated/T1_M_param.hpp', 'param.hpp.mte', T1)
-matlabTemplateEngine('generated/T1_M_direct.hpp', 'direct.hpp.mte', T1)
+% matlabTemplateEngine('generated/model_M_parameters.m', 'model_parameters.m.mte', T1)
+% matlabTemplateEngine('generated/model_M_indices.m', 'model_indices.m.mte', T1)
+% matlabTemplateEngine('generated/T1_M_param.hpp', 'param.hpp.mte', T1)
+% matlabTemplateEngine('generated/T1_M_direct.hpp', 'direct.hpp.mte', T1)
+% matlabTemplateEngine('generated/T1_M_acados.m', 'acados.m.mte', T1)
+matlabTemplateEngine('generated/T1_M_descriptor_form.m', 'descriptor_form.hpp.mte', T1)
 
 %% Build mex-file for CADynM generated model
 cd(gen_dir)
@@ -77,6 +79,7 @@ end
 %% make acados model
 clc
 acados_model_solver= make_acados_sim(param, model_name, gen_dir);
+acados_model_solverM= make_acados_sim(param, [model_name '_M'], gen_dir);
 
 %% run acados simulation
 fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow/impulse_URef-12_maininput.fst');
@@ -85,7 +88,8 @@ d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir);
 
 load('params_config.mat')
 d_acados= run_acados_simulation(acados_model_solver, d_FAST, p_);
-plot_timeseries_cmp(d_acados, d_FAST, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'});
+d_acados_M= run_acados_simulation(acados_model_solverM, d_FAST, p_);
+plot_timeseries_multi({d_acados, d_acados_M, d_FAST}, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'}, {'CADyn' 'CADynM' 'FAST'});
 
 %% make acados standalone simulator
 clc

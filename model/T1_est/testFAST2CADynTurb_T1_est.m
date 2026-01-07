@@ -38,6 +38,10 @@ matlabTemplateEngine(fullfile(gen_dir_m, 'model_parameters.m'), 'model_parameter
 matlabTemplateEngine(fullfile(gen_dir_m, 'model_indices.m'), 'model_indices.m.mte', T1_est)
 matlabTemplateEngine(fullfile(gen_dir_m, 'T1_est_param.hpp'), 'param.hpp.mte', T1_est)
 matlabTemplateEngine(fullfile(gen_dir_m, 'T1_est_direct.hpp'), 'direct.hpp.mte', T1_est)
+extermals_file = fullfile(gen_dir_m, 'T1_est_Externals.hpp');
+if ~exist(extermals_file, 'file')
+    matlabTemplateEngine(extermals_file, 'Externals.hpp.mte', T1_est)
+end
 
 %% Build mex-file for CADynM generated model
 cd(gen_dir_m)
