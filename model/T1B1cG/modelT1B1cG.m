@@ -1,7 +1,7 @@
 function T1B1cG = modelT1B1cG(params)
 % Simulation of a simplified horizontal axis wind turbine
 
-T1B1cG = MultiBodySystem('T1B1cG_M', {'tow_fa' 'bld_flp' 'phi_rot' 'phi_gen'}, {'vwind' 'Tgen' 'theta'});
+T1B1cG = MultiBodySystem('T1B1cG', {'tow_fa' 'bld_flp' 'phi_rot' 'phi_gen'}, {'vwind' 'Tgen' 'theta'});
 T1B1cG.addParameter(params);
 T1B1cG.addExternal('cm');
 T1B1cG.addExternal('ct');

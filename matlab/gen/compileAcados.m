@@ -15,6 +15,7 @@ includes= {
     model_dir
     '.'
     fullfile(base_dir, '../../simulator')
+    fullfile(base_dir, '../../../CADyn/src')
     'c_generated_code'
     fullfile(getenv('ACADOS_INSTALL_DIR'), 'include')
     fullfile(getenv('ACADOS_INSTALL_DIR'), 'include/blasfeo/include')

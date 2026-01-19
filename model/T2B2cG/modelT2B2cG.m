@@ -1,7 +1,7 @@
 function T2B2cG = modelT2B2cG(params)
 % Simulation of a simplified horizontal axis wind turbine
 
-T2B2cG = MultiBodySystem('T2B2cG_M', {'tow_fa' 'tow_ss' 'bld_flp' 'bld_edg' 'phi_rot' 'phi_gen'}, {'vwind' 'Tgen' 'theta'});
+T2B2cG = MultiBodySystem('T2B2cG', {'tow_fa' 'tow_ss' 'bld_flp' 'bld_edg' 'phi_rot' 'phi_gen'}, {'vwind' 'Tgen' 'theta'});
 T2B2cG.addParameter(params);
 T2B2cG.addExternal('cm');
 T2B2cG.addExternal('ct');

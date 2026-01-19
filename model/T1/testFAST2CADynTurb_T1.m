@@ -9,7 +9,7 @@ fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
 model_name= 'T1';
 gen_dir= fullfile(model_dir, 'generated');
 
-files_to_generate= {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m', '_acados.m', '_pre_calc.m', '_descriptor_form.hpp', '_lin.m', '_nonlin.m'};
+files_to_generate= {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m', '_pre_calc.m', '_descriptor_form.hpp', '_lin.m', '_nonlin.m'};
 
 %% calculate parameters
 cd(model_dir)
@@ -19,28 +19,6 @@ else
     [param, ~, tw_sid, bd_sid]= FAST2CADynTurb(fst_file, {[1 -2]}, 1);
     save('params', 'param', 'tw_sid', 'bd_sid')
 end
-
-%% CADynM model
-% If you want to use this experimental feature, please clone
-% https://github.com/jgeisler0303/CADynM in a directory parallel to CADynTurb
-clc
-cd(model_dir)
-
-param.tw_sid= tw_sid;
-T1 = modelT1(param);
-eom = T1.getEOM;
-T1.removeUnusedParameters();
-% matlabTemplateEngine('generated/model_M_parameters.m', 'model_parameters.m.mte', T1)
-% matlabTemplateEngine('generated/model_M_indices.m', 'model_indices.m.mte', T1)
-% matlabTemplateEngine('generated/T1_M_param.hpp', 'param.hpp.mte', T1)
-% matlabTemplateEngine('generated/T1_M_direct.hpp', 'direct.hpp.mte', T1)
-% matlabTemplateEngine('generated/T1_M_acados.m', 'acados.m.mte', T1)
-matlabTemplateEngine('generated/T1_M_descriptor_form.m', 'descriptor_form.hpp.mte', T1)
-
-%% Build mex-file for CADynM generated model
-cd(gen_dir)
-clc
-makeCADynMex([model_name '_M'], '.', '', '', fullfile(CADynTurb_dir, 'simulator'))
 
 %% generate and compile all source code
 clc
@@ -68,45 +46,4 @@ cd(gen_dir)
 clc
 opts= struct('StepTol', 1e-8, 'AbsTol', 1e-6, 'RelTol', 1e-6, 'hminmin', 1E-8, 'jac_recalc_step', 4, 'max_steps', 10);
 d_mex= run_simulation(model_name, d_sim, param, opts);
-d_mexM= run_simulation([model_name '_M'], d_sim, param, opts);
-plot_timeseries_multi({d_FAST, d_sim, d_mex, d_mexM}, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'},{'FAST', 'sim', 'CADyn mex', 'CADYnM mex'});
-
-%% end script here if acados is not installed
-if isempty(getenv('ACADOS_INSTALL_DIR'))
-    return
-end
-
-%% make acados model
-clc
-acados_model_solver= make_acados_sim(param, model_name, gen_dir);
-acados_model_solverM= make_acados_sim(param, [model_name '_M'], gen_dir);
-
-%% run acados simulation
-fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow/impulse_URef-12_maininput.fst');
-wind_dir= '';
-d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir);
-
-load('params_config.mat')
-d_acados= run_acados_simulation(acados_model_solver, d_FAST, p_);
-d_acados_M= run_acados_simulation(acados_model_solverM, d_FAST, p_);
-plot_timeseries_multi({d_acados, d_acados_M, d_FAST}, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'}, {'CADyn' 'CADynM' 'FAST'});
-
-%% make acados standalone simulator
-clc
-cd(gen_dir)
-sim_generate_c_code(acados_model_solver.sim)
-compileAcados(model_name, model_dir, gen_dir)
-% copy_acados_libs(gen_dir)
-
-%% compare acados stand-alone simulator with OpenFAST
-cd(gen_dir)
-fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow/impulse_URef-12_maininput.fst');
-wind_dir= '';
-
-[~, base_file]= fileparts(fast_file);
-sim_file= fullfile(gen_dir, [strrep(base_file, '_maininput', '_acados') '.outb']);
-d_acados= sim_standalone(fullfile(gen_dir, ['sim_' model_name '_acados']), fast_file, sim_file, '-a 0.99');
-
-d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir);
-
-plot_timeseries_cmp(d_acados, d_FAST, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'});
+plot_timeseries_cmd(d_sim, d_mex, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'});
