@@ -9,15 +9,15 @@ if any(CADynTurb_dir>127) || any(CADynTurb_dir==' ')
 end
 
 if ~exist(fullfile(top_dir, 'CADyn'), 'dir')
-    error('Please download CADyn to the folder %s. Go to the folder %s and do: "git clone https:/github.com/jgeisler0303/CADyn.git"', fullfile(top_dir, 'CADyn'), top_dir)
+    error('Please download CADyn to the folder %s. Go to the folder %s and do: "git clone https://github.com/jgeisler0303/CADyn.git"', fullfile(top_dir, 'CADyn'), top_dir)
 end
 
 if ~exist(fullfile(top_dir, 'FEMBeam'), 'dir')
-    error('Please download FEMBeam to the folder %s. Go to the folder %s and do: "git clone https:/github.com/jgeisler0303/FEMBeam.git"', fullfile(top_dir, 'FEMBeam'), top_dir)
+    error('Please download FEMBeam to the folder %s. Go to the folder %s and do: "git clone https://github.com/jgeisler0303/FEMBeam.git"', fullfile(top_dir, 'FEMBeam'), top_dir)
 end
 
 if ~exist(fullfile(top_dir, 'SimpleDynInflow'), 'dir')
-    error('Please download SimpleDynInflow to the folder %s. Go to the folder %s and do: "git clone https:/github.com/jgeisler0303/SimpleDynInflow.git"', fullfile(top_dir, 'SimpleDynInflow'), top_dir)
+    error('Please download SimpleDynInflow to the folder %s. Go to the folder %s and do: "git clone https://github.com/jgeisler0303/SimpleDynInflow.git"', fullfile(top_dir, 'SimpleDynInflow'), top_dir)
 end
 
 if ~exist(fullfile(top_dir, 'matlab-toolbox'), 'dir')
@@ -44,7 +44,7 @@ setenv('cagem_path', fullfile(CADynTurb_dir, '../CADyn/gen/cagem.mac'))
 maxima= getenv('maxima_path');
 if isempty(maxima)
     if ispc
-        error(['Please install Maxima. You can download it from <a href = "matlab:web(''https://sourceforge.net/projects/maxima/files/Maxima-Windows/'')">here</a>.' newline 'Then set the environment variable "maxima_path" to the full path of the maxima batch file (this will be something like ""). Do this by editing the script configCADynTurb accordingly.'])
+        error(['Please install Maxima 5.44. You can download it from <a href = "matlab:web(''https://sourceforge.net/projects/maxima/files/Maxima-Windows/'')">here</a>.' newline 'Then set the environment variable "maxima_path" to the full path of the maxima batch file (this will be something like "C:/maxima-5.44.0/bin/maxima.bat"). Do this by editing the script configCADynTurb accordingly.'])
     else
         error(['Please install Maxima version 5.44 in the sblc flavor. You can download it from <a href = "matlab:web(''https://sourceforge.net/projects/maxima/files/Maxima-Linux/5.44.0-Linux/'')">here</a>. You have to download and install the files "maxima-sbcl_5.44.0-1_{arch}.{deb|rpm}" and "maxima-common_5.44.0-1_all.{deb|rpm}". After download, on Ubuntu install via "dpkg -i {debname}". Do not install the official Ubuntu package ("sudo apt install maxima")!.' newline 'Then set the environment variable "maxima_path" to the full path of the maxima executable ("/usr/bin/maxima"). Do this by editing the script configCADynTurb accordingly.'])        
     end
