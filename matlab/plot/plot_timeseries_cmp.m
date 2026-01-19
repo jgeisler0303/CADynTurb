@@ -72,7 +72,7 @@ for i_plot= 1:n_plots
             
             ts= tsc1.get(plot_var);
             if ~isempty(ts)
-                data= ts.Data(idx1);
+                data= ts.Data(idx1, :);
                 if ~isempty(mod_str)
                     data= eval(mod_str);
                 end
@@ -90,7 +90,7 @@ for i_plot= 1:n_plots
             
             ts= tsc2.get(plot_var);
             if ~isempty(ts)
-                data= ts.Data(idx2);
+                data= ts.Data(idx2, :);
                 if ~isempty(mod_str)
                     data= eval(mod_str);
                 end

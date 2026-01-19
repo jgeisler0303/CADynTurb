@@ -46,7 +46,7 @@ for i_plot= 1:n_plots
 
             ts= tscs{i_tsc}.get(plot_var);
             if ~isempty(ts)
-                data= ts.Data(idx{i_tsc});
+                data= ts.Data(idx{i_tsc}, :);
                 if ~isempty(mod_str)
                     data= eval(mod_str);
                 end
