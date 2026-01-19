@@ -20,9 +20,33 @@ else
     save('params', 'param', 'tw_sid', 'bd_sid')
 end
 
+%% CADynM model
+% If you want to use this experimental feature, please clone
+% https://github.com/jgeisler0303/CADynM in a directory parallel to CADynTurb
+clc
+cd(model_dir)
+
+param.tw_sid= tw_sid;
+param.bd_sid= bd_sid;
+T2B2cG = modelT2B2cG(param);
+eom = T2B2cG.getEOM;
+T2B2cG.addOutput('bld_edg_mom', T2B2cG.getConstraintForce('M_edg')/3);
+T2B2cG.addOutput('bld_flp_mom', T2B2cG.getConstraintForce('M_flp')/3);
+
+T2B2cG.removeUnusedParameters();
+matlabTemplateEngine('generated/model_M_parameters.m', 'model_parameters.m.mte', T2B2cG)
+matlabTemplateEngine('generated/model_M_indices.m', 'model_indices.m.mte', T2B2cG)
+matlabTemplateEngine('generated/T2B2cG_M_param.hpp', 'param.hpp.mte', T2B2cG)
+matlabTemplateEngine('generated/T2B2cG_M_direct.hpp', 'direct.hpp.mte', T2B2cG)
+
+%% Build mex-file for CADynM generated model
+cd(gen_dir)
+clc
+makeCADynMex([model_name '_M'], '.', '', '', fullfile(CADynTurb_dir, 'simulator'))
+
 %% generate and compile all source code
 cd(model_dir)
-genCode([model_name '.mac'], gen_dir, files_to_generate, param, tw_sid, bd_sid);
+genCode([model_name '.mac'], gen_dir, files_to_generate, param, tw_sid, bd_sid, [0 1]);
 writeModelParams(param, gen_dir);
 compileModel(model_name, model_dir, gen_dir, files_to_generate)
 
@@ -50,7 +74,11 @@ plot_timeseries_cmp(d_sim, d_sim_100ms, {'RtVAvgxh', 'BlPitchC', 'HSShftV', 'Gen
 %% sim mex model (feedforward)
 opts= struct('StepTol', 1e-8, 'AbsTol', 1e-6, 'RelTol', 1e-6, 'hminmin', 1E-8, 'jac_recalc_step', 4, 'max_steps', 10);
 d_mex= run_simulation(model_name, d_sim, param, opts);
-plot_timeseries_cmp(d_sim, d_mex, {'RtVAvgxh', 'BlPitchC', 'HSShftV', 'GenTq', 'YawBrTDxp', 'YawBrTDyp', 'Q_BF1', 'Q_BE1'});
+d_mexM= run_simulation([model_name '_M'], d_sim, param, opts);
+plot_timeseries_multi({d_FAST, d_sim, d_mex, d_mexM}, {'RtVAvgxh', 'y{(:, 4)}', 'y{(:, 5)}', 'y{(:, 6)}', 'y{(:, 7)}'}, {'FAST', 'sim', 'CADyn mex', 'CADYnM mex'});
+% plot_timeseries_multi({d_FAST, d_sim, d_mex, d_mexM}, {'RtVAvgxh', 'HSShftV', 'YawBrTDxp', 'YawBrTDyp', 'Q_BF1', 'Q_BE1'}, {'FAST', 'sim', 'CADyn mex', 'CADYnM mex'});
+% plot_timeseries_multi({d_FAST, d_sim, d_mex, d_mexM}, {'RtVAvgxh', 'BlPitchC', 'HSShftV', 'GenTq', 'YawBrTDxp', 'YawBrTDyp', 'Q_BF1', 'Q_BE1'}, {'FAST', 'sim', 'CADyn mex', 'CADYnM mex'});
+% plot_timeseries_cmp(d_sim, d_mex, {'RtVAvgxh', 'BlPitchC', 'HSShftV', 'GenTq', 'YawBrTDxp', 'YawBrTDyp', 'Q_BF1', 'Q_BE1'});
 % plot_timeseries_cmp(d_sim, d_mex, {'RtVAvgxh', 'LSSTipVxa', 'HSShftV', 'Q_DrTr', 'YawBrTDxp', 'YawBrTDyp', 'Q_BF1', 'Q_BE1'});
 
 %% sim mex model 100ms (feedforward)
