@@ -42,7 +42,11 @@ libs= {
     'hpipm'
     };
 
-flags= ['-fpermissive -g -std=c++17 -Wl,--disable-new-dtags,-rpath,' getenv('ACADOS_INSTALL_DIR') '/lib'];
+if ispc
+    flags= '-fpermissive -g -std=c++17';
+else
+    flags= ['-fpermissive -g -std=c++17 -Wl,--disable-new-dtags,-rpath,' getenv('ACADOS_INSTALL_DIR') '/lib'];
+end
 
 out_name= fullfile(gen_dir, ['sim_' model_name '_acados']);
 

@@ -21,9 +21,9 @@ if isempty(getenv('EIGEN3'))
         websave(eigen_zip, "https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.zip");
         fprintf('Done.\n')
 
-        fprintf('Unzipping and copying files to your include directory ... ')
-        unzip(eigen_zip, eigenfullfile(CADynTurb_dir, '..'));
+        fprintf('Unzipping and copying files ... ')
         eigen3_dir = fullfile(CADynTurb_dir, '..', 'eigen-3.3.9');
+        unzip(eigen_zip, fullfile(CADynTurb_dir, '..'));
         fprintf('Done.\n')
     end
     if tf_install || tf_choose

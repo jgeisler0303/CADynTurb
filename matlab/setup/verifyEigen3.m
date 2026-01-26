@@ -1,6 +1,10 @@
 function correct = verifyEigen3(eigen3_dir)
 
 version_file = fullfile(eigen3_dir, 'Eigen/src/Core/util/Macros.h');
+if ~exist(version_file, 'file')
+    correct = false;
+    return
+end
 v = parseEigenVersion(version_file);
 correct = v.world==3 && v.major==3;
 end

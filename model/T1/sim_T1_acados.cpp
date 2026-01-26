@@ -210,8 +210,8 @@ void setupOutputs(FAST_Output &out, double *states, double *inputs) {
 }
 
 bool simulate(T1_acados_sim_solver_capsule *capsule, FAST_Wind* wind, double ts, double tfinal, const std::string &discon_path, const std::string &out_file_name, T1Parameters &param, FAST_Parent_Parameters &p, double rpm0) {
-    double states[n_states];
-    double inputs[n_inputs];
+    double states[n_states] = {0.0};
+    double inputs[n_inputs] = {0.0};
 
     FAST_Output out(tfinal/ts+2);
     out.setTime(0.0, ts);

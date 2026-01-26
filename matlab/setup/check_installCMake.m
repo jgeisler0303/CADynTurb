@@ -1,5 +1,6 @@
-function check_installCMake
-if system('cmake --version')~=0
+function check_installCMake(CADynTurb_dir)
+[res, ~] = system('cmake --version');
+if res~=0
     tf_install = askYesNo('You need to install cmake. Do you want to do that automatically?', true);
     if tf_install
         fprintf('Installing cmake ...')
@@ -10,7 +11,6 @@ if system('cmake --version')~=0
             websave(cmake_file, 'https://github.com/Kitware/CMake/releases/download/v4.2.2/cmake-4.2.2-windows-x86_64.msi');
             system(cmake_file)
         else
-            fprintf('Installing cmake ...')
             system('sudo apt update && sudo apt install cmake')
         end
         fprintf('Done.\n')

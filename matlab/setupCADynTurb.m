@@ -28,6 +28,7 @@ check_installCompiler(CADynTurb_dir)
 check_installEigen3(CADynTurb_dir)
 check_installIECWind(CADynTurb_dir)
 if acados_wanted
+    check_installGit(CADynTurb_dir)
     check_installAcados(CADynTurb_dir)
 end
 

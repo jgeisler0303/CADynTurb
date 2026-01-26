@@ -1,12 +1,9 @@
 %%
-if isempty(getenv('ACADOS_INSTALL_DIR'))
-    error('You need acados to run this script')
-end
-
 clc
 model_dir= fileparts(matlab.desktop.editor.getActiveFilename);
 CADynTurb_dir= fullfile(model_dir, '../..');
-run(fullfile(CADynTurb_dir, 'matlab/setupCADynTurb'))
+addpath(fullfile(CADynTurb_dir, 'matlab'))
+setupCADynTurb(true)
 
 fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
 
@@ -32,7 +29,6 @@ genCode([model_name '.mac'], gen_dir, files_to_generate, param, tw_sid, bd_sid, 
 %% make acados model
 clc
 acados_model_solver= make_acados_sim(param, model_name, gen_dir);
-% acados_model_solverM= make_acados_sim(param, [model_name '_M'], gen_dir);
 
 %% run acados simulation
 fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow/impulse_URef-12_maininput.fst');
@@ -41,13 +37,11 @@ d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir);
 
 load('params_config.mat')
 d_acados= run_acados_simulation(acados_model_solver, d_FAST, p_);
-% d_acados_M= run_acados_simulation(acados_model_solverM, d_FAST, p_);
 plot_timeseries_cmp(d_acados, d_FAST, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'});
 
 %% make acados standalone simulator
 clc
 cd(gen_dir)
-sim_generate_c_code(acados_model_solver.sim)
 compileAcados(model_name, model_dir, gen_dir)
 
 %% compare acados stand-alone simulator with OpenFAST

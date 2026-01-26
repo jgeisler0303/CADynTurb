@@ -33,3 +33,16 @@ if isempty(mex.getCompilerConfigurations('C++', 'Selected')) || isempty(mex.getC
             'Use of CADynTurb cannot continue before this requirement is met.'], ME.message);
     end
 end
+
+if ispc
+    mc = mex.getCompilerConfigurations('C', 'Selected');
+    mingwBin = fileparts(mc.Details.CompilerExecutable);
+
+    curPath = getenv('PATH');
+    isPresent = contains(lower(curPath), lower(mingwBin), 'IgnoreCase', true);
+    if ~isPresent
+        % Add to PATH for current MATLAB session (prepend)
+        newPath = [mingwBin ';' curPath];
+        setenv('PATH', newPath);
+    end
+end

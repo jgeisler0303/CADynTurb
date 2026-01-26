@@ -14,18 +14,26 @@ if isempty(acados_dir)
         tf_choose = askYesNo('Do you want to choose the path to the acados directory?', true);
     end
     if tf_install
-        check_installCMake
+        check_installCMake(CADynTurb_dir)
 
-        fprintf('Cloning acados repository ... ')
         acados_dir = fullfile(CADynTurb_dir, '..', 'acados');
-        gitclone('https://github.com/acados/acados.git', acados_dir, 'RecurseSubmodules', true);
-        % repo.switchBranch("");
+        if ~verifyAcados(acados_dir, true)
+            fprintf('Cloning acados repository ... ')
+            old_dir = pwd;
+            cd(fullfile(CADynTurb_dir, '..'))
+            % The matlab git functions fail to clone with submodules (an error results)
+            system('git clone https://github.com/acados/acados.git');
+            cd(fullfile(CADynTurb_dir, '..', 'acados'))
+            system('git checkout v0.5.3');
+            system('git submodule update --recursive --init');
+            cd(old_dir)
+            fprintf('Done.\n')
+        end
         setenv('ACADOS_INSTALL_DIR', acados_dir);
-        fprintf('Done.\n')
 
         fprintf('Starting build process ... ')
         if ispc
-            addpath(acados_dir, 'interfaces', 'acados_matlab_octave')
+            addpath(fullfile(acados_dir, 'interfaces', 'acados_matlab_octave'))
             acados_install_windows
         else
             build_dir = fullfile(acados_dir, 'build');
