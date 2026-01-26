@@ -20,6 +20,7 @@ includes= {
     fullfile(getenv('ACADOS_INSTALL_DIR'), 'include')
     fullfile(getenv('ACADOS_INSTALL_DIR'), 'include/blasfeo/include')
     fullfile(getenv('ACADOS_INSTALL_DIR'), 'include/hpipm/include')
+    getenv('EIGEN3')
     };
 
 sources= {
