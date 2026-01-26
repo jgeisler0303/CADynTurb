@@ -6,6 +6,10 @@ if ispc
         if tf_install
             fprintf('Please follow the instructions in the dialog.')
             matlab.internal.addons.installAddonFromSidePanel('', [], 'ML_MINGW', 'support_package', '')
+            tf_done = false;
+            while ~tf_done
+                tf_done = askYesNo('The Installation should now be running in an independent process. Please confirm it''s successful completion.', true);
+            end
         else
             error(['Please install the MinGW64 Compiler via MATLAB Add-Ons manually.' newline ...
                 'Use of CADynTurb cannot continue before this requirement is met.'])

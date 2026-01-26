@@ -9,7 +9,13 @@ if res~=0
             [~, ~] = mkdir(download_dir);
             cmake_file = fullfile(download_dir, 'cmake-4.2.2-windows-x86_64.msi');    
             websave(cmake_file, 'https://github.com/Kitware/CMake/releases/download/v4.2.2/cmake-4.2.2-windows-x86_64.msi');
-            system(cmake_file)
+            system(cmake_file);
+            % Try to set cmake path temporarily
+            setenv('PATH', ['C:\Program Files\CMake\bin;' getenv('PATH')]);
+            [res, ~] = system('cmake --version');
+            if res~=0
+                error('The Installation of CMake was probably successful but the cmake program is not on your path yet. Please restart MATLAB and rerun the setup process.')
+            end
         else
             system('sudo apt update && sudo apt install cmake')
         end

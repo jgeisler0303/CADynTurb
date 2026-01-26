@@ -33,12 +33,12 @@ if isempty(getenv('TURBSIM'))
     end
     if tf_install || tf_choose
         while true
-            if ~isempty(openfast_path)
-                if verifyTurbSim(openfast_path)
+            if ~isempty(turbsim_path)
+                if verifyTurbSim(turbsim_path)
                     writelines("setenv('TURBSIM', '" + strrep(turbsim_path, '\', '/') + "')", fullfile(CADynTurb_dir, 'matlab', 'my_configCADynTurb.m'), 'WriteMode', 'append');
                     break
                 else
-                    fprintf('The path "%s" doesn''t seem to be a valid TurbSim v3.3.0 executable.\n', openfast_path)
+                    fprintf('The path "%s" doesn''t seem to be a valid TurbSim v3.3.0 executable.\n', turbsim_path)
                 end
             end
             if ispc

@@ -10,7 +10,7 @@ fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
 model_name= 'T1';
 gen_dir= fullfile(model_dir, 'generated');
 
-files_to_generate= {'model_indices.m', 'model_parameters.m', '_acados.m'};
+files_to_generate= {'model_indices.m', 'model_parameters.m', '_acados.m', '_param.hpp'};
 
 %% calculate parameters
 cd(model_dir)
@@ -25,9 +25,11 @@ end
 clc
 cd(model_dir)
 genCode([model_name '.mac'], gen_dir, files_to_generate, param, tw_sid, bd_sid, [0 1]);
+writeModelParams(param, gen_dir);
 
 %% make acados model
 clc
+clear mex
 acados_model_solver= make_acados_sim(param, model_name, gen_dir);
 
 %% run acados simulation

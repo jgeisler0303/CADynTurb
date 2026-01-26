@@ -21,7 +21,7 @@ if res~=0
         old_dir = pwd;
         cd(fullfile(iecwind_repo, 'Source'))
         cmd = sprintf('"%s"  -static-libgfortran -static-libgcc IECwind.f90 -o "%s"', compiler, iecwind_file);
-        system(cmd)
+        system(cmd);
         movefile(iecwind_file, fullfile(CADynTurb_dir, '..', 'AMPoWS', 'Matlab', 'pre_processing', iecwind_file))
         cd(old_dir)
         if ispc

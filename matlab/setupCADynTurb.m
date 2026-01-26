@@ -23,8 +23,8 @@ end
 
 check_installRepositories(CADynTurb_dir)
 check_installMaxima(CADynTurb_dir)
-check_installAeroDyn_Driver(CADynTurb_dir)
 check_installCompiler(CADynTurb_dir)
+check_installAeroDyn_Driver(CADynTurb_dir)
 check_installEigen3(CADynTurb_dir)
 check_installIECWind(CADynTurb_dir)
 if acados_wanted

@@ -14,7 +14,7 @@ old_dir= cd(fullfile(CADynTurb_dir, 'ref_sim/wind'));
 cleanupObj = onCleanup(@()cd(old_dir));
 
 if ~exist(fullfile(CADynTurb_dir, 'ref_sim/wind/NTM_URef-12_turbsim.bts'), 'file')
-    system([turbsim_path ' NTM_URef-12_turbsim.inp'])
+    system([turbsim_path ' NTM_URef-12_turbsim.inp']);
 end
 
 %% make additional wind file for rotor average and shear
@@ -26,19 +26,19 @@ end
 %% run openfast for 12m/s with dynamic inflow
 if ~exist(fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow/impulse_URef-12_maininput.outb'), 'file')
     cd(fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow'))
-    system([openfast_path ' impulse_URef-12_maininput.fst'])
+    system([openfast_path ' impulse_URef-12_maininput.fst']);
 end
 if ~exist(fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow/1p1_NacYaw-0_URef-12_maininput.outb'), 'file')
     cd(fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow'))
-    system([openfast_path ' 1p1_NacYaw-0_URef-12_maininput.fst'])
+    system([openfast_path ' 1p1_NacYaw-0_URef-12_maininput.fst']);
 end
 
 %% run openfast for 12m/s without dynamic inflow
 if ~exist(fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow/impulse_URef-12_maininput.outb'), 'file')
     cd(fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow'))
-    system([openfast_path ' impulse_URef-12_maininput.fst'])
+    system([openfast_path ' impulse_URef-12_maininput.fst']);
 end
 if ~exist(fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow/1p1_NacYaw-0_URef-12_maininput.outb'), 'file')
     cd(fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow'))
-    system([openfast_path ' 1p1_NacYaw-0_URef-12_maininput.fst'])
+    system([openfast_path ' 1p1_NacYaw-0_URef-12_maininput.fst']);
 end

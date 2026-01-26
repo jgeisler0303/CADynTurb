@@ -17,23 +17,23 @@ if isempty(AD_driver)
     if tf_install
         fprintf('Downloading AeroDyn standalone driver ... ')
         if ispc
-            AD_Driver = fullfile(CADynTurb_dir, '..', 'SimpleDynInflow', 'AeroDyn_Driver_x64_Double.exe');
-            websave(AD_Driver, 'https://github.com/jgeisler0303/SimpleDynInflow/releases/download/AeroDyn_v3.3.0/AeroDyn_Driver_x64_Double.exe');
+            AD_driver = fullfile(CADynTurb_dir, '..', 'SimpleDynInflow', 'AeroDyn_Driver_x64_Double.exe');
+            websave(AD_driver, 'https://github.com/jgeisler0303/SimpleDynInflow/releases/download/AeroDyn_v3.3.0/AeroDyn_Driver_x64_Double.exe');
         else
-            AD_Driver = fullfile(CADynTurb_dir, '..', 'SimpleDynInflow', 'aerodyn_driver');
-            websave(AD_Driver, 'https://github.com/jgeisler0303/SimpleDynInflow/releases/download/AeroDyn_v3.3.0/aerodyn_driver');
-            system(['chmod a+x ' AD_Driver])
+            AD_driver = fullfile(CADynTurb_dir, '..', 'SimpleDynInflow', 'aerodyn_driver');
+            websave(AD_driver, 'https://github.com/jgeisler0303/SimpleDynInflow/releases/download/AeroDyn_v3.3.0/aerodyn_driver');
+            system(['chmod a+x ' AD_driver])
         end               
         fprintf('Done.\n')
     end
     if tf_install || tf_choose
         while true
-            if ~isempty(AD_Driver)
+            if ~isempty(AD_driver)
                 if verifyAD_driver(AD_driver)
-                    writelines("setenv('AD_DRIVER', '" + strrep(AD_Driver, '\', '/') + "')", fullfile(CADynTurb_dir, 'matlab', 'my_configCADynTurb.m'), 'WriteMode', 'append');
+                    writelines("setenv('AD_DRIVER', '" + strrep(AD_driver, '\', '/') + "')", fullfile(CADynTurb_dir, 'matlab', 'my_configCADynTurb.m'), 'WriteMode', 'append');
                     break
                 else
-                    fprintf('The path "%s" doesn''t seem to be a valid AeroDyn driver executable.\n', AD_Driver)
+                    fprintf('The path "%s" doesn''t seem to be a valid AeroDyn driver executable.\n', AD_driver)
                 end
             end
             if ispc
@@ -46,7 +46,7 @@ if isempty(AD_driver)
                 tf_choose = false;
                 break
             else
-                AD_Driver = fullfile(pathname, filename);
+                AD_driver = fullfile(pathname, filename);
             end
         end
     end
