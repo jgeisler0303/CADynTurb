@@ -14,6 +14,23 @@ if isempty(getenv('OPENFAST'))
     else
         tf_install = askYesNo('You need to have OpenFAST v3.3.0 on your system. Do you want to clone the repository and build it automatically?', true);
     end
+    if tf_install
+        if isunix
+            [res, msg] = system('grep MemTotal /proc/meminfo');
+            tokens = regexp(msg, '(\d+)', 'match');
+            if res~=0 || isempty(tokens)
+                warning('Could not determine our RAM. You could be in trouble compiling OpenFAST.');
+            else
+                kb = str2double(tokens{1});
+                if kb < 15 * 1024^2
+                    tf_continue = askYesNo('It seems you have less than 16GB of RAM. You will probably have trouble to compile OpenFAST, MATLAB may crash. Do you want to continue?', false);
+                    if ~tf_continue
+                        tf_install = false;
+                    end
+                end
+            end
+        end            
+    end
     if ~tf_install
         tf_choose = askYesNo('Do you want to choose the path to the OpenFAST version 3.3.0 executable?', true);
     end
@@ -24,27 +41,52 @@ if isempty(getenv('OPENFAST'))
             websave(openfast_path, 'https://github.com/OpenFAST/openfast/releases/download/v3.3.0/openfast_x64.exe');
             fprintf('Done.\n')
         else
-            fprintf('Installing prerequisits for building OpenFAST... ')
-            system('sudo apt install git cmake libblas-dev liblapack-dev gfortran-10 g++');
-            fprintf('Done.\n')
-            fprintf('Cloning openfast repository ... ')
-            repo = gitclone('https://github.com/OpenFAST/OpenFAST.git', fullfile(CADynTurb_dir, '..', 'OpenFAST'));
-            repo.switchBranch("v3.3.0");
-            fprintf('Done.\n')
+            [res, ~] = system('git --version');
+            git_installed= res==0;
+            [res, ~] = system('cmake --version');
+            cmake_installed= res==0;
+            [res, ~] = system('gfortran-10 --version');
+            gfortran_installed= res==0;
+            [res, ~] = system('g++ --version');
+            gpp_installed= res==0;
+            [res, ~] = system('dpkg -s libblas-dev');
+            libblas_installed= res==0;
+            [res, ~] = system('dpkg -s liblapack-dev');
+            liblapack_installed= res==0;
+            [res, ~] = system('dpkg -s libflame-dev');
+            libflame_installed= res==0;
+            if ~git_installed || ~cmake_installed || ~gfortran_installed || ~gpp_installed || ~libblas_installed || ~liblapack_installed || ~libflame_installed
+                fprintf('Installing prerequisits for building OpenFAST... ')
+                system([
+                    'env -u LD_LIBRARY_PATH x-terminal-emulator -e ', ...
+                    'bash -lc "sudo apt update && sudo apt install git cmake libblas-dev liblapack-dev libflame-dev gfortran-10 g++"'
+                ]);
+                fprintf('Done.\n')
+            end
+            if ~exist(fullfile(CADynTurb_dir, '..', 'OpenFAST', '.git'), 'dir')
+                fprintf('Cloning openfast repository ... ')
+                old_dir = pwd;
+                cd(fullfile(CADynTurb_dir, '..'))
+                system('git clone https://github.com/OpenFAST/OpenFAST.git');
+                cd(fullfile(CADynTurb_dir, '..', 'OpenFAST'))
+                system('git checkout v3.3.0');
+                cd(old_dir)
+                fprintf('Done.\n')
+            end
             fprintf('Starting build process ... ')
             build_dir = fullfile(CADynTurb_dir, '..', 'OpenFAST', 'build_330');
             [~, ~] = mkdir(build_dir);
             old_dir = pwd;
             cd(build_dir);
-            system('cmake ..')
-            system('make openfast turbsim aerodyn_driver -j4')
+            system('env -u LD_LIBRARY_PATH cmake ..');
+            system('env -u LD_LIBRARY_PATH make openfast turbsim aerodyn_driver -j4');
             openfast_path = fullfile(build_dir, 'glue-codes', 'openfast', 'openfast');
 
             build_dir = fullfile(CADynTurb_dir, '..', 'OpenFAST', 'share', 'discon', 'build_330');
             [~, ~] = mkdir(build_dir);
             cd(build_dir);
-            system('cmake ..')
-            system('make')
+            system('env -u LD_LIBRARY_PATH cmake ..');
+            system('env -u LD_LIBRARY_PATH make');
             cd(old_dir)
             fprintf('Done.\n')
         end

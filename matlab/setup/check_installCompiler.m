@@ -20,7 +20,10 @@ else
     if res~=0
         tf_install = askYesNo('You need to install the gcc compiler. Do you want to do that automatically?', true);
         if tf_install
-            system('sudo apt update && sudo apt install build-essential gcc-fortran')
+            system([
+                'env -u LD_LIBRARY_PATH x-terminal-emulator -e ', ...
+                'bash -lc "sudo apt update && sudo apt install build-essential gfortran-10"'
+            ]);
         else
             error(['Please setup up the gcc/g++ compiler manually.' newline ...
                 'Use of CADynTurb cannot continue before this requirement is met.'])

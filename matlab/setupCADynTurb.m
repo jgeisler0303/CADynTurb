@@ -21,6 +21,7 @@ try
 catch e
 end
 
+checkMatlabLib
 check_installRepositories(CADynTurb_dir)
 check_installMaxima(CADynTurb_dir)
 check_installCompiler(CADynTurb_dir)
@@ -59,6 +60,9 @@ catch e
 end
 
 setenv('cagem_path', fullfile(CADynTurb_dir, '../CADyn/gen/cagem.mac'))
+
+mc = mex.getCompilerConfigurations('C++', 'Selected');
+setenv('CPP', mc.Details.CompilerExecutable)
 
 if ~isempty(getenv('ACADOS_INSTALL_DIR'))
     if ~ispc

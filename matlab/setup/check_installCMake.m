@@ -17,7 +17,10 @@ if res~=0
                 error('The Installation of CMake was probably successful but the cmake program is not on your path yet. Please restart MATLAB and rerun the setup process.')
             end
         else
-            system('sudo apt update && sudo apt install cmake')
+            system([
+                'env -u LD_LIBRARY_PATH x-terminal-emulator -e ', ...
+                'bash -lc "sudo apt update && sudo apt install cmake"'
+            ]);
         end
         fprintf('Done.\n')
     else
