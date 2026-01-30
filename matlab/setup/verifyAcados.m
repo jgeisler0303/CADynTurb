@@ -16,7 +16,7 @@ if exist(acados_dir, 'dir')
 
     old_dir = pwd;
     cd(acados_dir)
-    [res, msg] = system('git tag --points-at HEAD');
+    [res, msg] = system('git -c gpg.program= --no-pager tag --points-at HEAD');
     cd(old_dir)
     msg = strtrim(msg);
     if res ~= 0 || ~strcmp(msg, 'v0.5.3')

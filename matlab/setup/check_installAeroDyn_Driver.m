@@ -22,7 +22,7 @@ if isempty(AD_driver)
         else
             AD_driver = fullfile(CADynTurb_dir, '..', 'SimpleDynInflow', 'aerodyn_driver');
             websave(AD_driver, 'https://github.com/jgeisler0303/SimpleDynInflow/releases/download/AeroDyn_v3.3.0/aerodyn_driver');
-            system(['chmod a+x ' AD_driver])
+            system(['chmod a+x ' AD_driver]);
         end               
         fprintf('Done.\n')
     end

@@ -41,9 +41,10 @@ if isempty(acados_dir)
             old_dir = pwd;
             cd(build_dir);
             system('cmake -DACADOS_WITH_QPOASES=ON ..')
-            system('make install -j4')
+            system('make install -j4');
             cd(old_dir)
             setenv('ENV_RUN', 'true')
+            addpath(fullfile(acados_dir, 'interfaces', 'acados_matlab_octave'))
             check_acados_requirements
         end
         fprintf('Done.\n')

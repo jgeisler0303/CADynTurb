@@ -19,19 +19,25 @@ if isempty(maxima_path)
         [~, ~] = mkdir(download_dir);
         if ispc
             maxima_install_file = fullfile(download_dir, 'maxima-clisp-sbcl-5.44.0-win64.exe');    
-            websave(maxima_install_file, 'https://sourceforge.net/projects/maxima/files/Maxima-Windows/5.44.0-Windows/maxima-clisp-sbcl-5.44.0-win64.exe/download')
+            if ~exist(maxima_install_file, 'file')
+                websave(maxima_install_file, 'https://sourceforge.net/projects/maxima/files/Maxima-Windows/5.44.0-Windows/maxima-clisp-sbcl-5.44.0-win64.exe/download')
+            end
         else
             maxima_package1 = fullfile(download_dir, 'maxima-sbcl_5.44.0-1_amd64.deb');
-            websave(maxima_package1, 'https://sourceforge.net/projects/maxima/files/Maxima-Linux/5.44.0-Linux/maxima-sbcl_5.44.0-1_amd64.deb/download');
+            if ~exist(maxima_package1, 'file')
+                websave(maxima_package1, 'https://sourceforge.net/projects/maxima/files/Maxima-Linux/5.44.0-Linux/maxima-sbcl_5.44.0-1_amd64.deb/download');
+            end
             maxima_package2 = fullfile(download_dir, 'maxima-common_5.44.0-1_all.deb');
-            websave(maxima_package2, 'https://sourceforge.net/projects/maxima/files/Maxima-Linux/5.44.0-Linux/maxima-common_5.44.0-1_all.deb/download');
+            if ~exist(maxima_package2, 'file')
+                websave(maxima_package2, 'https://sourceforge.net/projects/maxima/files/Maxima-Linux/5.44.0-Linux/maxima-common_5.44.0-1_all.deb/download');
+            end
         end
         fprintf('Done.\n')
         fprintf('Starting installation of Maxima ...');
         if ispc
             system(maxima_install_file);
         else
-            system('sudo dpkg -i ' + maxima_package1 + ' ' + maxima_package2);
+            system(['env -u LD_LIBRARY_PATH x-terminal-emulator -e "sudo dpkg -i ' maxima_package1 ' ' maxima_package2 '"']);
         end
         fprintf('Done.\n')
 
