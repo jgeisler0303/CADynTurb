@@ -35,3 +35,6 @@ if exist(fullfile(CADynTurb_dir, '..', 'CADynM'), 'dir')
     addpath(fullfile(CADynTurb_dir, '..', 'CADynM', 'toolbox', 'utils'))
 end
 
+if exist(fullfile(CADynTurb_dir, '..', 'MAMaS'), 'dir')
+    addpath(fullfile(CADynTurb_dir, '..', 'MAMaS', 'toolbox'))
+end
