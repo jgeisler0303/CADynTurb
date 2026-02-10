@@ -10,7 +10,7 @@ old_dir= pwd;
 cleanupObj = onCleanup(@()cd(old_dir));
 cd(gen_dir)
 
-includes= ['-I' fullfile(fileparts(getenv('cagem_path')), '../src') ' -I' gen_dir ' -I' fullfile(base_dir, '../../simulator') '-I' getenv('EIGEN3')];
+includes= ['-I' fullfile(fileparts(getenv('cagem_path')), '../src') ' -I' gen_dir ' -I' fullfile(base_dir, '../../simulator') ' -I' getenv('EIGEN3')];
 if any(strcmp(files_to_generate, '_direct.hpp'))
     % compile stand alone simulator
     sim_cpp= fullfile(base_dir, ['../../simulator/standalone_simulator.cpp']);
