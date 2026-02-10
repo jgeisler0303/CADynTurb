@@ -9,7 +9,7 @@ fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
 model_name= 'T1';
 gen_dir= fullfile(model_dir, 'generated');
 
-files_to_generate= {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m', '_pre_calc.m', '_descriptor_form.hpp', '_lin.m', '_nonlin.m'};
+files_to_generate= {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m', '_descriptor_form.hpp'}; %, '_lin.m', '_nonlin.m'};
 
 %% calculate parameters
 cd(model_dir)
@@ -23,7 +23,9 @@ end
 %% generate and compile all source code
 clc
 cd(model_dir)
+tic
 genCode([model_name '.mac'], gen_dir, files_to_generate, param, tw_sid, bd_sid, [0 1]);
+toc
 writeModelParams(param, gen_dir);
 compileModel(model_name, model_dir, gen_dir, files_to_generate)
 
@@ -46,4 +48,4 @@ cd(gen_dir)
 clc
 opts= struct('StepTol', 1e-8, 'AbsTol', 1e-6, 'RelTol', 1e-6, 'hminmin', 1E-8, 'jac_recalc_step', 4, 'max_steps', 10);
 d_mex= run_simulation(model_name, d_sim, param, opts);
-plot_timeseries_cmd(d_sim, d_mex, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'});
+plot_timeseries_cmp(d_sim, d_mex, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'});

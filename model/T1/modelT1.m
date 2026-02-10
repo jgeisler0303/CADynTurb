@@ -1,5 +1,6 @@
 function T1 = modelT1(params)
 % Simulation of a simplified horizontal axis wind turbine
+import MAMaS.*
 
 T1 = MultiBodySystem('T1', {'tow_fa' 'phi_rot'}, {'vwind' 'Tgen' 'theta'});
 T1.addParameter(params);
@@ -25,7 +26,7 @@ T1.addExternalParameter('thetaStep', [], params.thetaStep);
 T1.addOutput('tow_fa_acc', T1.dof.tow_fa_dd);
 T1.addOutput('gen_speed', T1.dof.phi_rot_d*T1.params.GBRatio);
 % just to preserve this state in the acados simulation
-T1.addOutput('out_phi_rot', T1.dof.phi_rot);
+T1.addOutput('phi_rot', T1.dof.phi_rot);
 
 T1.gravity(3) = -T1.params.g;
 
@@ -49,8 +50,9 @@ nacelle.addChild(hub);
 for i = 1:3
     blade = RigidBody(sprintf('blade%d', i), [], T1.params.blade_mass, diag([T1.params.blade_I0_1_1, T1.params.blade_I0_2_2, T1.params.blade_I0_3_3]));
     blade.translate([-T1.params.HubCM, 0, 0]);
-    % sym(2) is important to be able to simplify equations
-    blade.rotateLocalAxis('x', (i-1)*sym(2)/3*sym(pi))
+    % sym(2) is important to be able to simplify equations, use
+    % MultiBodySystem access to sym to abstract MATLAB Symbolics and MAMaS
+    blade.rotateLocalAxis('x', (i-1)*T1.sym(2)/3*T1.sym(pi))
     blade.rotateLocalAxis('z', T1.inputs.theta)
     blade.translate([0, 0, T1.params.blade_md0_3_1/T1.params.blade_mass]);
     hub.addChild(blade)
@@ -67,9 +69,9 @@ nacelle.addChild(geno)
 T1.completeSetup()
 
 % Applied forces and moments
-hub.applyForce([T1.externals.Fthrust, 0, 0])
-hub.applyMoment([T1.externals.Trot, 0, 0])
-geno.applyMoment([-T1.inputs.Tgen, 0, 0])
+hub.applyForce([T1.externals.Fthrust, 0, 0]')
+hub.applyMoment([T1.externals.Trot, 0, 0]')
+geno.applyMoment([-T1.inputs.Tgen, 0, 0]')
 
 
 

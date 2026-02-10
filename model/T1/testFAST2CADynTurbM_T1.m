@@ -11,7 +11,7 @@ fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
 model_name= 'T1';
 gen_dir_m= fullfile(model_dir, 'generated_M');
 
-files_to_generate= {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m'};
+files_to_generate= {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m', '_acados.m', '_descriptor_form.hpp'};
 
 %% calculate parameters
 cd(model_dir)
@@ -22,32 +22,12 @@ else
     save('params', 'param', 'tw_sid', 'bd_sid')
 end
 
-%%
+%% generate and compile all source code
 clc
 cd(model_dir)
-
-param.tw_sid= tw_sid;
-T1 = modelT1(param);
-eom = T1.getEOM;
-T1.removeUnusedParameters();
-
-[~, ~] = mkdir(gen_dir_m);
-copyfile(fullfile(model_dir, [model_name '_Externals.hpp']), gen_dir_m)
-matlabTemplateEngine('generated_M/model_parameters.m', 'model_parameters.m.mte', T1)
-matlabTemplateEngine('generated_M/model_indices.m', 'model_indices.m.mte', T1)
-matlabTemplateEngine('generated_M/T1_param.hpp', 'param.hpp.mte', T1)
-matlabTemplateEngine('generated_M/T1_direct.hpp', 'direct.hpp.mte', T1)
-matlabTemplateEngine('generated_M/T1_acados.m', 'acados.m.mte', T1)
-matlabTemplateEngine('generated_M/T1_descriptor_form.m', 'descriptor_form.hpp.mte', T1)
-extermals_file = fullfile(gen_dir_m, 'T1_Externals.hpp');
-if ~exist(extermals_file, 'file')
-    matlabTemplateEngine(extermals_file, 'Externals.hpp.mte', T1)
-end
-
-%% Build mex-file for CADynM generated model
-cd(gen_dir_m)
-clc
-makeCADynMex(model_name, '.', '', '', fullfile(CADynTurb_dir, 'simulator'))
+model = genCodeM(['model' model_name '.m'], gen_dir_m, files_to_generate, param, tw_sid, bd_sid);
+writeModelParams(param, gen_dir_m);
+compileModel(model_name, model_dir, gen_dir_m, files_to_generate)
 
 %% sim mex models (feedforward)
 if ~exist('d_sim', 'var')
