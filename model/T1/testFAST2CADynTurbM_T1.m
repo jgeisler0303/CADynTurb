@@ -25,7 +25,10 @@ end
 %% generate and compile all source code
 clc
 cd(model_dir)
+MultiBodySystem.setMSym();
+tic
 model = genCodeM(['model' model_name '.m'], gen_dir_m, files_to_generate, param, tw_sid, bd_sid);
+toc
 writeModelParams(param, gen_dir_m);
 compileModel(model_name, model_dir, gen_dir_m, files_to_generate)
 

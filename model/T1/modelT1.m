@@ -69,9 +69,9 @@ nacelle.addChild(geno)
 T1.completeSetup()
 
 % Applied forces and moments
-hub.applyForce([T1.externals.Fthrust, 0, 0]')
-hub.applyMoment([T1.externals.Trot, 0, 0]')
-geno.applyMoment([-T1.inputs.Tgen, 0, 0]')
+hub.applyForce([T1.externals.Fthrust, 0, 0].')
+hub.applyMoment([T1.externals.Trot, 0, 0].')
+geno.applyMoment([-T1.inputs.Tgen, 0, 0].')
 
 
 
