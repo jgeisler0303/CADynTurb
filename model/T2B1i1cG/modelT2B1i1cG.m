@@ -93,7 +93,7 @@ for i = 1:3
     blade(i) = ElasticBody([T2B1i1cG.dof.(sprintf('bld%d_flp', i)) T2B1i1cG.dof.bld_edg], bd_SID, sprintf('blade%d', i));
     blade(i).translate([-T2B1i1cG.params.HubCM, 0, 0]);
     % sym(2) is important to be able to simplify equations
-    blade(i).rotateLocalAxis('x', (i-1)*sym(2)/3*sym(pi))
+    blade(i).rotateLocalAxis('x', (i-1)*T2B1i1cG.sym(2)/3*T2B1i1cG.sym(pi))
     blade(i).rotateLocalAxis('z', T2B1i1cG.inputs.(sprintf('theta%d', i)))
     blade(i).rotateLocalAxis('x', T2B1i1cG.doc.(sprintf('M_edg%d', i)))
     blade(i).rotateLocalAxis('y', T2B1i1cG.doc.(sprintf('M_flp%d', i)))
@@ -130,22 +130,32 @@ nacelle.applyForce([0, T2B1i1cG.externals.Ftow_y, 0])
 for i = 1:3
     % Thrust (out of plane)
     OoPforce= T2B1i1cG.externals.(sprintf('Fthrust%d', i));
-    thrustForceRadius= sym('2/3')*T2B1i1cG.params.Rrot;
+    thrustForceRadius= T2B1i1cG.sym(2)/3*T2B1i1cG.params.Rrot;
     % flapwise
-    blade(i).applyForceInLocal([0 0 thrustForceRadius]', OoPforce*[cos(T2B1i1cG.inputs.(sprintf('theta%d', i))) 0 0]')
+    blade(i).applyForceInLocal([0 0 thrustForceRadius].', OoPforce*[cos(T2B1i1cG.inputs.(sprintf('theta%d', i))) 0 0].')
     % edgewise
-    blade(i).applyForceInLocal([0 0 thrustForceRadius]', OoPforce*[0 -sin(T2B1i1cG.inputs.(sprintf('theta%d', i))) 0]')
+    blade(i).applyForceInLocal([0 0 thrustForceRadius].', OoPforce*[0 -sin(T2B1i1cG.inputs.(sprintf('theta%d', i))) 0].')
 
-    Rtheta= Body.rotationMatrix([0 0 1], -T2B1i1cG.inputs.(sprintf('theta%d', i)));
-    blade(i).applyMoment(blade(i).T0(1:3, 1:3)*Rtheta(1:3, 1:3) * [0 T2B1i1cG.externals.(sprintf('MyD23_%d', i)) 0]');
+    Rtheta= blade(i).rotationMatrix([0 0 1], -T2B1i1cG.inputs.(sprintf('theta%d', i)));
+    blade(i).applyMoment(blade(i).T0(1:3, 1:3)*Rtheta(1:3, 1:3) * [0 T2B1i1cG.externals.(sprintf('MyD23_%d', i)) 0].');
 
     % Torque (in plane)
     IPforce= T2B1i1cG.externals.(sprintf('Trot%d', i))/T2B1i1cG.params.torqueForceRadius;
     % flapwise
-    blade(i).applyForceInLocal([0 0 T2B1i1cG.params.torqueForceRadius]', IPforce*[-sin(T2B1i1cG.inputs.(sprintf('theta%d', i))) 0 0]')
+    blade(i).applyForceInLocal([0 0 T2B1i1cG.params.torqueForceRadius].', IPforce*[-sin(T2B1i1cG.inputs.(sprintf('theta%d', i))) 0 0].')
     % edgewise
-    blade(i).applyForceInLocal([0 0 T2B1i1cG.params.torqueForceRadius]', IPforce*[0 -cos(T2B1i1cG.inputs.(sprintf('theta%d', i))) 0]')
+    blade(i).applyForceInLocal([0 0 T2B1i1cG.params.torqueForceRadius].', IPforce*[0 -cos(T2B1i1cG.inputs.(sprintf('theta%d', i))) 0].')
 
     % modal forces
-    blade(i).applyElasticForce([T2B1i1cG.externals.(sprintf('modalFlapForce%d', i)) T2B1i1cG.externals.modalEdgeForce]')
+    blade(i).applyElasticForce([T2B1i1cG.externals.(sprintf('modalFlapForce%d', i)) T2B1i1cG.externals.modalEdgeForce].')
 end
+
+T2B1i1cG.getEOM;
+T2B1i1cG.addOutput('bld1_flp_mom', T2B1i1cG.getConstraintForce('M_flp1'));
+T2B1i1cG.addOutput('bld1_edg_mom', T2B1i1cG.getConstraintForce('M_edg1'));
+T2B1i1cG.addOutput('bld2_flp_mom', T2B1i1cG.getConstraintForce('M_flp2'));
+T2B1i1cG.addOutput('bld2_edg_mom', T2B1i1cG.getConstraintForce('M_edg2'));
+T2B1i1cG.addOutput('bld3_flp_mom', T2B1i1cG.getConstraintForce('M_flp3'));
+T2B1i1cG.addOutput('bld3_edg_mom', T2B1i1cG.getConstraintForce('M_edg3'));
+T2B1i1cG.addOutput('tow_bot_fa_mom', T2B1i1cG.getConstraintForce('M_tow_y'));
+T2B1i1cG.addOutput('tow_bot_ss_mom', T2B1i1cG.getConstraintForce('M_tow_x'));

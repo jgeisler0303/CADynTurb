@@ -39,9 +39,9 @@ end
 tw_sid= FEMBeam2SID(data, 1, tower_modes, 1);
 % TODO: allow more than 2 tower modes
 if size(tw_sid.Ke.M0, 1)==2
-    tw_sid.De.M0= diag(2*sqrt(tw_sid.Me.M0*tw_sid.Ke.M0)) .* [GetFASTPar(edtwrDataOut, 'TwrFADmp(1)') GetFASTPar(edtwrDataOut, 'TwrSSDmp(1)')]/100;
+    tw_sid.De.M0= diag(2*sqrt(diag(tw_sid.Me.M0*tw_sid.Ke.M0)) .* [GetFASTPar(edtwrDataOut, 'TwrFADmp(1)') GetFASTPar(edtwrDataOut, 'TwrSSDmp(1)')]'/100);
 else
-    tw_sid.De.M0= diag(2*sqrt(tw_sid.Me.M0*tw_sid.Ke.M0)) .* GetFASTPar(edtwrDataOut, 'TwrFADmp(1)')/100;
+    tw_sid.De.M0= 2*sqrt(tw_sid.Me.M0*tw_sid.Ke.M0) .* GetFASTPar(edtwrDataOut, 'TwrFADmp(1)')/100;
 end
 tw_sid.De.structure= 1;
 

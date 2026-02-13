@@ -23,31 +23,18 @@ else
     save('params', 'param', 'tw_sid', 'bd_sid')
 end
 
-%%
+%% generate and compile all source code
 clc
 cd(model_dir)
+MultiBodySystem.setSym();
+tic
+model = genCodeM(['model' model_name '.m'], gen_dir_m, files_to_generate, param, tw_sid, bd_sid);
+toc
+writeModelParams(param, gen_dir_m);
+makeCADynMex(model_name, gen_dir_m, '', '', fullfile(CADynTurb_dir, 'simulator'))
 
-param.tw_sid= tw_sid;
-param.bd_sid= bd_sid;
-T1B1cG_est = modelT1B1cG_est(param);
-eom = T1B1cG_est.getEOM;
-T1B1cG_est.removeUnusedParameters();
-
-[~, ~] = mkdir(gen_dir_m);
-copyfile(fullfile(model_dir, [model_name '_Externals.hpp']), gen_dir_m)
-matlabTemplateEngine(fullfile(gen_dir_m, 'model_parameters.m'), 'model_parameters.m.mte', T1B1cG_est)
-matlabTemplateEngine(fullfile(gen_dir_m, 'model_indices.m'), 'model_indices.m.mte', T1B1cG_est)
-matlabTemplateEngine(fullfile(gen_dir_m, 'T1B1cG_est_param.hpp'), 'param.hpp.mte', T1B1cG_est)
-matlabTemplateEngine(fullfile(gen_dir_m, 'T1B1cG_est_direct.hpp'), 'direct.hpp.mte', T1B1cG_est)
-extermals_file = fullfile(gen_dir_m, 'T1B1cG_est_Externals.hpp');
-if ~exist(extermals_file, 'file')
-    matlabTemplateEngine(extermals_file, 'Externals.hpp.mte', T1B1cG_est)
-end
-
-%% Build mex-file for CADynM generated model
-cd(gen_dir_m)
+%% compile ekf mex
 clc
-makeCADynMex(model_name, '.', '', '', fullfile(CADynTurb_dir, 'simulator'))
 makeCADynEKFMex(model_name, model_dir, gen_dir_m)
 
 %% get reference simulations 1p1

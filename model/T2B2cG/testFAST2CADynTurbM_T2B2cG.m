@@ -12,7 +12,7 @@ fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
 model_name= 'T2B2cG';
 gen_dir_m= fullfile(model_dir, 'generated_M');
 
-files_to_generate= {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m', '_lin.m', '_nonlin.m'};
+files_to_generate= {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m'};
 
 %% calculate parameters
 cd(model_dir)
@@ -23,34 +23,16 @@ else
     save('params', 'param', 'tw_sid', 'bd_sid')
 end
 
-%% Generate Model
+%% generate and compile all source code
 clc
 cd(model_dir)
-
-param.tw_sid= tw_sid;
-param.bd_sid= bd_sid;
-T2B2cG = modelT2B2cG(param);
-eom = T2B2cG.getEOM;
-T2B2cG.addOutput('bld_edg_mom', T2B2cG.getConstraintForce('M_edg')/3);
-T2B2cG.addOutput('bld_flp_mom', T2B2cG.getConstraintForce('M_flp')/3);
-
-T2B2cG.removeUnusedParameters();
-
-[~, ~] = mkdir(gen_dir_m);
-copyfile(fullfile(model_dir, [model_name '_Externals.hpp']), gen_dir_m)
-matlabTemplateEngine('generated_M/model_parameters.m', 'model_parameters.m.mte', T2B2cG)
-matlabTemplateEngine('generated_M/model_indices.m', 'model_indices.m.mte', T2B2cG)
-matlabTemplateEngine('generated_M/T2B2cG_param.hpp', 'param.hpp.mte', T2B2cG)
-matlabTemplateEngine('generated_M/T2B2cG_direct.hpp', 'direct.hpp.mte', T2B2cG)
-extermals_file = fullfile(gen_dir_m, 'T2B2cG_Externals.hpp');
-if ~exist(extermals_file, 'file')
-    matlabTemplateEngine(extermals_file, 'Externals.hpp.mte', T2B2cG)
-end
-
-%% Build mex-file for CADynM generated model
-cd(gen_dir_m)
-clc
-makeCADynMex(model_name, '.', '', '', fullfile(CADynTurb_dir, 'simulator'))
+MaximaInterface.getInstance(20,'',true);
+MultiBodySystem.setSym();
+tic
+model = genCodeM(['model' model_name '.m'], gen_dir_m, files_to_generate, param, tw_sid, bd_sid);
+toc
+writeModelParams(param, gen_dir_m);
+compileModel(model_name, model_dir, gen_dir_m, files_to_generate)
 
 %% sim mex models (feedforward)
 if ~exist('d_sim', 'var')

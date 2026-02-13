@@ -55,7 +55,7 @@ for i = 1:3
     blade(i) = ElasticBody(T1B1cG.dof.bld_flp, bd_SID, sprintf('blade%d', i));
     blade(i).translate([-T1B1cG.params.HubCM, 0, 0]);
     % sym(2) is important to be able to simplify equations
-    blade(i).rotateLocalAxis('x', (i-1)*sym(2)/3*sym(pi))
+    blade(i).rotateLocalAxis('x', (i-1)*T1B1cG.sym(2)/3*T1B1cG.sym(pi))
     blade(i).rotateLocalAxis('z', T1B1cG.inputs.theta)
     hub.addChild(blade(i))
 end
@@ -71,25 +71,25 @@ T1B1cG.completeSetup()
 
 % Applied forces and moments
 M_DT = T1B1cG.params.DTTorSpr*(T1B1cG.dof.phi_gen/T1B1cG.params.GBRatio-T1B1cG.dof.phi_rot) + T1B1cG.params.DTTorDmp*(T1B1cG.dof.phi_gen_d/T1B1cG.params.GBRatio-T1B1cG.dof.phi_rot_d);
-hub.applyMoment([M_DT, 0, 0])
-geno.applyMoment([-M_DT/T1B1cG.params.GBRatio, 0, 0])
-geno.applyMoment([-T1B1cG.inputs.Tgen, 0, 0])
+hub.applyMoment([M_DT, 0, 0].')
+geno.applyMoment([-M_DT/T1B1cG.params.GBRatio, 0, 0].')
+geno.applyMoment([-T1B1cG.inputs.Tgen, 0, 0].')
 
 
 for i = 1:3
     % Thrust (out of plane)
     OoPforce= T1B1cG.externals.Fthrust/3;
     % flapwise
-    blade(i).applyForceInLocal([0 0 T1B1cG.params.thrustForceRadius]', OoPforce*[cos(T1B1cG.inputs.theta) 0 0]')
+    blade(i).applyForceInLocal([0 0 T1B1cG.params.thrustForceRadius].', OoPforce*[cos(T1B1cG.inputs.theta) 0 0].')
     % edgewise
-    blade(i).applyForceInLocal([0 0 T1B1cG.params.thrustForceRadius]', OoPforce*[0 -sin(T1B1cG.inputs.theta) 0]')
+    blade(i).applyForceInLocal([0 0 T1B1cG.params.thrustForceRadius].', OoPforce*[0 -sin(T1B1cG.inputs.theta) 0].')
 
     % Torque (in plane)
     IPforce= T1B1cG.externals.Trot/3/T1B1cG.params.torqueForceRadius;
     % flapwise
-    blade(i).applyForceInLocal([0 0 T1B1cG.params.torqueForceRadius]', IPforce*[-sin(T1B1cG.inputs.theta) 0 0]')
+    blade(i).applyForceInLocal([0 0 T1B1cG.params.torqueForceRadius].', IPforce*[-sin(T1B1cG.inputs.theta) 0 0].')
     % edgewise
-    blade(i).applyForceInLocal([0 0 T1B1cG.params.torqueForceRadius]', IPforce*[0 -cos(T1B1cG.inputs.theta) 0]')
+    blade(i).applyForceInLocal([0 0 T1B1cG.params.torqueForceRadius].', IPforce*[0 -cos(T1B1cG.inputs.theta) 0].')
 
     % modal forces
     blade(i).applyElasticForce(T1B1cG.externals.modalFlapForce)

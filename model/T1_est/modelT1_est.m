@@ -52,7 +52,7 @@ for i = 1:3
     blade = RigidBody(sprintf('blade%d', i), [], T1_est.params.blade_mass, diag([T1_est.params.blade_I0_1_1, T1_est.params.blade_I0_2_2, T1_est.params.blade_I0_3_3]));
     blade.translate([-T1_est.params.HubCM, 0, 0]);
     % sym(2) is important to be able to simplify equations
-    blade.rotateLocalAxis('x', (i-1)*sym(2)/3*sym(pi))
+    blade.rotateLocalAxis('x', (i-1)*T1_est.sym(2)/3*T1_est.sym(pi))
     blade.rotateLocalAxis('z', T1_est.inputs.theta)
     blade.translate([0, 0, T1_est.params.blade_md0_3_1/T1_est.params.blade_mass]);
     hub.addChild(blade)
@@ -69,9 +69,9 @@ nacelle.addChild(geno)
 T1_est.completeSetup()
 
 % Applied forces and moments
-hub.applyForce([T1_est.externals.Fthrust, 0, 0])
-hub.applyMoment([T1_est.externals.Trot, 0, 0])
-geno.applyMoment([-T1_est.inputs.Tgen, 0, 0])
+hub.applyForce([T1_est.externals.Fthrust, 0, 0].')
+hub.applyMoment([T1_est.externals.Trot, 0, 0].')
+geno.applyMoment([-T1_est.inputs.Tgen, 0, 0].')
 
 
 
