@@ -26,7 +26,7 @@ end
 %% generate and compile all source code
 clc
 cd(model_dir)
-MaximaInterface.getInstance(20,'',true);
+MaximaInterface.getInstance(1200,'',true);
 MultiBodySystem.setSym();
 tic
 model = genCodeM(['model' model_name '.m'], gen_dir_m, files_to_generate, param, tw_sid, bd_sid);

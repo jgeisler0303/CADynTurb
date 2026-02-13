@@ -20,17 +20,17 @@ T2B1i1cG.addExternal('theta_deg1');
 T2B1i1cG.addExternal('theta_deg2');
 T2B1i1cG.addExternal('theta_deg3');
 T2B1i1cG.addExternal('lam');
-T2B1i1cG.addExternal('Trot1', [T2B1i1cG.dof.tow_fa_d, T2B1i1cG.dof.phi_rot_d, T2B1i1cG.dof.bld2_flp_d, T2B1i1cG.dof.bld_edg_d, T2B1i1cG.inputs.vwind, T2B1i1cG.inputs.theta1, T2B1i1cG.inputs.h_shear, T2B1i1cG.inputs.v_shear, T2B1i1cG.dof.phi_rot]);
+T2B1i1cG.addExternal('Trot1', [T2B1i1cG.dof.tow_fa_d, T2B1i1cG.dof.phi_rot_d, T2B1i1cG.dof.bld1_flp_d, T2B1i1cG.dof.bld_edg_d, T2B1i1cG.inputs.vwind, T2B1i1cG.inputs.theta1, T2B1i1cG.inputs.h_shear, T2B1i1cG.inputs.v_shear, T2B1i1cG.dof.phi_rot]);
 T2B1i1cG.addExternal('Trot2', [T2B1i1cG.dof.tow_fa_d, T2B1i1cG.dof.phi_rot_d, T2B1i1cG.dof.bld2_flp_d, T2B1i1cG.dof.bld_edg_d, T2B1i1cG.inputs.vwind, T2B1i1cG.inputs.theta2, T2B1i1cG.inputs.h_shear, T2B1i1cG.inputs.v_shear, T2B1i1cG.dof.phi_rot]);
 T2B1i1cG.addExternal('Trot3', [T2B1i1cG.dof.tow_fa_d, T2B1i1cG.dof.phi_rot_d, T2B1i1cG.dof.bld3_flp_d, T2B1i1cG.dof.bld_edg_d, T2B1i1cG.inputs.vwind, T2B1i1cG.inputs.theta3, T2B1i1cG.inputs.h_shear, T2B1i1cG.inputs.v_shear, T2B1i1cG.dof.phi_rot]);
-T2B1i1cG.addExternal('Fthrust1', [T2B1i1cG.dof.tow_fa_d, T2B1i1cG.dof.phi_rot_d, T2B1i1cG.dof.bld2_flp_d, T2B1i1cG.dof.bld_edg_d, T2B1i1cG.inputs.vwind, T2B1i1cG.inputs.theta1, T2B1i1cG.inputs.h_shear, T2B1i1cG.inputs.v_shear, T2B1i1cG.dof.phi_rot]);
+T2B1i1cG.addExternal('Fthrust1', [T2B1i1cG.dof.tow_fa_d, T2B1i1cG.dof.phi_rot_d, T2B1i1cG.dof.bld1_flp_d, T2B1i1cG.dof.bld_edg_d, T2B1i1cG.inputs.vwind, T2B1i1cG.inputs.theta1, T2B1i1cG.inputs.h_shear, T2B1i1cG.inputs.v_shear, T2B1i1cG.dof.phi_rot]);
 T2B1i1cG.addExternal('Fthrust2', [T2B1i1cG.dof.tow_fa_d, T2B1i1cG.dof.phi_rot_d, T2B1i1cG.dof.bld2_flp_d, T2B1i1cG.dof.bld_edg_d, T2B1i1cG.inputs.vwind, T2B1i1cG.inputs.theta2, T2B1i1cG.inputs.h_shear, T2B1i1cG.inputs.v_shear, T2B1i1cG.dof.phi_rot]);
 T2B1i1cG.addExternal('Fthrust3', [T2B1i1cG.dof.tow_fa_d, T2B1i1cG.dof.phi_rot_d, T2B1i1cG.dof.bld3_flp_d, T2B1i1cG.dof.bld_edg_d, T2B1i1cG.inputs.vwind, T2B1i1cG.inputs.theta3, T2B1i1cG.inputs.h_shear, T2B1i1cG.inputs.v_shear, T2B1i1cG.dof.phi_rot]);
-T2B1i1cG.addExternal('modalFlapForce1', [T2B1i1cG.dof.tow_fa_d, T2B1i1cG.dof.phi_rot_d, T2B1i1cG.dof.bld2_flp_d, T2B1i1cG.dof.bld_edg_d, T2B1i1cG.inputs.vwind, T2B1i1cG.inputs.theta1, T2B1i1cG.inputs.h_shear, T2B1i1cG.inputs.v_shear, T2B1i1cG.dof.phi_rot]);
+T2B1i1cG.addExternal('modalFlapForce1', [T2B1i1cG.dof.tow_fa_d, T2B1i1cG.dof.phi_rot_d, T2B1i1cG.dof.bld1_flp_d, T2B1i1cG.dof.bld_edg_d, T2B1i1cG.inputs.vwind, T2B1i1cG.inputs.theta1, T2B1i1cG.inputs.h_shear, T2B1i1cG.inputs.v_shear, T2B1i1cG.dof.phi_rot]);
 T2B1i1cG.addExternal('modalFlapForce2', [T2B1i1cG.dof.tow_fa_d, T2B1i1cG.dof.phi_rot_d, T2B1i1cG.dof.bld2_flp_d, T2B1i1cG.dof.bld_edg_d, T2B1i1cG.inputs.vwind, T2B1i1cG.inputs.theta2, T2B1i1cG.inputs.h_shear, T2B1i1cG.inputs.v_shear, T2B1i1cG.dof.phi_rot]);
 T2B1i1cG.addExternal('modalFlapForce3', [T2B1i1cG.dof.tow_fa_d, T2B1i1cG.dof.phi_rot_d, T2B1i1cG.dof.bld3_flp_d, T2B1i1cG.dof.bld_edg_d, T2B1i1cG.inputs.vwind, T2B1i1cG.inputs.theta3, T2B1i1cG.inputs.h_shear, T2B1i1cG.inputs.v_shear, T2B1i1cG.dof.phi_rot]);
-T2B1i1cG.addExternal('modalEdgeForce', [T2B1i1cG.dof.tow_fa_d, T2B1i1cG.dof.phi_rot_d, T2B1i1cG.dof.bld2_flp_d, T2B1i1cG.dof.bld2_flp_d, T2B1i1cG.dof.bld3_flp_d, T2B1i1cG.dof.bld_edg_d, T2B1i1cG.inputs.vwind, T2B1i1cG.inputs.theta1, T2B1i1cG.inputs.theta2, T2B1i1cG.inputs.theta3]);
-T2B1i1cG.addExternal('MyD23_1', [T2B1i1cG.dof.tow_fa_d, T2B1i1cG.dof.phi_rot_d, T2B1i1cG.dof.bld2_flp_d, T2B1i1cG.inputs.theta1, T2B1i1cG.inputs.vwind, T2B1i1cG.inputs.h_shear, T2B1i1cG.inputs.v_shear, T2B1i1cG.dof.phi_rot]);
+T2B1i1cG.addExternal('modalEdgeForce', [T2B1i1cG.dof.tow_fa_d, T2B1i1cG.dof.phi_rot_d, T2B1i1cG.dof.bld1_flp_d, T2B1i1cG.dof.bld2_flp_d, T2B1i1cG.dof.bld3_flp_d, T2B1i1cG.dof.bld_edg_d, T2B1i1cG.inputs.vwind, T2B1i1cG.inputs.theta1, T2B1i1cG.inputs.theta2, T2B1i1cG.inputs.theta3]);
+T2B1i1cG.addExternal('MyD23_1', [T2B1i1cG.dof.tow_fa_d, T2B1i1cG.dof.phi_rot_d, T2B1i1cG.dof.bld1_flp_d, T2B1i1cG.inputs.theta1, T2B1i1cG.inputs.vwind, T2B1i1cG.inputs.h_shear, T2B1i1cG.inputs.v_shear, T2B1i1cG.dof.phi_rot]);
 T2B1i1cG.addExternal('MyD23_2', [T2B1i1cG.dof.tow_fa_d, T2B1i1cG.dof.phi_rot_d, T2B1i1cG.dof.bld2_flp_d, T2B1i1cG.inputs.theta2, T2B1i1cG.inputs.vwind, T2B1i1cG.inputs.h_shear, T2B1i1cG.inputs.v_shear, T2B1i1cG.dof.phi_rot]);
 T2B1i1cG.addExternal('MyD23_3', [T2B1i1cG.dof.tow_fa_d, T2B1i1cG.dof.phi_rot_d, T2B1i1cG.dof.bld3_flp_d, T2B1i1cG.inputs.theta3, T2B1i1cG.inputs.vwind, T2B1i1cG.inputs.h_shear, T2B1i1cG.inputs.v_shear, T2B1i1cG.dof.phi_rot]);
 T2B1i1cG.addExternal('Ftow_y', T2B1i1cG.dof.tow_ss_d);
@@ -109,22 +109,15 @@ nacelle.addChild(geno)
 % must be completed
 T2B1i1cG.completeSetup()
 
-% Outputs need finished kinematic setup
-T2B1i1cG.addOutput('tow_fa_acc', T2B1i1cG.dof.tow_fa_dd);
-T2B1i1cG.addOutput('tow_ss_acc', T2B1i1cG.dof.tow_ss_dd);
-T2B1i1cG.addOutput('gen_speed', T2B1i1cG.dof.phi_gen_d);
-% for now calculate these later, after the kinetic calculations are finished
-% T2B1i1cG.addOutput('bld_edg1_mom', T2B2cG.getConstraintForce('M_edg1'));
-% T2B1i1cG.addOutput('bld2_flp_mom', T2B2cG.getConstraintForce('M_flp1'));
 
 % Applied forces and moments
 M_DT = T2B1i1cG.params.DTTorSpr*(T2B1i1cG.dof.phi_gen/T2B1i1cG.params.GBRatio-T2B1i1cG.dof.phi_rot) + T2B1i1cG.params.DTTorDmp*(T2B1i1cG.dof.phi_gen_d/T2B1i1cG.params.GBRatio-T2B1i1cG.dof.phi_rot_d);
-hub.applyMoment([M_DT, 0, 0])
-geno.applyMoment([-M_DT/T2B1i1cG.params.GBRatio, 0, 0])
-geno.applyMoment([-T2B1i1cG.inputs.Tgen, 0, 0])
+hub.applyMoment([M_DT, 0, 0].')
+geno.applyMoment([-M_DT/T2B1i1cG.params.GBRatio, 0, 0].')
+geno.applyMoment([-T2B1i1cG.inputs.Tgen, 0, 0].')
 
-nacelle.applyMoment([-M_DT, 0, 0])
-nacelle.applyForce([0, T2B1i1cG.externals.Ftow_y, 0])
+nacelle.applyMoment([-M_DT, 0, 0].')
+nacelle.applyForce([0, T2B1i1cG.externals.Ftow_y, 0].')
 
 
 for i = 1:3
@@ -150,7 +143,11 @@ for i = 1:3
     blade(i).applyElasticForce([T2B1i1cG.externals.(sprintf('modalFlapForce%d', i)) T2B1i1cG.externals.modalEdgeForce].')
 end
 
+% Outputs need finished kinematic setup
 T2B1i1cG.getEOM;
+T2B1i1cG.addOutput('tow_fa_acc', T2B1i1cG.dof.tow_fa_dd);
+T2B1i1cG.addOutput('tow_ss_acc', T2B1i1cG.dof.tow_ss_dd);
+T2B1i1cG.addOutput('gen_speed', T2B1i1cG.dof.phi_gen_d);
 T2B1i1cG.addOutput('bld1_flp_mom', T2B1i1cG.getConstraintForce('M_flp1'));
 T2B1i1cG.addOutput('bld1_edg_mom', T2B1i1cG.getConstraintForce('M_edg1'));
 T2B1i1cG.addOutput('bld2_flp_mom', T2B1i1cG.getConstraintForce('M_flp2'));
