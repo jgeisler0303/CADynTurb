@@ -17,13 +17,21 @@ if ~exist('opts', 'var') || isempty(opt)
     % standard
     % opts= struct('StepTol', 1e-8, 'AbsTol', 1e-6, 'RelTol', 1e-6, 'hminmin', 1E-8, 'jac_recalc_step', 4, 'max_steps', 10);
     % one step
-    opts= struct('StepTol', 1e6, 'AbsTol', 1e6, 'RelTol', 1e6, 'hminmin', 1E-8, 'jac_recalc_step', 10, 'max_steps', 1);
+    opts= struct('StepTol', 1e6, 'AbsTol', 1e6, 'RelTol', 1e6, 'hminmin', 1E-8, 'jac_recalc_step', 10, 'max_steps', 2);
 end
 if ~exist('P0', 'var')
     P0= [];
 end
 
-model_indices
+if endsWith(model, 'RK1')
+    ode1 = true;
+    model_indices_ode1
+    indices_script_name = 'model_indices_ode1';
+else
+    ode1 = false;
+    model_indices
+    indices_script_name = 'model_indices';
+end
 
 t= d_in.Time;
 dt= t(2)-t(1);
@@ -37,18 +45,28 @@ if ~isfield(param, 'adaptScale') || isempty(param.adaptScale)
     param.adaptScale= ones(1, ny);
 end
 
-[x_ref, u, y_meas, x0_est]= convertFAST_CADyn(d_in, param, do_est | step_predict);
-q= x_ref(1:nq, :);
-dq= x_ref(nq+1:end, :);
-ddq= zeros(size(q));
+[x_ref, u, y_meas, x0_est]= convertFAST_CADyn(d_in, param, do_est | step_predict, indices_script_name);
+if ode1
+    x= x_ref;
+    xdot= zeros(nx, size(x_ref, 2));
+else
+    q= x_ref(1:nq, :);
+    dq= x_ref(nq+1:end, :);
+    ddq= zeros(size(q));
+end
+
 if exist('x0_est_', 'var') && ~isempty(x0_est_)
     x0_est= x0_est_;
 end
 
 if do_est
     if ~isnan(x0_est)
-        q(:, 1)= x0_est(1:nq);
-        dq(:, 1)= x0_est((nq+1):end);
+        if ode1
+            x_ref(:, 1)= x0_est;
+        else
+            q(:, 1)= x0_est(1:nq);
+            dq(:, 1)= x0_est((nq+1):end);
+        end
     end
     ekf_config= get_ekf_config();
     if ~isfield(param, 'fixedQxx') || isempty(param.fixedQxx)
@@ -73,47 +91,80 @@ Sigma_est= [];
 
 tic
 if do_est<2
-    [~, ~, ddq(:, 1)]= ...
+    if ~ode1
+        % initial value for accelration should be consistent
+        [~, ~, ddq(:, 1)]= ...
             sys_mex(q(:, 1), dq(:, 1), ddq(:, 1), u(:, 1), param, t(2)-t(1), opts);
+    end
     
     for i= 2:nt
-        if step_predict
-            q_in= x_ref(1:nq, i-1);
-            dq_in= x_ref(nq+1:end, i-1);
+        if ode1
+            if step_predict
+                x_in= x_ref(:, i-1);
+            else
+                x_in= x(:, i-1);
+            end
+            [x(:, i), xdot(:, i), y_pred(:, i), AB, CD, res, cpu_time(i), int_err(i), n_steps(i), n_backsteps(i), n_sub_steps(i)]= ...
+                sys_mex(x_in, xdot(:, i-1), u(:, i-u_offset), param, t(i)-t(i-1), opts);
         else
-            q_in= q(:, i-1);
-            dq_in= dq(:, i-1);
+            if step_predict
+                q_in= x_ref(1:nq, i-1);
+                dq_in= x_ref(nq+1:end, i-1);
+            else
+                q_in= q(:, i-1);
+                dq_in= dq(:, i-1);
+            end
+            [q(:, i), dq(:, i), ddq(:, i), y_pred(:, i), AB, CD, res, cpu_time(i), int_err(i), n_steps(i), n_backsteps(i), n_sub_steps(i)]= ...
+                sys_mex(q_in, dq_in, ddq(:, i-1), u(:, i-u_offset), param, t(i)-t(i-1), opts);
         end
-        [q(:, i), dq(:, i), ddq(:, i), y_pred(:, i), AB, CD, res, cpu_time(i), int_err(i), n_steps(i), n_backsteps(i), n_sub_steps(i)]= ...
-            sys_mex(q_in, dq_in, ddq(:, i-1), u(:, i-u_offset), param, t(i)-t(i-1), opts);
-    
+
         if ~res
             break
         end
     
         if do_est
-            [q(:, i), dq(:, i), Sigma_est, Q, R]= ...
-                EKF_autotuning(q(:, i), dq(:, i), y_pred(:, i), y_meas(:, i), param, ekf_config, Sigma_est, AB, CD, Q, R, N, t(i));
+            if ode1
+                error('not implemented')
+            else
+                [q(:, i), dq(:, i), Sigma_est, Q, R]= ...
+                    EKF_autotuning(q(:, i), dq(:, i), y_pred(:, i), y_meas(:, i), param, ekf_config, Sigma_est, AB, CD, Q, R, N, t(i));
+            end
         end
     end
 else
-    [q, dq, ~, y_pred, Q, R, cpu_time, d_norm, p_xx, r_xx, s_xx, P_end]= ekf_mex(q(:, 1), dq(:, 1), u, y_meas, param, dt, ekf_config.x_ul, ekf_config.x_ll, Q, R, param.Tadapt, param.adaptScale, param.fixedQxx, param.fixedRxx, opts, P0);
+    if ode1
+        error('not implemented')
+    else
+        [q, dq, ~, y_pred, Q, R, cpu_time, d_norm, p_xx, r_xx, s_xx, P_end]= ekf_mex(q(:, 1), dq(:, 1), u, y_meas, param, dt, ekf_config.x_ul, ekf_config.x_ll, Q, R, param.Tadapt, param.adaptScale, param.fixedQxx, param.fixedRxx, opts, P0);
+    end
 end
 toc
 y_pred(:, 1)= y_pred(:, 2);
 
 if step_predict
     d_out.x= x_ref;
-    d_out.x_pred= [q; dq];
+    if ode1
+        d_out.x_pred= x;
+    else
+        d_out.x_pred= [q; dq];
+    end
     d_out.y= y_meas;
     d_out.y_pred= y_pred;    
 else
-    d_out= convertFAST_CADyn(t, q, dq, ddq, u, y_pred, param);
+    if ode1
+        d_out= convertFAST_CADyn(t, x, [], xdot, u, y_pred, param, indices_script_name);
+    else
+        d_out= convertFAST_CADyn(t, q, dq, ddq, u, y_pred, param,indices_script_name);
+    end
     if do_est==2
         d_out= add_timeseries(d_out, 'd_norm', '-', d_norm');
         d_out= add_timeseries(d_out, 'p_xx', '-', p_xx');
         d_out= add_timeseries(d_out, 'r_xx', '-', r_xx');
         d_out= add_timeseries(d_out, 's_xx', '-', s_xx');
     end
-    x_end_est= [q(:, end); dq(:, end)];
+    if ode1
+        x_end_est= x(:, end);
+    else
+        x_end_est= [q(:, end); dq(:, end)];
+    end
 end

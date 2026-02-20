@@ -1,18 +1,23 @@
 function varargout= convertFAST_CADyn(varargin)
 
-model_indices
-
-if length(varargin)==2 || length(varargin)==3
-    if length(varargin)==3
+if isa(varargin{1}, 'tscollection')
+    % convert from FAST data to vectors
+    d_in= varargin{1};
+    param= varargin{2};
+    if nargin>=3
         est_or_predict= varargin{3};
     else
         est_or_predict= 0;
     end
+    if nargin>=4
+        indices_script_name = varargin{4};
+    else
+        indices_script_name = 'model_indices';
+    end
+    indices_script= str2func(indices_script_name);
+    indices_script()
 
-    d_in= varargin{1};
     nt= length(d_in.Time);
-
-    param= varargin{2};
 
     x= zeros(nx, nt);
     try x(tow_fa_idx, :)= d_in.Q_TFA1.Data; catch, end
@@ -94,52 +99,79 @@ if length(varargin)==2 || length(varargin)==3
     varargout{3}= y;
     varargout{4}= x0_est;
 else
+    % convert vectors to FAST data
     t= varargin{1};
     q= varargin{2};
     dq= varargin{3};
     ddq= varargin{4};
+    x= [q; dq];
     u= varargin{5};
     y= varargin{6};
     param= varargin{7};
+    if nargin>=8
+        indices_script_name = varargin{8};
+    else
+        indices_script_name = 'model_indices';
+    end
+    indices_script= str2func(indices_script_name);
+    indices_script()
+
+    if exist('nq', 'var')
+        ode1 = false;
+        for i = 1:length(dof_names)
+            eval(sprintf('%s_dd_idx = %d;', dof_names{i}, i))
+        end
+    else
+        for i = (nx-nxdot+1):nx
+            name = state_names{i};
+            if name(end)=='_'
+                name = [name 'd'];
+            else
+                name = [name '_d'];
+            end
+            eval(sprintf('%s_idx = %d;', name, i))
+        end
+        ode1 = true;
+    end
 
     d_out= tscollection(t);
-    try d_out= add_timeseries(d_out, 'Q_B1F1', 'm', q(bld1_flp_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'Q_B2F1', 'm', q(bld2_flp_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'Q_B3F1', 'm', q(bld3_flp_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'QD_B1F1', 'm/s', dq(bld1_flp_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'QD_B2F1', 'm/s', dq(bld2_flp_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'QD_B3F1', 'm/s', dq(bld3_flp_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'Q_B1F1', 'm', x(bld1_flp_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'Q_B2F1', 'm', x(bld2_flp_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'Q_B3F1', 'm', x(bld3_flp_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'QD_B1F1', 'm/s', x(bld1_flp_d_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'QD_B2F1', 'm/s', x(bld2_flp_d_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'QD_B3F1', 'm/s', x(bld3_flp_d_idx, :)); catch, end
     try d_out= add_timeseries(d_out, 'PtchPMzc1', 'deg', -u(in_theta1_idx, :)/pi*180); catch, end
     try d_out= add_timeseries(d_out, 'PtchPMzc2', 'deg', -u(in_theta2_idx, :)/pi*180); catch, end
     try d_out= add_timeseries(d_out, 'PtchPMzc3', 'deg', -u(in_theta3_idx, :)/pi*180); catch, end
-    try d_out= add_timeseries(d_out, 'Q_BF1', 'm', q(bld_flp_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'Q_BE1', 'm', q(bld_edg_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'QD_BF1', 'm/s', dq(bld_flp_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'QD_BE1', 'm/s', dq(bld_edg_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'Q_BF1', 'm', x(bld_flp_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'Q_BE1', 'm', x(bld_edg_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'QD_BF1', 'm/s', x(bld_flp_d_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'QD_BE1', 'm/s', x(bld_edg_d_idx, :)); catch, end
     try d_out= add_timeseries(d_out, 'PtchPMzc', 'deg', -u(in_theta_idx, :)/pi*180); catch, end
-    try d_out= add_timeseries(d_out, 'LSSTipPxa', 'deg', mod(q(phi_rot_idx, :), 2*pi)*180.0/pi); catch, end
-    try d_out= add_timeseries(d_out, 'Q_GeAz', 'rad', mod(q(phi_rot_idx, :) + q(Dphi_gen_idx, :)/param.GBRatio+3/2*pi, 2*pi)); catch, end
-    try d_out= add_timeseries(d_out, 'Q_GeAz', 'rad', mod(q(phi_gen_idx, :)/param.GBRatio+pi*3.0/2.0, 2*pi)); catch, end
-    try d_out= add_timeseries(d_out, 'Q_DrTr', 'rad', -q(Dphi_gen_idx, :)/param.GBRatio); catch, end
-    try d_out= add_timeseries(d_out, 'Q_DrTr', 'rad', q(phi_rot_idx, :) - q(phi_gen_idx, :)/param.GBRatio); catch, end
-    try d_out= add_timeseries(d_out, 'QD_DrTr', 'rad', -dq(Dphi_gen_idx, :)/param.GBRatio); catch, end
-    try d_out= add_timeseries(d_out, 'QD_DrTr', 'rad', dq(phi_rot_idx, :) - dq(phi_gen_idx, :)/param.GBRatio); catch, end
-    try d_out= add_timeseries(d_out, 'LSSTipVxa', 'rpm', dq(phi_rot_idx, :)*30.0/pi); catch, end
-    try d_out= add_timeseries(d_out, 'LSSTipAxa', 'deg/s^2', ddq(phi_rot_idx, :)*180.0/pi); catch, end
-    try d_out= add_timeseries(d_out, 'HSShftV', 'rpm', (dq(phi_rot_idx, :)*param.GBRatio + dq(Dphi_gen_idx, :))*30.0/pi); catch, end
-    try d_out= add_timeseries(d_out, 'HSShftV', 'rpm', dq(phi_gen_idx, :)*30.0/pi); catch, end
-    try d_out= add_timeseries(d_out, 'HSShftA', 'deg/s^2', (ddq(phi_rot_idx, :)*param.GBRatio + ddq(Dphi_gen_idx, :))*180.0/pi); catch, end
-    try d_out= add_timeseries(d_out, 'HSShftA', 'deg/s^2', ddq(phi_gen_idx, :)*180.0/pi); catch, end
-    try d_out= add_timeseries(d_out, 'YawBrTDxp', 'm', q(tow_fa_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'YawBrTDyp', 'm', q(tow_ss_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'YawBrTVxp', 'm/s', dq(tow_fa_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'YawBrTVyp', 'm/s', dq(tow_ss_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'Q_TFA1', 'm', q(tow_fa_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'Q_TSS1', 'm', -q(tow_ss_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'QD_TFA1', 'm/s', dq(tow_fa_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'QD_TSS1', 'm/s', -dq(tow_ss_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'YawBrTAxp', 'm/s^2', ddq(tow_fa_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'YawBrTAyp', 'm/s^2', ddq(tow_ss_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'LSSTipPxa', 'deg', mod(x(phi_rot_idx, :), 2*pi)*180.0/pi); catch, end
+    try d_out= add_timeseries(d_out, 'Q_GeAz', 'rad', mod(x(phi_rot_idx, :) + x(Dphi_gen_idx, :)/param.GBRatio+3/2*pi, 2*pi)); catch, end
+    try d_out= add_timeseries(d_out, 'Q_GeAz', 'rad', mod(x(phi_gen_idx, :)/param.GBRatio+pi*3.0/2.0, 2*pi)); catch, end
+    try d_out= add_timeseries(d_out, 'Q_DrTr', 'rad', -x(Dphi_gen_idx, :)/param.GBRatio); catch, end
+    try d_out= add_timeseries(d_out, 'Q_DrTr', 'rad', x(phi_rot_idx, :) - x(phi_gen_idx, :)/param.GBRatio); catch, end
+    try d_out= add_timeseries(d_out, 'QD_DrTr', 'rad', -x(Dphi_gen_d_idx, :)/param.GBRatio); catch, end
+    try d_out= add_timeseries(d_out, 'QD_DrTr', 'rad', x(phi_rot_d_idx, :) - x(phi_gen_d_idx, :)/param.GBRatio); catch, end
+    try d_out= add_timeseries(d_out, 'LSSTipVxa', 'rpm', x(phi_rot_d_idx, :)*30.0/pi); catch, end
+    try d_out= add_timeseries(d_out, 'LSSTipAxa', 'deg/s^2', ddq(phi_rot_dd_idx, :)*180.0/pi); catch, end
+    try d_out= add_timeseries(d_out, 'HSShftV', 'rpm', (x(phi_rot_d_idx, :)*param.GBRatio + x(Dphi_gen_d_idx, :))*30.0/pi); catch, end
+    try d_out= add_timeseries(d_out, 'HSShftV', 'rpm', x(phi_gen_d_idx, :)*30.0/pi); catch, end
+    try d_out= add_timeseries(d_out, 'HSShftA', 'deg/s^2', (ddq(phi_rot_dd_idx, :)*param.GBRatio + ddq(Dphi_gen_dd_idx, :))*180.0/pi); catch, end
+    try d_out= add_timeseries(d_out, 'HSShftA', 'deg/s^2', ddq(phi_gen_dd_idx, :)*180.0/pi); catch, end
+    try d_out= add_timeseries(d_out, 'YawBrTDxp', 'm', x(tow_fa_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'YawBrTDyp', 'm', x(tow_ss_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'YawBrTVxp', 'm/s', x(tow_fa_d_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'YawBrTVyp', 'm/s', x(tow_ss_d_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'Q_TFA1', 'm', x(tow_fa_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'Q_TSS1', 'm', -x(tow_ss_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'QD_TFA1', 'm/s', x(tow_fa_d_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'QD_TSS1', 'm/s', -x(tow_ss_d_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'YawBrTAxp', 'm/s^2', ddq(tow_fa_dd_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'YawBrTAyp', 'm/s^2', ddq(tow_ss_dd_idx, :)); catch, end
     % try d_out= add_timeseries(d_out, 'RootFxc', 'kN', &system.Fthrust, 1.0/3000.0); catch, end
     % try d_out= add_timeseries(d_out, 'RootMxc', 'kNm', &system.Trot, 1.0/3000.0); catch, end
     % try d_out= add_timeseries(d_out, 'LSShftFxa', 'kN', &system.Fthrust, 1.0/1000.0); catch, end
@@ -147,10 +179,10 @@ else
     % try d_out= add_timeseries(d_out, 'RotPwr', 'kW', system.Trot*system.states.phi_rot_d/1000.0); catch, end
     try d_out= add_timeseries(d_out, 'HSShftTq', 'kNm', u(in_Tgen_idx, :)/1000.0); catch, end
     % try d_out= add_timeseries(d_out, 'HSShftPwr', 'kW', system.inputs.Tgen*system.states.phi_gen_d/1000.0); catch, end
-    try d_out= add_timeseries(d_out, 'RtVAvgxh', 'm/s', q(vwind_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'RtVAvgxh', 'm/s', x(vwind_idx, :)); catch, end
     try d_out= add_timeseries(d_out, 'RtVAvgxh', 'm/s', u(in_vwind_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'RtHSAvg', 'm/s', q(h_shear_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'RtVSAvg', 'm/s', q(v_shear_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'RtHSAvg', 'm/s', x(h_shear_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'RtVSAvg', 'm/s', x(v_shear_idx, :)); catch, end
     % try d_out= add_timeseries(d_out, 'RtTSR', '-', &system.lam); catch, end
     % try d_out= add_timeseries(d_out, 'RtAeroCq', '-', &system.cm); catch, end
     % try d_out= add_timeseries(d_out, 'RtAeroCt', '-', &system.ct); catch, end
@@ -163,8 +195,8 @@ else
     try d_out= add_timeseries(d_out, 'GenTq', 'kNm', u(in_Tgen_idx, :)/1000.0); catch, end
 %     try d_out= add_timeseries(d_out, 'RootMxb_filt', 'kNm', y(out_bld_edg_mom_filt_idx, :)/1000); catch, end
 %     try d_out= add_timeseries(d_out, 'RootMyb_filt', 'kNm', y(out_bld_flp_mom_filt_idx, :)/1000); catch, end
-%     try d_out= add_timeseries(d_out, 'RootMxb', 'kNm', (y(out_bld_edg_mom_filt_idx, :)+q(m_bld_edg_mom_idx, :))/1000); catch, end
-%     try d_out= add_timeseries(d_out, 'RootMyb', 'kNm', (y(out_bld_flp_mom_filt_idx, :)+q(m_bld_flp_mom_idx, :))/1000); catch, end
+%     try d_out= add_timeseries(d_out, 'RootMxb', 'kNm', (y(out_bld_edg_mom_filt_idx, :)+x(m_bld_edg_mom_idx, :))/1000); catch, end
+%     try d_out= add_timeseries(d_out, 'RootMyb', 'kNm', (y(out_bld_flp_mom_filt_idx, :)+x(m_bld_flp_mom_idx, :))/1000); catch, end
     try d_out= add_timeseries(d_out, 'RootMyb1', 'kNm', y(out_bld1_flp_mom_idx, :)/1000); catch, end
     try d_out= add_timeseries(d_out, 'RootMxb1', 'kNm', y(out_bld1_edg_mom_idx, :)/1000); catch, end
     try d_out= add_timeseries(d_out, 'RootMyb2', 'kNm', y(out_bld2_flp_mom_idx, :)/1000); catch, end
@@ -172,9 +204,14 @@ else
     try d_out= add_timeseries(d_out, 'RootMyb3', 'kNm', y(out_bld3_flp_mom_idx, :)/1000); catch, end
     try d_out= add_timeseries(d_out, 'RootMxb3', 'kNm', y(out_bld3_edg_mom_idx, :)/1000); catch, end
     try d_out= add_timeseries(d_out, 'y', '-', y); catch, end
-    try d_out= add_timeseries(d_out, 'q', '-', q); catch, end
-    try d_out= add_timeseries(d_out, 'dq', '-', dq); catch, end
-    try d_out= add_timeseries(d_out, 'ddq', '-', ddq); catch, end
+    if ode1
+        try d_out= add_timeseries(d_out, 'q', '-', q); catch, end
+        try d_out= add_timeseries(d_out, 'dq', '-', dq); catch, end
+        try d_out= add_timeseries(d_out, 'ddq', '-', ddq); catch, end
+    else
+        try d_out= add_timeseries(d_out, 'x', '-', x); catch, end
+        try d_out= add_timeseries(d_out, 'xdot', '-', ddq); catch, end
+    end
 
     varargout{1}= d_out;
 end

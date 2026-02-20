@@ -12,7 +12,7 @@ model_name= 'T1_est';
 gen_dir= fullfile(model_dir, 'generated');
 gen_dir_m = [gen_dir '_M'];
 
-files_to_generate= {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m'};
+files_to_generate= {'_direct.hpp', '_ode1.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m', 'model_indices_ode1.m'};
 
 %% calculate parameters
 cd(model_dir)
@@ -26,13 +26,14 @@ end
 %%
 clc
 cd(model_dir)
-MultiBodySystem.setMSym();
+MultiBodySystem.setSym();
 tic
 model = genCodeM(['model' model_name '.m'], gen_dir_m, files_to_generate, param, tw_sid, bd_sid);
 toc
 writeModelParams(param, gen_dir_m);
-makeCADynMex(model_name, gen_dir_m, '', '', fullfile(CADynTurb_dir, 'simulator'))
-makeCADynEKFMex(model_name, model_dir, gen_dir_m)
+makeCADynMex(model_name, gen_dir_m, 'CADyn_RK1condensed_mex.cpp', [model_name '_RK1_mex'], fullfile(CADynTurb_dir, 'simulator'))
+% makeCADynMex(model_name, gen_dir_m, '', '', fullfile(CADynTurb_dir, 'simulator'))
+% makeCADynEKFMex(model_name, model_dir, gen_dir_m)
 
 %% get reference simulations 1p1
 sim_dir= fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow');
@@ -60,7 +61,7 @@ for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
     plot_timeseries_multi({d_in, d_est1, d_est2}, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'})
 end
 
-%% compare mex simulations
+%% compare mex simulations CADyn vs CADynM
 v= 11;
 for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
     d_FAST= loadData(ref_sims.files{i}, wind_dir);
@@ -70,4 +71,15 @@ for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
     cd(gen_dir_m)
     d_sim_M= run_simulation(model_name, d_FAST, param);
     plot_timeseries_multi({d_FAST, d_sim, d_sim_M}, {'RtVAvgxh', 'BlPitchC', 'GenTq', 'LSSTipVxa', 'YawBrTDxp'}, {'FAST', 'CADyn', 'CADynM'});
+end
+
+%% compare mex simulations Newmark beta vs condensed implicit RK1
+cd(gen_dir_m)
+v= 11;
+for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
+    d_FAST= loadData(ref_sims.files{i}, wind_dir);
+
+    d_sim= run_simulation(model_name, d_FAST, param);
+    d_sim_RK1= run_simulation([model_name '_RK1'], d_FAST, param);
+    plot_timeseries_multi({d_FAST, d_sim, d_sim_RK1}, {'RtVAvgxh', 'BlPitchC', 'GenTq', 'LSSTipVxa', 'YawBrTDxp'}, {'FAST', 'CADyn', 'CADyn RK1'});
 end
