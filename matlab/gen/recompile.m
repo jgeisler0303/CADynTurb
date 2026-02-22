@@ -6,7 +6,7 @@ if exist(target, 'file')
     for i= 1:length(dependencies)
         dd_src= dir(dependencies{i});
         if dd_src.datenum>dd_dst.datenum
-            do_compile= false;
+            do_compile= true;
         end
     end
 else

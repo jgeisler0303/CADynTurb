@@ -70,7 +70,11 @@ if do_est
     end
     ekf_config= get_ekf_config();
     if ~isfield(param, 'fixedQxx') || isempty(param.fixedQxx)
-        param.fixedQxx= zeros(length(ekf_config.estimated_states), 1);
+        if ode1
+            param.fixedQxx= zeros(nx, 1);
+        else
+            param.fixedQxx= zeros(length(ekf_config.estimated_states), 1);
+        end
     end
     if ~isfield(param, 'fixedRxx') || isempty(param.fixedRxx)
         param.fixedRxx= zeros(ny, 1);
@@ -133,7 +137,7 @@ if do_est<2
     end
 else
     if ode1
-        error('not implemented')
+        [x, ~, y_pred, Q, R, cpu_time, d_norm, p_xx, r_xx, s_xx, P_end]= ekf_mex(x(:, 1), u, y_meas, param, dt, ekf_config.x_ul, ekf_config.x_ll, Q, R, param.Tadapt, param.adaptScale, param.fixedQxx, param.fixedRxx, opts, P0);
     else
         [q, dq, ~, y_pred, Q, R, cpu_time, d_norm, p_xx, r_xx, s_xx, P_end]= ekf_mex(q(:, 1), dq(:, 1), u, y_meas, param, dt, ekf_config.x_ul, ekf_config.x_ll, Q, R, param.Tadapt, param.adaptScale, param.fixedQxx, param.fixedRxx, opts, P0);
     end

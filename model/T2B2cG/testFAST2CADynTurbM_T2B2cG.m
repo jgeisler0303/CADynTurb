@@ -12,7 +12,7 @@ fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
 model_name= 'T2B2cG';
 gen_dir_m= fullfile(model_dir, 'generated_M');
 
-files_to_generate= {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m'};
+files_to_generate= {'_ode1.hpp', '_direct.hpp', '_param.hpp', 'model_indices.m', 'model_indices_ode1.m', 'model_parameters.m'};
 
 %% calculate parameters
 cd(model_dir)
@@ -48,3 +48,19 @@ d_mexM= run_simulation(model_name, d_sim, param, opts);
 plot_timeseries_multi({d_sim, d_mex, d_mexM}, {'RtVAvgxh', 'y{(:, 4)}', 'y{(:, 5)}', 'y{(:, 6)}', 'y{(:, 7)}'}, {'sim', 'CADyn mex', 'CADYnM mex'});
 % plot_timeseries_multi({d_sim, d_mex, d_mexM}, {'RtVAvgxh', 'HSShftV', 'YawBrTDxp', 'YawBrTDyp', 'Q_BF1', 'Q_BE1'}, {'sim', 'CADyn mex', 'CADYnM mex'});
 % plot_timeseries_multi({d_sim, d_mex, d_mexM}, {'RtVAvgxh', 'BlPitchC', 'HSShftV', 'GenTq', 'YawBrTDxp', 'YawBrTDyp', 'Q_BF1', 'Q_BE1'}, {'sim', 'CADyn mex', 'CADYnM mex'});
+
+%% compare stand-alone RK1 simulator with OpenFAST
+cd(gen_dir_m)
+fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow/impulse_URef-12_maininput.fst');
+wind_dir= '';
+
+d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir);
+
+[~, base_file]= fileparts(fast_file);
+sim_file= fullfile(gen_dir_m, [strrep(base_file, '_maininput', '') '.outb']);
+
+d_sim= sim_standalone(fullfile(gen_dir_m, ['sim_' model_name]), fast_file, sim_file, '-a 0.99');
+d_sim_RK1= sim_standalone(fullfile(gen_dir_m, ['sim_' model_name '_RK1']), fast_file, sim_file, '-a 0.99');
+
+plot_timeseries_multi({d_FAST, d_sim, d_sim_RK1}, {'RtVAvgxh', 'BlPitchC', 'HSShftV', 'GenTq', 'YawBrTDxp', 'YawBrTDyp', 'Q_BF1', 'Q_BE1'}, {'FAST', 'Newmark beta', 'RK1'});
+

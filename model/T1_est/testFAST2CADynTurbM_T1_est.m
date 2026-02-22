@@ -12,7 +12,7 @@ model_name= 'T1_est';
 gen_dir= fullfile(model_dir, 'generated');
 gen_dir_m = [gen_dir '_M'];
 
-files_to_generate= {'_direct.hpp', '_ode1.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m', 'model_indices_ode1.m'};
+files_to_generate= {'_ode1.hpp', '_param.hpp', 'model_parameters.m', 'model_indices_ode1.m'}; % '_direct.hpp', 'model_indices.m', 
 
 %% calculate parameters
 cd(model_dir)
@@ -32,6 +32,7 @@ model = genCodeM(['model' model_name '.m'], gen_dir_m, files_to_generate, param,
 toc
 writeModelParams(param, gen_dir_m);
 makeCADynMex(model_name, gen_dir_m, 'CADyn_RK1condensed_mex.cpp', [model_name '_RK1_mex'], fullfile(CADynTurb_dir, 'simulator'))
+makeCADynEKFMex([model_name '_RK1'], model_dir, gen_dir_m)
 % makeCADynMex(model_name, gen_dir_m, '', '', fullfile(CADynTurb_dir, 'simulator'))
 % makeCADynEKFMex(model_name, model_dir, gen_dir_m)
 
@@ -57,6 +58,24 @@ for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
     param.fixedQxx(ix_vwind)= (ss1/200)^2;
     [d_est1, ~, ~, ~, ~, ~, Q, R]= run_simulation(model_name, d_in, param, [], 0, 2, [], []);
     [d_est2, ~, ~, ~, ~, ~, Q, R]= run_simulation(model_name, d_in, param, [], 0, 2, Q, R);
+
+    plot_timeseries_multi({d_in, d_est1, d_est2}, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'})
+end
+
+%% run Kalman filter RK1
+cd(gen_dir_m)
+model_indices_ode1
+param.Tadapt= 30;
+param.fixedQxx= zeros(nx, 1);
+
+v= 12;
+for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
+    d_in= loadData(ref_sims.files{i}, wind_dir);
+
+    ss1= std(d_in.Wind1VelX.Data);
+    param.fixedQxx(vwind_idx)= (ss1/200)^2;
+    [d_est1, ~, ~, ~, ~, ~, Q, R]= run_simulation([model_name '_RK1'], d_in, param, [], 0, 2, [], []);
+    [d_est2, ~, ~, ~, ~, ~, Q, R]= run_simulation([model_name '_RK1'], d_in, param, [], 0, 2, Q, R);
 
     plot_timeseries_multi({d_in, d_est1, d_est2}, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'})
 end

@@ -13,7 +13,7 @@ cd(gen_dir)
 includes= ['-I' fullfile(fileparts(getenv('cagem_path')), '../src') ' -I' gen_dir ' -I' fullfile(base_dir, '../../simulator') ' -I' getenv('EIGEN3')];
 if any(strcmp(files_to_generate, '_direct.hpp'))
     % compile stand alone simulator
-    sim_cpp= fullfile(base_dir, ['../../simulator/standalone_simulator.cpp']);
+    sim_cpp= fullfile(base_dir, '../../simulator/standalone_simulator.cpp');
     out_name= fullfile(gen_dir, ['sim_' model_name]);
     dependencies= {
         [model_name '_direct.hpp']
@@ -34,6 +34,34 @@ if any(strcmp(files_to_generate, '_direct.hpp'))
     if recompile([model_name '_mex.' mexext], dependencies)
         fprintf('Compiling mex simulator\n')
         makeCADynMex(model_name, '.', '', '', fullfile(base_dir, '../../simulator'))
+    else
+        fprintf('Skipping compilation of mex simulator\n')
+    end    
+end
+
+if any(strcmp(files_to_generate, '_ode1.hpp'))
+    % compile stand alone simulator
+    sim_cpp= fullfile(base_dir, '../../simulator/standalone_simulator_RK1.cpp');
+    out_name= fullfile(gen_dir, ['sim_' model_name '_RK1']);
+    dependencies= {
+        [model_name '_ode1.hpp']
+        [model_name '_param.hpp']
+        fullfile(fileparts(getenv('cagem_path')), '../src/RK1condensed.hpp')
+        };
+    defines= {['MODEL_NAME=' model_name]};
+
+    compileProg(sim_cpp, out_name, dependencies, defines, includes, {}, {}, {}, win_on_linux)
+
+    %% compile mex simulator
+    dependencies= {
+        [model_name '_ode1.hpp']
+        [model_name '_param.hpp']
+        fullfile(fileparts(getenv('cagem_path')), '../src/RK1condensed.hpp')
+        fullfile(fileparts(getenv('cagem_path')), '../src/CADyn_RK1condensed_mex.cpp')
+        };
+    if recompile([model_name '_RK1_mex.' mexext], dependencies)
+        fprintf('Compiling mex simulator\n')
+        makeCADynMex(model_name, '.', 'CADyn_RK1condensed_mex.cpp', [model_name '_RK1_mex'], fullfile(base_dir, '../../simulator'))
     else
         fprintf('Skipping compilation of mex simulator\n')
     end    

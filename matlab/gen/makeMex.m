@@ -1,5 +1,5 @@
 function makeMex(mex_src, includes, options, cxxflags, defines, sources, linker_options, lib_dirs, libs)
-
+% mex_src may also be just the target name
 if ~exist('includes', 'var')
     includes= {};
 end
@@ -46,16 +46,15 @@ if ~iscell(libs)
     libs= {libs};
 end
 
-[~, mex_file]= fileparts(mex_src);
+[~, mex_file, mex_src_ext]= fileparts(mex_src);
 % mex_name= fullfile(mex_path, mex_file);
 
 v= ver;
 is_matlab= ~strcmp(v(1).Name, 'Octave');
+clear(mex_file);
 if is_matlab
-    clear mex
     output_str= '-output';
 else
-    clear(mex_file);
     output_str= '-o';
 end
 
@@ -85,9 +84,9 @@ if ~isempty(cxxflags)
     end    
 end
 
-args= {};
+args= {output_str, mex_file};
 if ~isempty(options)
-    args= [args options output_str mex_file];
+    args= [options args];
 end
 if ~isempty(defines)
     args= [args defines];
@@ -95,10 +94,10 @@ end
 if ~isempty(includes)
     args= [args includes];
 end
-if ~isempty(sources)
-    args= [args sources];
+if ~isempty(mex_src_ext)
+    sources= [sources {mex_src}];
 end
-args= [args {mex_src}];
+args= [args sources];
 if ~isempty(linker_options)
     args= [args linker_options];
 end
@@ -114,14 +113,6 @@ if ~isempty(cxxflags) && ~is_matlab
     setenv('CXXFLAGS', old_cxxflags);
 end
 
-compiled= false;
-if exist(mex_name_ext, 'file') && exist(mex_src, 'file')
-    dd_src= dir(mex_src);
-    dd_dst= dir(mex_name_ext);
-    if dd_src.datenum<dd_dst.datenum
-        compiled= true;
-    end
-end
-if ~compiled
+if recompile(mex_name_ext, sources)
     error('Mex was not properly compiled');
 end
