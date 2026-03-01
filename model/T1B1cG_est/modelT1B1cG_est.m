@@ -32,9 +32,6 @@ T1B1cG_est.addExternalParameter('thetaMax', [], params.thetaMax);
 T1B1cG_est.addExternalParameter('thetaMin', [], params.thetaMin);
 T1B1cG_est.addExternalParameter('thetaStep', [], params.thetaStep);
 
-T1B1cG_est.addOutput('tow_fa_acc', T1B1cG_est.dof.tow_fa_dd);
-T1B1cG_est.addOutput('gen_speed', T1B1cG_est.dof.phi_rot_d*T1B1cG_est.params.GBRatio+T1B1cG_est.dof.Dphi_gen_d);
-
 T1B1cG_est.gravity(3) = -T1B1cG_est.params.g;
 
 % Tower
@@ -71,7 +68,7 @@ nacelle.addChild(geno)
 
 % at least for forces given in local coordinates, the kinematic modeling
 % must be completed
-T1B1cG_est.completeSetup()
+T1B1cG_est.finishKinematics()
 
 % Applied forces and moments
 M_DT = T1B1cG_est.params.DTTorSpr*(T1B1cG_est.dof.Dphi_gen/T1B1cG_est.params.GBRatio) + T1B1cG_est.params.DTTorDmp*(T1B1cG_est.dof.Dphi_gen_d/T1B1cG_est.params.GBRatio);
@@ -98,3 +95,9 @@ for i = 1:3
     % modal forces
     blade(i).applyElasticForce(T1B1cG_est.externals.modalFlapForce)
 end
+
+T1B1cG_est.finishKinetics()
+
+T1B1cG_est.addOutput('tow_fa_acc', T1B1cG_est.dof.tow_fa_dd);
+T1B1cG_est.addOutput('gen_speed', T1B1cG_est.dof.phi_rot_d*T1B1cG_est.params.GBRatio+T1B1cG_est.dof.Dphi_gen_d);
+

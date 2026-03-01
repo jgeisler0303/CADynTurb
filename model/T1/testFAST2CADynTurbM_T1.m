@@ -3,6 +3,8 @@
 % https://github.com/jgeisler0303/CADynM in a directory parallel to CADynTurb
 clc
 model_dir= fileparts(matlab.desktop.editor.getActiveFilename);
+if isempty(model_dir), model_dir= pwd; end
+
 CADynTurb_dir= fullfile(model_dir, '../..');
 run(fullfile(CADynTurb_dir, 'matlab/setupCADynTurb'))
 
@@ -25,7 +27,8 @@ end
 %% generate and compile all source code
 clc
 cd(model_dir)
-MultiBodySystem.setMSym();
+MultiBodySystem.setSym();
+MultiBodySystem.setKinematicsFromLocal();
 tic
 model = genCodeM(['model' model_name '.m'], gen_dir_m, files_to_generate, param, tw_sid, bd_sid);
 toc

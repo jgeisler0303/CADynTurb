@@ -80,9 +80,7 @@ geno = RigidBody('generator', [], 0, diag([T2B2cG.params.GenIner, 0, 0]));
 geno.rotateLocalAxis('x', T2B2cG.dof.phi_gen)
 nacelle.addChild(geno)
 
-% at least for forces given in local coordinates, the kinematic modeling
-% must be completed
-T2B2cG.completeSetup()
+T2B2cG.finishKinematics()
 
 % Applied forces and moments
 M_DT = T2B2cG.params.DTTorSpr*(T2B2cG.dof.phi_gen/T2B2cG.params.GBRatio-T2B2cG.dof.phi_rot) + T2B2cG.params.DTTorDmp*(T2B2cG.dof.phi_gen_d/T2B2cG.params.GBRatio-T2B2cG.dof.phi_rot_d);
@@ -119,7 +117,7 @@ end
 
 % Outputs need finished kinematic setup
 % constraint force outputs need finished kinetic setup
-T2B2cG.getEOM;
+T2B2cG.finishKinetics();
 
 T2B2cG.addOutput('tow_fa_acc', T2B2cG.dof.tow_fa_dd);
 T2B2cG.addOutput('tow_ss_acc', T2B2cG.dof.tow_ss_dd);

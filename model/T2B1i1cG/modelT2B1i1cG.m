@@ -107,7 +107,7 @@ nacelle.addChild(geno)
 
 % at least for forces given in local coordinates, the kinematic modeling
 % must be completed
-T2B1i1cG.completeSetup()
+T2B1i1cG.finishKinematics()
 
 
 % Applied forces and moments
@@ -144,7 +144,8 @@ for i = 1:3
 end
 
 % Outputs need finished kinematic setup
-T2B1i1cG.getEOM;
+T2B1i1cG.finishKinetics();
+
 T2B1i1cG.addOutput('tow_fa_acc', T2B1i1cG.dof.tow_fa_dd);
 T2B1i1cG.addOutput('tow_ss_acc', T2B1i1cG.dof.tow_ss_dd);
 T2B1i1cG.addOutput('gen_speed', T2B1i1cG.dof.phi_gen_d);

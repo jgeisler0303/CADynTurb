@@ -23,11 +23,6 @@ T1.addExternalParameter('thetaMax', [], params.thetaMax);
 T1.addExternalParameter('thetaMin', [], params.thetaMin);
 T1.addExternalParameter('thetaStep', [], params.thetaStep);
 
-T1.addOutput('tow_fa_acc', T1.dof.tow_fa_dd);
-T1.addOutput('gen_speed', T1.dof.phi_rot_d*T1.params.GBRatio);
-% just to preserve this state in the acados simulation
-T1.addOutput('phi_rot', T1.dof.phi_rot);
-
 T1.gravity(3) = -T1.params.g;
 
 % Tower
@@ -66,12 +61,16 @@ nacelle.addChild(geno)
 
 % at least for forces given in local coordinates, the kinematic modeling
 % must be completed
-T1.completeSetup()
+T1.finishKinematics()
 
 % Applied forces and moments
 hub.applyForce([T1.externals.Fthrust, 0, 0].')
 hub.applyMoment([T1.externals.Trot, 0, 0].')
 geno.applyMoment([-T1.inputs.Tgen, 0, 0].')
 
+T1.finishKinetics()
 
-
+T1.addOutput('tow_fa_acc', T1.dof.tow_fa_dd);
+T1.addOutput('gen_speed', T1.dof.phi_rot_d*T1.params.GBRatio);
+% just to preserve this state in the acados simulation
+T1.addOutput('phi_rot', T1.dof.phi_rot);

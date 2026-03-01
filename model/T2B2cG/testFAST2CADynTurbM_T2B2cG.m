@@ -4,6 +4,8 @@
 
 clc
 model_dir= fileparts(matlab.desktop.editor.getActiveFilename);
+if isempty(model_dir), model_dir= pwd; end
+
 CADynTurb_dir= fullfile(model_dir, '../..');
 run(fullfile(CADynTurb_dir, 'matlab/setupCADynTurb'))
 
@@ -28,6 +30,7 @@ clc
 cd(model_dir)
 MaximaInterface.getInstance(20,'',true);
 MultiBodySystem.setSym();
+MultiBodySystem.setKinematicsFromLocal();
 tic
 model = genCodeM(['model' model_name '.m'], gen_dir_m, files_to_generate, param, tw_sid, bd_sid);
 toc
@@ -45,7 +48,7 @@ d_mex= run_simulation(model_name, d_sim, param, opts);
 cd(gen_dir_m)
 d_mexM= run_simulation(model_name, d_sim, param, opts);
 
-plot_timeseries_multi({d_sim, d_mex, d_mexM}, {'RtVAvgxh', 'y{(:, 4)}', 'y{(:, 5)}', 'y{(:, 6)}', 'y{(:, 7)}'}, {'sim', 'CADyn mex', 'CADYnM mex'});
+plot_timeseries_multi({d_mex, d_mexM}, {'RtVAvgxh', 'y{(:, 4)}', 'y{(:, 5)}', 'y{(:, 6)}', 'y{(:, 7)}'}, {'CADyn mex', 'CADYnM mex'});
 % plot_timeseries_multi({d_sim, d_mex, d_mexM}, {'RtVAvgxh', 'HSShftV', 'YawBrTDxp', 'YawBrTDyp', 'Q_BF1', 'Q_BE1'}, {'sim', 'CADyn mex', 'CADYnM mex'});
 % plot_timeseries_multi({d_sim, d_mex, d_mexM}, {'RtVAvgxh', 'BlPitchC', 'HSShftV', 'GenTq', 'YawBrTDxp', 'YawBrTDyp', 'Q_BF1', 'Q_BE1'}, {'sim', 'CADyn mex', 'CADYnM mex'});
 

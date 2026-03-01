@@ -1,6 +1,8 @@
 %%
 clc
 model_dir= fileparts(matlab.desktop.editor.getActiveFilename);
+if isempty(model_dir), model_dir= pwd; end
+    
 CADynTurb_dir= fullfile(model_dir, '../..');
 run(fullfile(CADynTurb_dir, 'matlab/setupCADynTurb'))
 

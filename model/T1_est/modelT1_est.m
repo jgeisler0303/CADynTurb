@@ -26,9 +26,6 @@ T1_est.addExternalParameter('thetaMax', [], params.thetaMax);
 T1_est.addExternalParameter('thetaMin', [], params.thetaMin);
 T1_est.addExternalParameter('thetaStep', [], params.thetaStep);
 
-T1_est.addOutput('tow_fa_acc', T1_est.dof.tow_fa_dd);
-T1_est.addOutput('gen_speed', T1_est.dof.phi_rot_d*T1_est.params.GBRatio);
-
 T1_est.gravity(3) = -T1_est.params.g;
 
 % Tower
@@ -66,12 +63,15 @@ nacelle.addChild(geno)
 
 % at least for forces given in local coordinates, the kinematic modeling
 % must be completed
-T1_est.completeSetup()
+T1_est.finishKinematics()
 
 % Applied forces and moments
 hub.applyForce([T1_est.externals.Fthrust, 0, 0].')
 hub.applyMoment([T1_est.externals.Trot, 0, 0].')
 geno.applyMoment([-T1_est.inputs.Tgen, 0, 0].')
 
+T1_est.finishKinetics()
 
+T1_est.addOutput('tow_fa_acc', T1_est.dof.tow_fa_dd);
+T1_est.addOutput('gen_speed', T1_est.dof.phi_rot_d*T1_est.params.GBRatio);
 
