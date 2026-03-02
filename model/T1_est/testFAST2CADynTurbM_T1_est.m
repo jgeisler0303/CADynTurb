@@ -14,7 +14,7 @@ model_name= 'T1_est';
 gen_dir= fullfile(model_dir, 'generated');
 gen_dir_m = [gen_dir '_M'];
 
-files_to_generate= {'_ode1.hpp', '_param.hpp', 'model_parameters.m', 'model_indices_ode1.m'}; % '_direct.hpp', 'model_indices.m', 
+files_to_generate= {'_ode1.hpp', '_direct.hpp', '_param.hpp', 'model_parameters.m', 'model_indices_ode1.m'}; % '_direct.hpp', 'model_indices.m', 
 
 %% calculate parameters
 cd(model_dir)

@@ -1,6 +1,8 @@
 %% set configuration variables
 clc
 model_dir= fileparts(matlab.desktop.editor.getActiveFilename);
+if isempty(model_dir), model_dir= pwd; end
+
 CADynTurb_dir= fullfile(model_dir, '../..');
 run(fullfile(CADynTurb_dir, 'matlab/setupCADynTurb'))
 
@@ -9,7 +11,7 @@ fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
 model_name= 'T1_est';
 gen_dir= fullfile(model_dir, 'generated');
 
-files_to_generate= {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m'};
+files_to_generate= {'_ode1.hpp', '_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m', 'model_indices_ode1.m'};
 
 %% calculate parameters
 cd(model_dir)
@@ -25,10 +27,12 @@ cd(model_dir)
 genCode([model_name '.mac'], gen_dir, files_to_generate, param, tw_sid, bd_sid, [0 1]); % no reduce const but const matrix elements only once
 writeModelParams(param, gen_dir);
 makeCADynMex(model_name, gen_dir, '', '', fullfile(CADynTurb_dir, 'simulator'))
+makeCADynMex(model_name, gen_dir, 'CADyn_RK1condensed_mex.cpp', [model_name '_RK1_mex'], fullfile(CADynTurb_dir, 'simulator'))
 
 %% compile ekf mex
 clc
 makeCADynEKFMex(model_name, model_dir, gen_dir)
+makeCADynEKFMex([model_name '_RK1'], model_dir, gen_dir_m)
 
 %% get reference simulations 1p1
 sim_dir= fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow');
