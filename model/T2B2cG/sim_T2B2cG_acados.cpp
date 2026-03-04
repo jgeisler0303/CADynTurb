@@ -226,7 +226,7 @@ void setupOutputs(FAST_Output &out, double *states, double *inputs) {
 //     out.addChannel("RotPwr", "kW", &RotPwr, 1.0/1000.0);
     out.addChannel("HSShftTq", "kNm", &inputs[Tgen], 1.0/1000.0);
 //     out.addChannel("HSShftPwr", "kW", &HSShftPwr, 1.0/1000.0);
-    out.addChannel("RtVAvgxh", "m/s", &inputs[vwind]);
+    out.addChannel("RAWS", "m/s", &inputs[vwind]);
 //     out.addChannel("RtTSR", "-", &system.lam);
 //     out.addChannel("RtAeroCq", "-", &system.cm);
 //     out.addChannel("RtAeroCt", "-", &system.ct);

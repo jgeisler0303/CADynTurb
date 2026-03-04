@@ -15,7 +15,7 @@ t('s_xx', 1)= {sqrt(mean(est.s_xx.Data(idx, :), 'all'))};
 t('p_xx', 1)= {sqrt(mean(est.p_xx.Data(idx, :), 'all'))};
 t('d_norm', 1)= {mean(est.d_norm.Data(idx), 'all')};
 
-wind_cc= corrcoef(ref.RtVAvgxh.Data(idx), est.RtVAvgxh.Data(idx));
+wind_cc= corrcoef(ref.RAWS.Data(idx), est.RAWS.Data(idx));
 t('cc_vw_est', 1)= {wind_cc(1, 2)};
 
 if ismember('Wind1VelX', ref.gettimeseriesnames)
@@ -24,7 +24,7 @@ end
 if ismember('WindMeas1', ref.gettimeseriesnames)
     vw_meas= ref.WindMeas1.Data(idx);
 end
-wind_cc= corrcoef(vw_meas, est.RtVAvgxh.Data(idx));
+wind_cc= corrcoef(vw_meas, est.RAWS.Data(idx));
 t('cc_vw_meas', 1)= {wind_cc(1, 2)};
 
 [~, ~, y_meas]= convertFAST_CADyn(ref, param, 1);

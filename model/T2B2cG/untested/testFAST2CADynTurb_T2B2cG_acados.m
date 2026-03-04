@@ -41,7 +41,7 @@ x_ref= [
     ];
 
 u_ref= [
-    d.RtVAvgxh.Data'
+    d.RAWS.Data'
     d.GenTq.Data'*1000
     d.BlPitchC.Data'/(-180)*pi
     ];
@@ -160,7 +160,7 @@ ts.TimeInfo.Units= 's';
 d_sim= d_sim.addts(ts);
 
 %%
-plot_timeseries_cmp(d, d_sim, {'RtVAvgxh', 'PtchPMzc', 'HSShftV', 'GenTq', 'YawBrTDxp', 'YawBrTDyp', 'Q_BF1', 'Q_BE1'});
+plot_timeseries_cmp(d, d_sim, {'RAWS', 'PtchPMzc', 'HSShftV', 'GenTq', 'YawBrTDxp', 'YawBrTDyp', 'Q_BF1', 'Q_BE1'});
 
 %%
 sim_generate_c_code(acados_sim_6DOF)
@@ -183,4 +183,4 @@ end
 %%
 d_a= loadFAST('simp_12_6DOF_acados.outb');
 figure
-plot_timeseries_cmp(d, d_a, {'RtVAvgxh', 'PtchPMzc', 'HSShftV', 'GenTq', 'YawBrTDxp', 'YawBrTDyp', 'Q_BF1', 'Q_BE1'});
+plot_timeseries_cmp(d, d_a, {'RAWS', 'PtchPMzc', 'HSShftV', 'GenTq', 'YawBrTDxp', 'YawBrTDyp', 'Q_BF1', 'Q_BE1'});

@@ -21,7 +21,7 @@ wind_dir= fullfile(CADynTurb_dir, 'ref_sim/wind');
 ref_sims= get_ref_sims(sim_dir, '1p1*_maininput.outb');
 v= 11;
 i= find(ref_sims.vv==v & ref_sims.yaw==0)';
-d_FAST= loadData(ref_sims.files{i}, wind_dir);
+d_FAST= loadData(ref_sims.files{i}, wind_dir, false, param);
 
 %% DISCON parameters
 DISCON_param.comm_interval= 0.01;
@@ -63,7 +63,7 @@ dq= x_ref(nq+1:end, 1:nt);
 ddq= zeros(nq, 1);
 u= u(:, 1:nt);
 
-vwind= d_FAST.RtVAvgxh.Data(1:nt);
+vwind= d_FAST.RAWS.Data(1:nt);
 
 %% simulation with Newmark T1 simulator
 cd(ocp_path)

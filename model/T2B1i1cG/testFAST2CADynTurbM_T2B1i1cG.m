@@ -49,5 +49,5 @@ d_mex= run_simulation(model_name, d_sim, param, opts);
 cd(gen_dir_m)
 d_mexM= run_simulation(model_name, d_sim, param, opts);
 
-% plot_timeseries_multi({d_mex, d_mexM}, {'RtVAvgxh', 'y{(:, 4)}', 'y{(:, 5)}', 'y{(:, 10)}', 'y{(:, 11)}'}, {'CADyn mex', 'CADYnM mex'});
-plot_timeseries_multi({d_sim, d_mex, d_mexM}, {'RtVAvgxh', 'HSShftV', 'YawBrTDxp', 'YawBrTDyp', 'Q_B1F1', 'Q_BE1'}, {'sim', 'CADyn mex', 'CADYnM mex'});
+% plot_timeseries_multi({d_mex, d_mexM}, {'RAWS', 'y{(:, 4)}', 'y{(:, 5)}', 'y{(:, 10)}', 'y{(:, 11)}'}, {'CADyn mex', 'CADYnM mex'});
+plot_timeseries_multi({d_sim, d_mex, d_mexM}, {'RAWS', 'HSShftV', 'YawBrTDxp', 'YawBrTDyp', 'Q_B1F1', 'Q_BE1'}, {'sim', 'CADyn mex', 'CADYnM mex'});

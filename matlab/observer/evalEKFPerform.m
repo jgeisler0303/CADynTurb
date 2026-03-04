@@ -22,18 +22,18 @@ else
     tiledlayout(size(y_meas, 1)+1, 2)
 end
 nexttile
-wind_cc= corrcoef(d_in.RtVAvgxh.Data(idx), d_est.RtVAvgxh.Data(idx));
+wind_cc= corrcoef(d_in.RAWS.Data(idx), d_est.RAWS.Data(idx));
 wind_cc= wind_cc(1, 2);
 
 try
-    plot(d_in.Time(idx), d_in.RAWS4.Data(idx), d_est.Time(idx), d_est.RtVAvgxh.Data(idx))
+    plot(d_in.Time(idx), d_in.RAWS4.Data(idx), d_est.Time(idx), d_est.RAWS.Data(idx))
 catch
-    plot(d_in.Time(idx), d_in.RtVAvgxh.Data(idx), d_est.Time(idx), d_est.RtVAvgxh.Data(idx))
+    plot(d_in.Time(idx), d_in.RAWS.Data(idx), d_est.Time(idx), d_est.RAWS.Data(idx))
 end    
 hold on
 
-plot(d_est.Time(idx), d_est.RtVAvgxh.Data(idx)+2*sqrt(d_est.p_xx.Data(idx, find(ekf_config.estimated_states==vwind_idx))), 'k')
-plot(d_est.Time(idx), d_est.RtVAvgxh.Data(idx)-2*sqrt(d_est.p_xx.Data(idx, find(ekf_config.estimated_states==vwind_idx))), 'k')
+plot(d_est.Time(idx), d_est.RAWS.Data(idx)+2*sqrt(d_est.p_xx.Data(idx, find(ekf_config.estimated_states==vwind_idx))), 'k')
+plot(d_est.Time(idx), d_est.RAWS.Data(idx)-2*sqrt(d_est.p_xx.Data(idx, find(ekf_config.estimated_states==vwind_idx))), 'k')
 % try
 %     h= plot(d_in.Time(idx), d_in.WindMeas1.Data(idx));
 %     uistack(h, 'bottom')

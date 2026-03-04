@@ -33,21 +33,22 @@ compileModel(model_name, model_dir, gen_dir, files_to_generate)
 
 %% compare stand-alone simulator with OpenFAST
 cd(gen_dir)
+% fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow/1p1_NacYaw-0_URef-12_maininput.fst');
 fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow/impulse_URef-12_maininput.fst');
 % fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow/impulse_URef-12_maininput.fst');
-wind_dir= '';
+wind_dir= fullfile(CADynTurb_dir, 'ref_sim/wind');
 
 [~, base_file]= fileparts(fast_file);
 sim_file= fullfile(gen_dir, [strrep(base_file, '_maininput', '') '.outb']);
 d_sim= sim_standalone(fullfile(gen_dir, ['sim_' model_name]), fast_file, sim_file, '-a 0.99');
 
-d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir);
+d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir, false, param);
 
-plot_timeseries_cmp(d_sim, d_FAST, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'});
+plot_timeseries_cmp(d_sim, d_FAST, {'RAWS', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'});
 
 %% sim mex model (feedforward)
 cd(gen_dir)
 clc
 opts= struct('StepTol', 1e-8, 'AbsTol', 1e-6, 'RelTol', 1e-6, 'hminmin', 1E-8, 'jac_recalc_step', 4, 'max_steps', 10);
 d_mex= run_simulation(model_name, d_sim, param, opts);
-plot_timeseries_cmp(d_sim, d_mex, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'});
+plot_timeseries_cmp(d_sim, d_mex, {'RAWS', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'});

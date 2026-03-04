@@ -1,24 +1,20 @@
-function d_in= loadData(file_path, wind_dir, filter_369p)
+function d_in= loadData(file_path, wind_dir, filter_369p, param)
+if exist('param', 'var')
+    R = param.Rrot;
+    x_rot = -param.OverHang * cos(param.tilt);
+else
+    R = [];
+    x_rot = [];
+end
+
 [~, file]= fileparts(file_path);
 
 d_in= collectBlades(loadFAST(file_path));
 % load rotor average wind speed
-if ~strncmp(file, 'impuls', 6)
-    d_in= add_average_wind(d_in, wind_dir, file);
+if strncmp(file, 'impuls', 6)
+    d_in = add_uniform_wind(d_in, file_path);
 else
-    RtHSAvg= timeseries('RtHSAvg');
-    RtHSAvg.Time= d_in.Time;
-    RtHSAvg.Data= zeros(size(d_in.Time));
-    RtHSAvg.DataInfo.Units= 'm/s/m';
-    RtHSAvg.TimeInfo.Units= 's';
-    d_in= d_in.addts(RtHSAvg);
-    
-    RtVSAvg= timeseries('RtVSAvg');
-    RtVSAvg.Time= d_in.Time;
-    RtVSAvg.Data= zeros(size(d_in.Time));
-    RtVSAvg.DataInfo.Units= 'm/s/m';
-    RtVSAvg.TimeInfo.Units= 's';
-    d_in= d_in.addts(RtVSAvg);      
+    d_in= add_average_wind(d_in, wind_dir, file, R, x_rot);
 end
 
 if exist('filter_369p', 'var') && filter_369p

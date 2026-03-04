@@ -28,7 +28,7 @@ if isa(varargin{1}, 'tscollection')
     % Q_GeAz is on the low speed side
     try x(Dphi_gen_idx, :)= -d_in.Q_DrTr.Data*param.GBRatio; catch, end
     try x(phi_gen_idx, :)= unwrap((d_in.LSSTipPxa.Data-d_in.Q_DrTr.Data)*param.GBRatio);  catch, end
-    try x(vwind_idx, :)= d_in.RtVAvgxh.Data; catch, end
+    try x(vwind_idx, :)= d_in.RAWS.Data; catch, end
     try x(bld1_flp_idx, :)= d_in.Q_B1F1.Data; catch, end
     try x(bld2_flp_idx, :)= d_in.Q_B2F1.Data; catch, end
     try x(bld3_flp_idx, :)= d_in.Q_B3F1.Data; catch, end
@@ -55,11 +55,11 @@ if isa(varargin{1}, 'tscollection')
         try u(in_dh_shear_idx, :)= 0; catch, end
         try u(in_dv_shear_idx, :)= 0; catch, end
     else
-        try u(in_dvwind_idx, :)= gradient(d_in.RtVAvgxh.Data, d_in.Time); catch, end
+        try u(in_dvwind_idx, :)= gradient(d_in.RAWS.Data, d_in.Time); catch, end
         try u(in_dh_shear_idx, :)= gradient(d_in.RtHSAvg.Data, d_in.Time); catch, end
         try u(in_dv_shear_idx, :)= gradient(d_in.RtVSAvg.Data, d_in.Time); catch, end
     end
-    try u(in_vwind_idx, :)= d_in.RtVAvgxh.Data; catch, end
+    try u(in_vwind_idx, :)= d_in.RAWS.Data; catch, end
     try u(in_Tgen_idx, :)= d_in.GenTq.Data*1000; catch, end
     try u(in_theta_idx, :)= -d_in.BlPitchC.Data/180*pi; catch, end
     try u(in_theta1_idx, :)= -d_in.BlPitchC1.Data/180*pi; catch, end
@@ -179,8 +179,8 @@ else
     % try d_out= add_timeseries(d_out, 'RotPwr', 'kW', system.Trot*system.states.phi_rot_d/1000.0); catch, end
     try d_out= add_timeseries(d_out, 'HSShftTq', 'kNm', u(in_Tgen_idx, :)/1000.0); catch, end
     % try d_out= add_timeseries(d_out, 'HSShftPwr', 'kW', system.inputs.Tgen*system.states.phi_gen_d/1000.0); catch, end
-    try d_out= add_timeseries(d_out, 'RtVAvgxh', 'm/s', x(vwind_idx, :)); catch, end
-    try d_out= add_timeseries(d_out, 'RtVAvgxh', 'm/s', u(in_vwind_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'RAWS', 'm/s', x(vwind_idx, :)); catch, end
+    try d_out= add_timeseries(d_out, 'RAWS', 'm/s', u(in_vwind_idx, :)); catch, end
     try d_out= add_timeseries(d_out, 'RtHSAvg', 'm/s', x(h_shear_idx, :)); catch, end
     try d_out= add_timeseries(d_out, 'RtVSAvg', 'm/s', x(v_shear_idx, :)); catch, end
     % try d_out= add_timeseries(d_out, 'RtTSR', '-', &system.lam); catch, end

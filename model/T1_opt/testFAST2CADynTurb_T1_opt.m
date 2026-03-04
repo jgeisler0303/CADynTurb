@@ -44,7 +44,7 @@ acados_model_solver= make_acados_sim(model_name, gen_dir);
 cd(gen_dir)
 fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow/impulse_URef-12_maininput.fst');
 wind_dir= '';
-d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir);
+d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir, false, param);
 
 d_acados= run_acados_simulation(acados_model_solver, d_FAST, param);
-plot_timeseries_cmp(d_acados, d_FAST, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'});
+plot_timeseries_cmp(d_acados, d_FAST, {'RAWS', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'});

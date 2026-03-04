@@ -60,7 +60,7 @@
     MACRO(RootMxc3, states, Trot3,  { out.addChannel("RootMxc3", "kNm", &system.Trot3, 1.0/3000.0); } )                         \
     MACRO(HSShftTq, inputs, Tgen,  { out.addChannel("HSShftTq", "kNm", &system.inputs.Tgen, 1.0/1000.0);                        \
                             out.addChannel("GenTq", "kNm", &system.inputs.Tgen, 1.0/1000.0); } )                                \
-    MACRO(RtVAvgxh, inputs, vwind,  { out.addChannel("RtVAvgxh", "m/s", &system.inputs.vwind); } )                              \
+    MACRO(RAWS, inputs, vwind,  { out.addChannel("RAWS", "m/s", &system.inputs.vwind); } )                              \
     MACRO(RtTSR, states, lam,  { out.addChannel("RtTSR", "-", &system.lam); } )                                                 \
     MACRO(RtAeroCq, states, cm,  { out.addChannel("RtAeroCq", "-", &system.cm); } )                                             \
     MACRO(RtAeroCt, states, ct,  { out.addChannel("RtAeroCt", "-", &system.ct); } )                                             \

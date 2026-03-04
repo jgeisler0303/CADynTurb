@@ -47,7 +47,7 @@ sim_file= fullfile(gen_dir, [strrep(base_file, '_maininput', '') '.outb']);
 
 d_sim= sim_standalone(fullfile(gen_dir, ['sim_' model_name]), fast_file, sim_file, '-a 0.99');
 
-d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir, 0);
+d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir, 0, param);
 
-% plot_timeseries_cmp(d_FAST, d_sim, {'RtVAvgxh', 'BlPitchC1', 'LSSTipPxa', 'YawBrTDxp', {'RootMxb1' 'RootMxb2' 'RootMxb3'}, {'RootMyb1' 'RootMyb2' 'RootMyb3'}})
-plot_timeseries_cmp(d_FAST, d_sim, {'RtVAvgxh', 'RootMxb1' 'RootMxb2' 'RootMxb3', 'RootMyb1' 'RootMyb2' 'RootMyb3'})
+% plot_timeseries_cmp(d_FAST, d_sim, {'RAWS', 'BlPitchC1', 'LSSTipPxa', 'YawBrTDxp', {'RootMxb1' 'RootMxb2' 'RootMxb3'}, {'RootMyb1' 'RootMyb2' 'RootMyb3'}})
+plot_timeseries_cmp(d_FAST, d_sim, {'RAWS', 'RootMxb1' 'RootMxb2' 'RootMxb3', 'RootMyb1' 'RootMyb2' 'RootMyb3'})

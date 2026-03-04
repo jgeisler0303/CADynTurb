@@ -1,7 +1,10 @@
-function d= add_average_wind(d, wind_dir, fst_file, R)
-% TODO: does not consider OverHang
-if ~exist('R', 'var')
-    R= 92/2;
+function d= add_average_wind(d, wind_dir, fst_file, R, x_rot)
+arguments
+    d tscollection
+    wind_dir 
+    fst_file 
+    R (:,1) double = []
+    x_rot (:,1) double = []
 end
 
 if strcmp(wind_dir(end-3:end), '.bts')
@@ -20,7 +23,7 @@ else
 end
 
 if exist(bts_path, 'file')
-    d= addBTS(bts_path, d, R);
+    d= addBTS(bts_path, d, R, x_rot);
 else
     if ~exist('wnd_path', 'var') || ~exist(wnd_path, 'file')
         toks= regexp(bts_file, 'URef-(\d*)_RandSeed1-(\d*)_', 'tokens', 'once');
@@ -33,26 +36,33 @@ else
     end
 
     if exist(wnd_path, 'file')
-        d= addWND(wnd_path, d, R);
+        d= addWND(wnd_path, d, R, x_rot);
     else
         error('Neither BTS nor WND file found')
     end
 end
 end
 
-function d= addBTS(bts_path, d, R)
+function d= addBTS(bts_path, d, R, x_rot)
     [velocity, ~, y, z, ~, ~, ny, ~, dy, dt, zHub, ~, u_hub]= readfile_BTS(bts_path);
 
     % assume the wind file is not periodic, otherwise the offset should be 0
     t_offset= ((ny-1)*dy/2)/u_hub;
+    if ~isempty(x_rot)
+        t_offset = t_offset + x_rot/u_hub;
+    end
     d= addWind(d, velocity, y, z-zHub, dt, t_offset, R);
 end
 
-function d= addWND(wnd_path, d, R)
-    [velocity, y, z, ~, ~, ~, ~, dt, zHub, ~, ~]= readfile_WND(wnd_path);
+function d= addWND(wnd_path, d, R, x_rot)
+    [velocity, y, z, ~, ~, ~, ~, dt, zHub, ~, SummVars]= readfile_WND(wnd_path);
     
     % assume the wind file is periodic, otherwise the offset should be ((ny-1)*dy/2)/u_hub
     t_offset= 0;
+    % TODO: not tested (SummVars)
+    if ~isempty(x_rot)
+        t_offset = t_offset + x_rot/SummVars(3);
+    end
     d= addWind(d, velocity, y, z-zHub, dt, t_offset, R);
 end
 
@@ -83,9 +93,15 @@ function d= addWind(d, velocity, y, z, dt, t_offset, R)
     tv= (0:nt-1)*dt;
     
     time= d.Time + t_offset;
-    % TODO: extend periodic wind
-    d.RtVAvgxh.Data= interp1(tv, wind, time);
 
+    % TODO: extend periodic wind
+    RAWS= timeseries('RAWS');
+    RAWS.Time= d.Time;
+    RAWS.Data=interp1(tv, wind, time);
+    RAWS.DataInfo.Units= 'm/s';
+    RAWS.TimeInfo.Units= 's';
+    d= d.addts(RAWS);
+    
     RtHSAvg= timeseries('RtHSAvg');
     RtHSAvg.Time= d.Time;
     RtHSAvg.Data=interp1(tv, hshear, time);

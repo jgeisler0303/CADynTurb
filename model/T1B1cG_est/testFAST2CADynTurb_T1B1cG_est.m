@@ -40,10 +40,10 @@ cd(gen_dir)
 
 v= 11;
 for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
-    d_FAST= loadData(ref_sims.files{i}, wind_dir);
+    d_FAST= loadData(ref_sims.files{i}, wind_dir, false, param);
 
     d_sim= run_simulation(model_name, d_FAST, param);
-    plot_timeseries_cmp(d_FAST, d_sim, {'RtVAvgxh', 'BlPitchC', 'HSShftV', 'GenTq', 'YawBrTDxp', 'Q_BF1'});
+    plot_timeseries_cmp(d_FAST, d_sim, {'RAWS', 'BlPitchC', 'HSShftV', 'GenTq', 'YawBrTDxp', 'Q_BF1'});
 end
 
 %% run Kalman filter
@@ -56,7 +56,7 @@ param.fixedQxx= zeros(length(ekf_config.estimated_states), 1);
 
 v= 12;
 for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
-    d_in= loadData(ref_sims.files{i}, wind_dir);
+    d_in= loadData(ref_sims.files{i}, wind_dir, false, param);
 
     ss1= std(d_in.Wind1VelX.Data);
     param.fixedQxx(ix_vwind)= (ss1/200)^2;
@@ -64,5 +64,5 @@ for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
     [d_est1, ~, ~, ~, ~, ~, Q, R]= run_simulation(model_name, d_in, param, [], 0, 2, [], []);
     [d_est2, ~, ~, ~, ~, ~, Q, R]= run_simulation(model_name, d_in, param, [], 0, 2, Q, R);
 
-    plot_timeseries_multi({d_in, d_est1, d_est2}, {'RtVAvgxh', 'Q_TFA1' 'Q_BF1' 'LSSTipVxa', 'Q_DrTr'})
+    plot_timeseries_multi({d_in, d_est1, d_est2}, {'RAWS', 'Q_TFA1' 'Q_BF1' 'LSSTipVxa', 'Q_DrTr'})
 end

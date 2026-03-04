@@ -55,14 +55,14 @@ param.fixedQxx= zeros(length(ekf_config.estimated_states), 1);
 
 v= 12;
 for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
-    d_in= loadData(ref_sims.files{i}, wind_dir);
+    d_in= loadData(ref_sims.files{i}, wind_dir, false, param);
 
     ss1= std(d_in.Wind1VelX.Data);
     param.fixedQxx(ix_vwind)= (ss1/200)^2;
     [d_est1, ~, ~, ~, ~, ~, Q, R]= run_simulation(model_name, d_in, param, [], 0, 2, [], []);
     [d_est2, ~, ~, ~, ~, ~, Q, R]= run_simulation(model_name, d_in, param, [], 0, 2, Q, R);
 
-    plot_timeseries_multi({d_in, d_est1, d_est2}, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'})
+    plot_timeseries_multi({d_in, d_est1, d_est2}, {'RAWS', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'})
 end
 
 %% run Kalman filter RK1
@@ -73,35 +73,35 @@ param.fixedQxx= zeros(nx, 1);
 
 v= 12;
 for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
-    d_in= loadData(ref_sims.files{i}, wind_dir);
+    d_in= loadData(ref_sims.files{i}, wind_dir, false, param);
 
     ss1= std(d_in.Wind1VelX.Data);
     param.fixedQxx(vwind_idx)= (ss1/200)^2;
     [d_est1, ~, ~, ~, ~, ~, Q, R]= run_simulation([model_name '_RK1'], d_in, param, [], 0, 2, [], []);
     [d_est2, ~, ~, ~, ~, ~, Q, R]= run_simulation([model_name '_RK1'], d_in, param, [], 0, 2, Q, R);
 
-    plot_timeseries_multi({d_in, d_est1, d_est2}, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'})
+    plot_timeseries_multi({d_in, d_est1, d_est2}, {'RAWS', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'})
 end
 
 %% compare mex simulations CADyn vs CADynM
 v= 11;
 for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
-    d_FAST= loadData(ref_sims.files{i}, wind_dir);
+    d_FAST= loadData(ref_sims.files{i}, wind_dir, false, param);
 
     cd(gen_dir)
     d_sim= run_simulation(model_name, d_FAST, param);
     cd(gen_dir_m)
     d_sim_M= run_simulation(model_name, d_FAST, param);
-    plot_timeseries_multi({d_FAST, d_sim, d_sim_M}, {'RtVAvgxh', 'BlPitchC', 'GenTq', 'LSSTipVxa', 'YawBrTDxp'}, {'FAST', 'CADyn', 'CADynM'});
+    plot_timeseries_multi({d_FAST, d_sim, d_sim_M}, {'RAWS', 'BlPitchC', 'GenTq', 'LSSTipVxa', 'YawBrTDxp'}, {'FAST', 'CADyn', 'CADynM'});
 end
 
 %% compare mex simulations Newmark beta vs condensed implicit RK1
 cd(gen_dir_m)
 v= 11;
 for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
-    d_FAST= loadData(ref_sims.files{i}, wind_dir);
+    d_FAST= loadData(ref_sims.files{i}, wind_dir, false, param);
 
     d_sim= run_simulation(model_name, d_FAST, param);
     d_sim_RK1= run_simulation([model_name '_RK1'], d_FAST, param);
-    plot_timeseries_multi({d_FAST, d_sim, d_sim_RK1}, {'RtVAvgxh', 'BlPitchC', 'GenTq', 'LSSTipVxa', 'YawBrTDxp'}, {'FAST', 'CADyn', 'CADyn RK1'});
+    plot_timeseries_multi({d_FAST, d_sim, d_sim_RK1}, {'RAWS', 'BlPitchC', 'GenTq', 'LSSTipVxa', 'YawBrTDxp'}, {'FAST', 'CADyn', 'CADyn RK1'});
 end

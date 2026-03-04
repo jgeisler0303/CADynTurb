@@ -11,7 +11,7 @@ wind_dir= fullfile(CADynTurb_dir, 'ref_sim/wind');
 ref_sims= get_ref_sims(sim_dir, '1p1*_maininput.outb');
 v= 11;
 i= find(ref_sims.vv==v & ref_sims.yaw==0)';
-d_FAST= loadData(ref_sims.files{i}, wind_dir);
+d_FAST= loadData(ref_sims.files{i}, wind_dir, false, param);
 
 %%
 cd(sim_model_path)
@@ -83,7 +83,7 @@ for i= 100:149
 end
 
 n= 63000;
-VWIND= d_FAST.RtVAvgxh.Data(1:n);
+VWIND= d_FAST.RAWS.Data(1:n);
 Tgen= zeros(1, n+1);
 theta= zeros(1, n+1);
 ddq= zeros(nq, 1);

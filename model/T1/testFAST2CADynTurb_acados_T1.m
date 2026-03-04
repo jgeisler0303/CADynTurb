@@ -35,11 +35,11 @@ acados_model_solver= make_acados_sim(param, model_name, gen_dir);
 %% run acados simulation
 fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow/impulse_URef-12_maininput.fst');
 wind_dir= '';
-d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir);
+d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir, false, param);
 
 load('params_config.mat')
 d_acados= run_acados_simulation(acados_model_solver, d_FAST, p_);
-plot_timeseries_cmp(d_acados, d_FAST, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'});
+plot_timeseries_cmp(d_acados, d_FAST, {'RAWS', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'});
 
 %% make acados standalone simulator
 clc
@@ -55,6 +55,6 @@ wind_dir= '';
 sim_file= fullfile(gen_dir, [strrep(base_file, '_maininput', '_acados') '.outb']);
 d_acados= sim_standalone(fullfile(gen_dir, ['sim_' model_name '_acados']), fast_file, sim_file, '-a 0.99');
 
-d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir);
+d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir, false, param);
 
-plot_timeseries_cmp(d_acados, d_FAST, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'});
+plot_timeseries_cmp(d_acados, d_FAST, {'RAWS', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'});

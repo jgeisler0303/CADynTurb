@@ -203,7 +203,7 @@ void setupOutputs(FAST_Output &out, double *states, double *inputs) {
     out.addChannel("YawBrTVyp", "m/s", &states[tow_fa_d]);
     out.addChannel("Q_TFA1", "m", &states[tow_fa]);
     out.addChannel("HSShftTq", "kNm", &inputs[Tgen], 1.0/1000.0);
-    out.addChannel("RtVAvgxh", "m/s", &inputs[vwind]);
+    out.addChannel("RAWS", "m/s", &inputs[vwind]);
     out.addChannel("BlPitchC", "deg", &inputs[theta],  -180.0/M_PI);
     out.addChannel("GenTq", "kNm", &inputs[Tgen], 1.0/1000.0);
     out.addChannel("HSShftPwr", "kW", &HSShftPwr, 1.0/1000.0);

@@ -177,7 +177,7 @@ void setupOutputs(FAST_Output &out, T2B2cG &system) {
 //     out.addChannel("RotPwr", "kW", &RotPwr, 1.0/1000.0);
     out.addChannel("HSShftTq", "kNm", &system.inputs.Tgen, 1.0/1000.0);
     out.addChannel("HSShftPwr", "kW", &HSShftPwr, 1.0/1000.0);
-    out.addChannel("RtVAvgxh", "m/s", &system.inputs.vwind);
+    out.addChannel("RAWS", "m/s", &system.inputs.vwind);
 //     out.addChannel("WindVxi", "m/s", &system.inputs.vwind);
 //     out.addChannel("Wind1VelX", "m/s", &system.inputs.vwind);
 //     out.addChannel("RtTSR", "-", &system.lam);

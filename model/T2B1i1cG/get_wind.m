@@ -10,9 +10,9 @@ for i= find(ref_sims.yaw==0)'
     [~, f]= fileparts(ref_sims.files{i});
     file_name{j}= f;
     
-    d_FAST= loadData(ref_sims.files{i}, wind_dir);    
+    d_FAST= loadData(ref_sims.files{i}, wind_dir, false, param);    
     
-    v(j, :)= d_FAST.RtVAvgxh.Data;
+    v(j, :)= d_FAST.RAWS.Data;
     h_shear(j, :)= d_FAST.RtHSAvg.Data;
     v_shear(j, :)= d_FAST.RtVSAvg.Data;
 

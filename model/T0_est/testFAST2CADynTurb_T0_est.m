@@ -47,11 +47,11 @@ param.fixedQxx= zeros(length(ekf_config.estimated_states), 1);
 
 v= 12;
 for  i= find(ref_sims.vv==12 & ref_sims.yaw==0)'
-    d_in= loadData(ref_sims.files{i}, wind_dir);
+    d_in= loadData(ref_sims.files{i}, wind_dir, false, param);
 
     ss1= std(d_in.Wind1VelX.Data);
     param.fixedQxx(ix_vwind)= (ss1/200)^2;
     [d_est, ~, ~, ~, ~, ~, Q, R]= run_simulation(model_name, d_in, param, [], 0, 2, [], []);
 
-    plot_timeseries_cmp(d_in, d_est, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq'})
+    plot_timeseries_cmp(d_in, d_est, {'RAWS', 'BlPitchC', 'LSSTipVxa', 'GenTq'})
 end

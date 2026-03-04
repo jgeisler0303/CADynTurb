@@ -65,7 +65,6 @@ int main(int argc, char* argv[]) {
     ("d,discon_dll", "Path and name of the DISCON controller DLL", cxxopts::value<std::string>()->default_value("DISCON.dll"))
     ("o,output", "Output file name", cxxopts::value<std::string>()->default_value("default.outb"))
     ("a,adjust_wind", "Adjustment factor for wind speed", cxxopts::value<double>()->default_value("1.0"))
-    ("x,dx_wind", "Offset into wind field in m", cxxopts::value<double>()->default_value("0.0"))
     ("r,rpm0", "Initial generator speed in rpm", cxxopts::value<double>()->default_value("0.0"))
     ("c,config", "Options file for the integration algorithm (default: rk1_options.txt)", cxxopts::value<std::string>()->default_value("rk1_options.txt"))
     ("v,verbose", "Print verbose output from the integration algorithm", cxxopts::value<bool>()->default_value("false"))
@@ -121,8 +120,18 @@ int main(int argc, char* argv[]) {
                 discon_dll= p.getFilename("ServoFile.DLL_FileName");
             }
             
+            double dx_wind = 0.0;
             try {
-                wind= makeFAST_Wind(p, argc_result["dx_wind"].as<double>());
+                if(p["InflowFile.WindType"]>2) {
+                    dx_wind = -p["EDFile.OverHang"] * cos(p["EDFile.ShftTilt"]/180.0*M_PI);
+                }
+            } catch (const std::exception& e) {
+                
+                fprintf(stderr, "Error reading Overhang: %s\n", e.what());
+                exit (EXIT_FAILURE);
+            }
+            try {
+                wind= makeFAST_Wind(p, dx_wind);
             } catch (const std::exception& e) {
                 fprintf(stderr, "Inflow error: %s\n", e.what());
                 exit (EXIT_FAILURE);

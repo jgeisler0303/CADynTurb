@@ -32,7 +32,7 @@ for ii= 2:N_sim
 	acados_model.set('x', x_sim(:, ii-1));
 	acados_model.set('u', u_ref(:, ii-1));
     if ~isempty(ap_wind_idx)
-        ap(ap_wind_idx)= d_in.RtVAvgxh.Data(ii-1);
+        ap(ap_wind_idx)= d_in.RAWS.Data(ii-1);
         acados_model.set('p', ap);
     end
 

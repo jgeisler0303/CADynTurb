@@ -46,7 +46,7 @@ d_mex= run_simulation(model_name, d_sim, param, opts);
 cd(gen_dir_m)
 d_mexM= run_simulation(model_name, d_sim, param, opts);
 
-plot_timeseries_multi({d_sim, d_mex, d_mexM}, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'},{'sim', 'CADyn mex', 'CADYnM mex'});
+plot_timeseries_multi({d_sim, d_mex, d_mexM}, {'RAWS', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'},{'sim', 'CADyn mex', 'CADYnM mex'});
 
 %% compare stand-alone RK1 simulator with OpenFAST
 cd(gen_dir_m)
@@ -54,7 +54,7 @@ fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow/impulse_URef-12_maini
 % fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow/impulse_URef-12_maininput.fst');
 wind_dir= '';
 
-d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir);
+d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir, false, param);
 
 [~, base_file]= fileparts(fast_file);
 sim_file= fullfile(gen_dir_m, [strrep(base_file, '_maininput', '') '.outb']);
@@ -62,5 +62,5 @@ sim_file= fullfile(gen_dir_m, [strrep(base_file, '_maininput', '') '.outb']);
 d_sim= sim_standalone(fullfile(gen_dir_m, ['sim_' model_name]), fast_file, sim_file, '-a 0.99');
 d_sim_RK1= sim_standalone(fullfile(gen_dir_m, ['sim_' model_name '_RK1']), fast_file, sim_file, '-a 0.99');
 
-plot_timeseries_multi({d_FAST, d_sim, d_sim_RK1}, {'RtVAvgxh', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'}, {'FAST', 'Newmark beta', 'RK1'});
+plot_timeseries_multi({d_FAST, d_sim, d_sim_RK1}, {'RAWS', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'}, {'FAST', 'Newmark beta', 'RK1'});
 
