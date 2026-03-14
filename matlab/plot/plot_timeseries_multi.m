@@ -1,4 +1,4 @@
-function ha_= plot_timeseries_multi(tscs, vars, names, t0, t1)
+function ha_= plot_timeseries_multi(tscs, vars, names, t0, t1, t_offset, one_legend, decimate)
 
 linetype_order= {'-', '--', '-.', ':'};
 color_order= colororder;
@@ -21,15 +21,28 @@ if ~exist('t1', 'var')
     end
 end
 
+if ~exist('t_offset', 'var') || isempty(t_offset)
+    t_offset= zeros(size(tscs));
+end
+
+if ~exist('one_legend', 'var')
+    one_legend= true;
+end
+if ~exist('decimate', 'var')
+    decimate= 1;
+end
+
 idx= cell(size(tscs));
 for i= 1:length(tscs)
-    idx{i}= tscs{i}.Time>=t0 & tscs{i}.Time<=t1;
+    idx{i}= find(tscs{i}.Time>=t0, 1):decimate:find(tscs{i}.Time<=t1, 1, 'last');
 end
 
 clf
 n_plots= length(vars);
+tiledlayout(n_plots, 1)
+ha= zeros(n_plots, 1);
 for i_plot= 1:n_plots
-    ha(i_plot)= subplot(n_plots, 1, i_plot);
+    ha(i_plot)= nexttile;
     
     sub_vars= vars{i_plot};
     if ~iscell(sub_vars)
@@ -51,7 +64,7 @@ for i_plot= 1:n_plots
                     data= eval(mod_str);
                 end
                 
-                h= plot(ts.Time(idx{i_tsc}), data, 'DisplayName', [ts.Name ' (' names{i_tsc} ')']);
+                h= plot(ts.Time(idx{i_tsc})+t_offset(i_tsc), data, 'DisplayName', [ts.Name ' (' names{i_tsc} ')']);
                 set(h, 'Color', color_order(i_tsc, :));
                 set(h, 'LineStyle', linetype_order{i_line});
                 if isempty(label_str)
@@ -66,8 +79,15 @@ for i_plot= 1:n_plots
         xlabel('Time in s')
     end
     ylabel(label_str, 'Interpreter', 'none');
-    legend('Location', 'SouthWest', 'NumColumns', n_lines, 'Interpreter', 'none')
+
+    if ~one_legend
+        legend('Location', 'SouthWest', 'NumColumns', n_lines, 'Interpreter', 'none')
+    end
     grid on
+end
+if one_legend
+    lg= legend(names, 'Orientation', 'horizontal', 'Interpreter', 'none');
+    lg.Layout.Tile = 'South';
 end
 
 linkaxes(findobj(gcf, 'Type', 'Axes'), 'x')
