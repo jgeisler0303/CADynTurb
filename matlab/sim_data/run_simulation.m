@@ -1,4 +1,4 @@
-function [d_out, cpu_time, int_err, n_steps, n_backsteps, n_sub_steps, Q, R, x_end_est, P_end]= run_simulation(model, d_in, param, opt, step_predict, do_est, Q, R, N, x0_est_, P0)
+function [d_out, cpu_time, int_err, n_steps, n_backsteps, n_sub_steps, Q, R, x_end_est, P_end]= run_simulation(model, d_in, param, opts, step_predict, do_est, Q, R, N, x0_est_, P0)
 
 sys_mex= str2func([model '_mex']);
 get_ekf_config= str2func([model '_ekf_config']);
@@ -13,7 +13,7 @@ end
 if ~exist('N', 'var')
     N= [];
 end
-if ~exist('opts', 'var') || isempty(opt)
+if ~exist('opts', 'var') || isempty(opts)
     % standard
     % opts= struct('StepTol', 1e-8, 'AbsTol', 1e-6, 'RelTol', 1e-6, 'hminmin', 1E-8, 'jac_recalc_step', 4, 'max_steps', 10);
     % one step
@@ -135,6 +135,7 @@ if do_est<2
             end
         end
     end
+    P_end = Sigma_est;
 else
     if ode1
         [x, ~, y_pred, Q, R, cpu_time, d_norm, p_xx, r_xx, s_xx, P_end]= ekf_mex(x(:, 1), u, y_meas, param, dt, ekf_config.x_ul, ekf_config.x_ll, Q, R, param.Tadapt, param.adaptScale, param.fixedQxx, param.fixedRxx, opts, P0);

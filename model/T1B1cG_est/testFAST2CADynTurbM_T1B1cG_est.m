@@ -14,7 +14,7 @@ model_name= 'T1B1cG_est';
 gen_dir= fullfile(model_dir, 'generated');
 gen_dir_m = [gen_dir '_M'];
 
-files_to_generate= {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m'};
+files_to_generate= {'_direct.hpp', '_ode1.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m', 'model_indices_ode1.m'};
 
 %% calculate parameters
 cd(model_dir)
@@ -28,17 +28,13 @@ end
 %% generate and compile all source code
 clc
 cd(model_dir)
-MultiBodySystem.setSym();
+MultiBodySystem.setMSym();
 MultiBodySystem.setKinematicsFromLocal();
 tic
 model = genCodeM(['model' model_name '.m'], gen_dir_m, files_to_generate, param, tw_sid, bd_sid);
 toc
 writeModelParams(param, gen_dir_m);
-makeCADynMex(model_name, gen_dir_m, '', '', fullfile(CADynTurb_dir, 'simulator'))
-
-%% compile ekf mex
-clc
-makeCADynEKFMex(model_name, model_dir, gen_dir_m)
+compileModel(model_name, model_dir, gen_dir_m, files_to_generate)
 
 %% get reference simulations 1p1
 sim_dir= fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow');
@@ -49,21 +45,31 @@ ref_sims= get_ref_sims(sim_dir, '1p1*_maininput.outb');
 %% simulate mex model
 cd(gen_dir_m)
 
-v= 11;
+v= 12;
 for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
     d_FAST= loadData(ref_sims.files{i}, wind_dir, false, param);
 
     d_sim= run_simulation(model_name, d_FAST, param);
-    plot_timeseries_cmp(d_FAST, d_sim, {'RAWS', 'BlPitchC', 'HSShftV', 'GenTq', 'YawBrTDxp', 'Q_BF1'});
+    d_sim_RK1= run_simulation([model_name '_RK1'], d_FAST, param);
+
+    plot_timeseries_multi({d_FAST, d_sim, d_sim_RK1}, {'RAWS', 'BlPitchC', 'HSShftV', 'GenTq', 'YawBrTDxp', 'Q_BF1'}, {'FAST', 'Newmark', 'RK1'});
 end
 
 %% run Kalman filter
+clc
 cd(gen_dir_m)
+
+param.Tadapt= 30;
+
+% Newmark beta
 model_indices
 ekf_config= T1B1cG_est_ekf_config;
 ix_vwind= find(ekf_config.estimated_states==vwind_idx);
-param.Tadapt= 30;
 param.fixedQxx= zeros(length(ekf_config.estimated_states), 1);
+% RK1
+param_RK1 = param;
+model_indices_ode1
+param_RK1.fixedQxx= zeros(nx, 1);
 
 v= 12;
 for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
@@ -71,9 +77,13 @@ for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
 
     ss1= std(d_in.Wind1VelX.Data);
     param.fixedQxx(ix_vwind)= (ss1/200)^2;
+    param_RK1.fixedQxx(vwind_idx)= (ss1/200)^2;
 
-    [d_est1, ~, ~, ~, ~, ~, Q, R]= run_simulation(model_name, d_in, param, [], 0, 2, [], []);
-    [d_est2, ~, ~, ~, ~, ~, Q, R]= run_simulation(model_name, d_in, param, [], 0, 2, Q, R);
+    [d_est, ~, ~, ~, ~, ~, Q, R, x_end_est, P_end]= run_simulation(model_name, d_in, param, [], 0, 2, [], []);
+    d_est2                                        = run_simulation(model_name, d_in, param, [], 0, 2, Q, R, [], x_end_est, P_end);
 
-    plot_timeseries_multi({d_in, d_est1, d_est2}, {'RAWS', 'Q_TFA1' 'Q_BF1' 'LSSTipVxa', 'Q_DrTr'})
+    [d_est_RK1, ~, ~, ~, ~, ~, Q, R, x_end_est, P_end]= run_simulation([model_name '_RK1'], d_in, param_RK1, [], 0, 2, [], []);
+    d_est_RK12                                        = run_simulation([model_name '_RK1'], d_in, param_RK1, [], 0, 2, Q, R, [], x_end_est, P_end);
+
+    plot_timeseries_multi({d_in, d_est2, d_est_RK1, d_est_RK12}, {'RAWS', 'Q_TFA1' 'Q_BF1' 'LSSTipVxa', 'Q_DrTr'}, {'FAST', 'Newmark', 'RK1 1', 'RK1 2'})
 end

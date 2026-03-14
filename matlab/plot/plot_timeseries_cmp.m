@@ -1,4 +1,4 @@
-function ha_= plot_timeseries_cmp(tsc1, tsc2, vars1, vars2, name1, name2, t0, t1, t_ofs1, t_ofs2, one_legend)
+function ha_= plot_timeseries_cmp(tsc1, tsc2, vars1, vars2, name1, name2, t0, t1, t_ofs1, t_ofs2, one_legend, decimate)
 
 if ~iscell(vars1)
     vars1= {vars1};
@@ -33,9 +33,12 @@ end
 if ~exist('one_legend', 'var')
     one_legend= true;
 end
+if ~exist('decimate', 'var')
+    decimate= 1;
+end
 
-idx1= tsc1.Time>=t0 & tsc1.Time<=t1;
-idx2= tsc2.Time>=t0 & tsc2.Time<=t1;
+idx1= find(tsc1.Time>=t0, 1):decimate:find(tsc1.Time<=t1, 1, 'last');
+idx2= find(tsc2.Time>=t0, 1):decimate:find(tsc2.Time<=t1, 1, 'last');
 
 clf
 n_plots= max([length(vars1) length(vars2)]);
