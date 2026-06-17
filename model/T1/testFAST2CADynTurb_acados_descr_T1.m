@@ -20,6 +20,11 @@ else
     [param, ~, tw_sid, bd_sid]= FAST2CADynTurb(fst_file, {[1 -2]}, 1);
     save('params', 'param', 'tw_sid', 'bd_sid')
 end
+param.rpm_max= 1200;
+param.rpm_min= 800;
+param.power_max= 5000e3;
+param= calc_cx_poly('cp', param);
+param= calc_cx_poly('ct', param);
 
 %% generate and compile all source code
 clc
@@ -39,8 +44,11 @@ p= acados_params(parameter_names, param);
 fun_E = Function('funE', {model.x, model.u, model.p}, {model.E});
 fun_f = Function('funf', {model.x, model.u, model.p}, {model.f_descr_expr});
 
-fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow/impulse_URef-12_maininput.fst');
-wind_dir= '';
+% fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow/impulse_URef-12_maininput.fst');
+% wind_dir= '';
+fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow/1p1_NacYaw-0_URef-12_maininput.fst');
+wind_dir= fullfile(CADynTurb_dir, 'ref_sim/wind');
+
 d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir, false, param);
 
 [x_ref, u_ref]= convertFAST_CADyn(d_FAST, param, 0);

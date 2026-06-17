@@ -12,8 +12,17 @@ Fwind_v= rho/2.0*Arot*vwind_eff;
 lam= min(max(lam, lambdaMin), lambdaMax);
 theta_deg= min(max(theta_deg, thetaMin), thetaMax);
 
-cm= cm_int([lam, theta_deg], cm_lut);
-ct= ct_int([lam, theta_deg], ct_lut);
+% Alternative formulation via polynomials
+cp= eval_poly(lam, theta_deg, param.cp_coeff, param.cp_exp);
+cp= min(0.6, max(-0.1, cp));
+cm=cp/phi_rot_d/Rrot;
+
+ct= eval_poly(lam, theta_deg, param.ct_coeff, param.ct_exp);
+ct= min(1.2, max(-0.1, ct));
+
+% LUT formulation
+% cm= cm_int([lam, theta_deg], cm_lut);
+% ct= ct_int([lam, theta_deg], ct_lut);
 
 Trot= Rrot*Fwind_v*(vwind_eff*cm);
 Fthrust= Fwind_v*(vwind_eff*ct);
