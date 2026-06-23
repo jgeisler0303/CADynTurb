@@ -14,8 +14,18 @@ if isa(varargin{1}, 'tscollection')
     else
         indices_script_name = 'model_indices';
     end
-    indices_script= str2func(indices_script_name);
-    indices_script()
+    if isstruct(indices_script_name)
+        model_info = indices_script_name;
+        unpack_idx_struct(model_info.q.idx, '', '_idx')
+        unpack_idx_struct(model_info.qd.idx, '', '_idx', model_info.q.n)
+        unpack_idx_struct(model_info.u.idx, 'in_', '_idx')
+        nx = model_info.q.n + model_info.qd.n;
+        nu = model_info.u.n;
+        ny = 0; % no outputs for acados models
+    else
+        indices_script= str2func(indices_script_name);
+        indices_script()
+    end
 
     nt= length(d_in.Time);
 
@@ -49,6 +59,9 @@ if isa(varargin{1}, 'tscollection')
     try x(h_shear_d_idx, :)= 0; catch, end
     try x(v_shear_d_idx, :)= 0; catch, end
 
+    try x(Tgen_idx, :)= d_in.GenTq.Data*1000; catch, end
+    try x(theta_idx, :)= -d_in.BlPitchC.Data/180*pi; catch, end
+
     u= zeros(nu, nt);
     if est_or_predict
         try u(in_dvwind_idx, :)= 0; catch, end
@@ -67,7 +80,10 @@ if isa(varargin{1}, 'tscollection')
     try u(in_theta3_idx, :)= -d_in.BlPitchC3.Data/180*pi; catch, end
     try u(in_bld_edg_mom_meas_idx, :)= d_in.RootMxb.Data*1000; catch, end
     try u(in_bld_flp_mom_meas_idx, :)= d_in.RootMyb.Data*1000; catch, end
-    
+
+    try u(in_dTgen_idx, :)= gradient(d_in.GenTq.Data*1000, d_in.Time); catch, end
+    try u(in_dtheta_idx, :)= gradient(-d_in.BlPitchC.Data/180*pi, d_in.Time); catch, end
+
     y= zeros(ny, nt);
     try y(out_tow_fa_acc_idx, :)= d_in.YawBrTAxp.Data; catch, end
     try y(out_abs_tow_fa_acc_idx, :)= abs(d_in.YawBrTAxp.Data); catch, end
@@ -113,14 +129,25 @@ else
     else
         indices_script_name = 'model_indices';
     end
-    indices_script= str2func(indices_script_name);
-    indices_script()
+    if isstruct(indices_script_name)
+        model_info = indices_script_name;
+        unpack_idx_struct(model_info.q.idx, '', '_idx')
+        unpack_idx_struct(model_info.qd.idx, '', '_idx', model_info.q.n)
+        unpack_idx_struct(model_info.u.idx, 'in_', '_idx')
+        nx = model_info.q.n + model_info.qd.n;
+    else
+        indices_script= str2func(indices_script_name);
+        indices_script()
+    end
 
     if exist('nq', 'var')
         ode1 = false;
         for i = 1:length(dof_names)
             eval(sprintf('%s_dd_idx = %d;', dof_names{i}, i))
         end
+    elseif isstruct(indices_script_name)
+        ode1 = false;
+        % no dd from acados for now
     else
         for i = (nx-nxdot+1):nx
             name = state_names{i};
@@ -188,10 +215,12 @@ else
     % try d_out= add_timeseries(d_out, 'RtAeroCt', '-', &system.ct); catch, end
     % try d_out= add_timeseries(d_out, 'RotCf', '-', &system.cflp); catch, end
     % try d_out= add_timeseries(d_out, 'RotCe', '-', &system.cedg); catch, end
+    try d_out= add_timeseries(d_out, 'BlPitchC', 'deg', -x(theta_idx, :)*180.0/pi); catch, end
     try d_out= add_timeseries(d_out, 'BlPitchC', 'deg', -u(in_theta_idx, :)*180.0/pi); catch, end
     try d_out= add_timeseries(d_out, 'BlPitchC1', 'deg', -u(in_theta1_idx, :)*180.0/pi); catch, end
     try d_out= add_timeseries(d_out, 'BlPitchC2', 'deg', -u(in_theta2_idx, :)*180.0/pi); catch, end
     try d_out= add_timeseries(d_out, 'BlPitchC3', 'deg', -u(in_theta3_idx, :)*180.0/pi); catch, end
+    try d_out= add_timeseries(d_out, 'GenTq', 'kNm', x(Tgen_idx, :)/1000.0); catch, end
     try d_out= add_timeseries(d_out, 'GenTq', 'kNm', u(in_Tgen_idx, :)/1000.0); catch, end
 %     try d_out= add_timeseries(d_out, 'RootMxb_filt', 'kNm', y(out_bld_edg_mom_filt_idx, :)/1000); catch, end
 %     try d_out= add_timeseries(d_out, 'RootMyb_filt', 'kNm', y(out_bld_flp_mom_filt_idx, :)/1000); catch, end
@@ -205,12 +234,12 @@ else
     try d_out= add_timeseries(d_out, 'RootMxb3', 'kNm', y(out_bld3_edg_mom_idx, :)/1000); catch, end
     try d_out= add_timeseries(d_out, 'y', '-', y); catch, end
     if ode1
+        try d_out= add_timeseries(d_out, 'x', '-', x); catch, end
+        try d_out= add_timeseries(d_out, 'xdot', '-', ddq); catch, end
+    else
         try d_out= add_timeseries(d_out, 'q', '-', q); catch, end
         try d_out= add_timeseries(d_out, 'dq', '-', dq); catch, end
         try d_out= add_timeseries(d_out, 'ddq', '-', ddq); catch, end
-    else
-        try d_out= add_timeseries(d_out, 'x', '-', x); catch, end
-        try d_out= add_timeseries(d_out, 'xdot', '-', ddq); catch, end
     end
 
     varargout{1}= d_out;

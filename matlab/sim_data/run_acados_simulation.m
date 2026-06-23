@@ -1,5 +1,4 @@
-function d_acados= run_acados_simulation(acados_model, d_in, param)
-
+function d_acados= run_acados_simulation(acados_model, d_in, param, model_info)
 model_parameters
 pre_calc_fun= str2func(strrep(acados_model.sim.model.name, '_acados', '_pre_calc'));
 try
@@ -23,7 +22,7 @@ end
 
 %% simulate system in loop
 clc
-[x_ref, u_ref]= convertFAST_CADyn(d_in, param, 0);
+[x_ref, u_ref]= convertFAST_CADyn(d_in, param, 0, model_info);
 
 N_sim= length(d_in.Time);
 x_sim= x_ref;
@@ -46,8 +45,9 @@ for ii= 2:N_sim
     % S_forw = sim.get('S_forw');
 end
 
-q= x_sim(1:size(x_sim, 1)/2, :);
-dq= x_sim(size(x_sim, 1)/2+1:end, :);
+q= x_sim(1:model_info.q.n, :);
+dq= x_sim((model_info.q.n+1):end, :);
 ddq= [];
 y_sim= [];
-d_acados= convertFAST_CADyn(d_in.Time, q, dq, ddq, u_ref, y_sim, param);
+
+d_acados= convertFAST_CADyn(d_in.Time, q, dq, ddq, u_ref, y_sim, param, model_info);
