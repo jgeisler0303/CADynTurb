@@ -1,6 +1,20 @@
-function [multi_cost, theta_min]= eco_multi_cost(param, sym_p, vwind, GBRatio, Rrot, phi_rot_d, Tgen, theta, dTgen, dtheta, tow_fa_d, rho, rpm_max, power_max, w_cost)
+function [multi_cost, theta_min, lambda_opt_num]= eco_multi_cost(param, model_syms)
+vwind = model_syms.p.by_name.vwind;
+GBRatio = model_syms.p.by_name.GBRatio;
+Rrot = model_syms.p.by_name.Rrot;
+rho = model_syms.p.by_name.rho;
+rpm_max = model_syms.p.by_name.rpm_max;
+power_max = model_syms.p.by_name.power_max;
+w_cost = model_syms.p.by_name.w_cost;
 
-[xs, ys, theta_opt_poly, lambda_opt]= calc_cp_max_spline(param);
+phi_rot_d = model_syms.qd.by_name.phi_rot_d;
+Tgen = model_syms.q.by_name.Tgen;
+theta = model_syms.q.by_name.theta;
+dTgen = model_syms.u.by_name.dTgen;
+dtheta = model_syms.u.by_name.dtheta;
+tow_fa_d = model_syms.qd.by_name.tow_fa_d;
+
+[xs, ys, theta_opt_poly, lambda_opt_num]= calc_cp_max_spline(param);
 cp_lam= casadi.interpolant('cp_lam', 'bspline', {xs}, ys);
 
 % 1 economic cost
@@ -14,9 +28,9 @@ multi_cost.eco= -cp_opt; % TODO: add normalizing offset in case of stagewise win
 omgen_= casadi.MX.sym('omgen_', 1); 
 lam_g= omgen_/GBRatio*Rrot/vwind;
 cp_g= cp_lam(lam_g);
-dcp_lam_fun = casadi.Function('dcp_lam_fun', {omgen_, sym_p}, {gradient(cp_g, omgen_)});
+dcp_lam_fun = casadi.Function('dcp_lam_fun', {omgen_, model_syms.p.vec}, {gradient(cp_g, omgen_)});
 om_gen_max= rpm_max/30*pi;
-dcp_dom_rot= dcp_lam_fun(om_gen_max, sym_p); % TODO: maybe with vwind_eff?
+dcp_dom_rot= dcp_lam_fun(om_gen_max, model_syms.p.vec); % TODO: maybe with vwind_eff?
 
 w_cp= w_cost(1);
 w_rpm_max= w_cost(2);
@@ -35,15 +49,15 @@ multi_cost.rpm_max= w_cost(2) * smooth_plus(phi_rot_d*GBRatio-om_gen_max+slope_c
 omrot_= casadi.MX.sym('omrot_', 1); 
 lam_= omrot_*Rrot/vwind;
 cp_= cp_lam(lam_);
-cp_lam_fun= casadi.Function('cp_lam_fun', {omrot_, sym_p}, {cp_});
+cp_lam_fun= casadi.Function('cp_lam_fun', {omrot_, model_syms.p.vec}, {cp_});
 
 Pwind= 0.5*rho*pi*Rrot*Rrot*vwind^3;
 om_rot_max= om_gen_max/GBRatio;
-Pmech= Pwind*cp_lam_fun(om_rot_max, sym_p);
+Pmech= Pwind*cp_lam_fun(om_rot_max, model_syms.p.vec);
 rated_operation= 0.5*(1+tanh(((Pmech-power_max)/power_max*100-10)*2/10));
 
 % min opt pitch angle
-om_gen_opt= lambda_opt*vwind/Rrot*GBRatio;
+om_gen_opt= lambda_opt_num*vwind/Rrot*GBRatio;
 om_gen_opt= min(om_gen_max, om_gen_opt); % TODO: add rpm min
 lambda_opt= om_gen_opt/GBRatio*Rrot/vwind;
 lambda_opt2= lambda_opt*lambda_opt;

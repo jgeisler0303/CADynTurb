@@ -18,7 +18,9 @@ w(lam<param.lambda(1))= 0.1*exp(lam(lam<param.lambda(1))-param.lambda(1));
 w(lam>param.lambda(1) & lam<param.lambda(end))= 1;
 w(lam>lam_max-2 & lam<lam_max+2)= 10;
 w(lam>lam_max-1 & lam<lam_max+1)= 50;
-ys= fminsearch(@(ys)rms(w.*(cp_max_-spline(xs, ys, lam))) + 0.1*rms(diff(ys, 3)), interp1(lam, cp_max_, xs));
+
+options = optimset('Display','off','MaxFunEvals',2000);
+ys= fminsearch(@(ys)rms(w.*(cp_max_-spline(xs, ys, lam))) + 0.1*rms(diff(ys, 3)), interp1(lam, cp_max_, xs), options);
 
 lambda= param.lambda(:);
 lambda2= lambda.*lambda;
