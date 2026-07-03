@@ -12,7 +12,7 @@ fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
 model_name= 'T1_opt';
 gen_dir= fullfile(model_dir, 'generated');
 
-files_to_generate= {'model_indices.m', 'model_parameters.m', '_acados.m', 'model_indices_ode1.m'};
+files_to_generate= {'model_indices.m', 'model_parameters.m', '_acados.m'};
 
 if ~exist('TEST_MODE', 'var') || ~TEST_MODE; return; end
 

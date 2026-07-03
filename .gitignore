@@ -5,6 +5,8 @@ matlab/my_configCADynTurb.m
 generated*
 simulator/test_eigen
 
+DISCON_sandbox_worker
+
 *.mat
 octave-workspace
 *~

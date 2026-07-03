@@ -1,8 +1,10 @@
-function writeModelParams(param, target_dir)
+function param_file = writeModelParams(param, target_dir, parameter_names)
+if ~exist('parameter_names', 'var')
+    run(fullfile(target_dir, 'model_parameters.m'))
+end
 
-run(fullfile(target_dir, 'model_parameters.m'))
-
-fid= fopen(fullfile(target_dir, 'params.txt'), 'w');
+param_file = fullfile(target_dir, 'params.txt');
+fid= fopen(param_file, 'w');
 for i= 1:length(parameter_names)
     if ~isnumeric(param.(parameter_names{i})), continue; end
     fprintf(fid, '%s ', parameter_names{i});

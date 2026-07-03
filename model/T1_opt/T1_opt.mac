@@ -8,7 +8,7 @@ STATES: [tow_fa, phi_rot, Tgen, theta];
 INPUTS: [dTgen, dtheta];
 OUTPUTS: [tow_fa_acc, gen_speed];
 EXTERNAL: [cm(), ct(), theta_deg(), lam(), Trot(tow_fa_d, phi_rot_d, vwind, theta), Fthrust(tow_fa_d, phi_rot_d, vwind, theta)];
-EXT_PARAM: [pit_min, GBRatio, w_cost[9], power_max, rpm_max, vwind, rho, Rrot, lambdaMin, lambdaMax, thetaMin, thetaMax, Arot];
+EXT_PARAM: [pit_min, GBRatio, w_cost[9], power_max, rpm_max, rpm_min, vwind, rho, Rrot, lambdaMin, lambdaMax, lambdaStep, thetaMin, thetaMax, thetaStep, Arot, cp_lut[25, 91], ct_lut[25, 91], vwind_vec[23], theta_full_lut[23], theta_opt_lut[25], lambda[25], lambda_opt];
 F_EXT: [Tgen_d-dTgen, theta_d-dtheta];
 
 /* Gravity vector */

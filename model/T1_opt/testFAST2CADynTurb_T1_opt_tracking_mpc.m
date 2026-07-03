@@ -10,7 +10,7 @@ sim_dir= fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow');
 wind_dir= fullfile(CADynTurb_dir, 'ref_sim/wind');
 ref_sims= get_ref_sims(sim_dir, '1p1*_maininput.outb');
 % desired wind speed for simulation
-v= 11;
+v= 9;
 i= find(ref_sims.vv==v & ref_sims.yaw==0)';
 d_FAST= loadData(ref_sims.files{i}, wind_dir, false, param);
 
@@ -26,7 +26,7 @@ model_indices
 clc
 cd(model_dir)
 
-nlp_solver_max_iter = 1;
+nlp_solver_max_iter = 2;
 use_shifting = true; % shift the solution from previous MPC call to initialize the next call
 n= inf; % limit simulation length
 
@@ -40,7 +40,7 @@ ocp_solver.set('nlp_solver_max_iter', nlp_solver_max_iter)
 
 % cost in nonlinear least squares form
 % x: tow_fa, Tgen, theta, tow_fa_d, phi_rot_d
-W_x = diag([0, 1e-6, 1e-1, 1e2, 1e5]);
+W_x = diag([0, 1e-6, 1e5, 1e2, 1e5]);
 % u: dTgen, dtheta
 W_u = diag([1e-6 1e-2]);
 
@@ -68,15 +68,19 @@ om_rot_ref = nan(length(VWIND), 1);
 P_ref = nan(length(VWIND), 1);
 Tgen_ref = nan(length(VWIND), 1);
 theta_ref = nan(length(VWIND), 1);
+status = nan(length(VWIND), 1);
 
 % simulation loop
+f = waitbar(0, 'Simulation in progress...');
 for k= 1:length(VWIND)
+    waitbar(k/length(VWIND), f, 'Simulation in progress...');
+
     % downsample MPC rate, i.e. only call the MPC every mpc_rate_f samples
     if mod(k-1, mpc_rate_f)==0
         param.vwind = VWIND(k);
 
         % Calculate tracking references for current wind speed
-        [om_rot_ref(k), Tgen_ref(k), theta_ref(k), P_ref(k)] = calc_tracking_references(param);
+        [om_rot_ref(k), Tgen_ref(k), theta_ref(k), P_ref(k)] = calc_tracking_references(VWIND(k), param);
 
         % reset solver and prepare with parameters and initial conditions
         ocp_solver.reset();
@@ -86,7 +90,8 @@ for k= 1:length(VWIND)
         
         ocp_solver.set('constr_x0', x0)
 
-        yref = zeros(model_syms.q.n+model_syms.qd.n+model_syms.u.n, 1);
+        yref = zeros(model_info.q.n+model_info.qd.n+model_info.u.n, 1);
+        yref(idx_name.idx.theta)= theta_ref(k);
         yref(idx_name.idx.Tgen)= Tgen_ref(k);
         yref(idx_name.idx.phi_rot_d)= om_rot_ref(k);
 
@@ -94,7 +99,7 @@ for k= 1:length(VWIND)
         for j = 1:(N-1)
             ocp_solver.set('cost_y_ref', yref, j);
         end
-        ocp_solver.set('cost_y_ref_e', yref(1:model_syms.q.n+model_syms.qd.n), N);
+        ocp_solver.set('cost_y_ref_e', yref(1:model_info.q.n+model_info.qd.n), N);
 
         % set simulation initial state
         if k==1
@@ -140,8 +145,8 @@ for k= 1:length(VWIND)
         ocp_solver.set('constr_x0', x0)
 
         ocp_solver.solve();
-
-        if ocp_solver.get('status')~=0 && ocp_solver.get('status')~=2
+        status(k) = ocp_solver.get('status');
+        if status(k)~=0 && status(k)~=2
             error('Solver status %d in step %d', ocp_solver.get('status'), k)
         end
         solU = ocp_solver.get('u');
@@ -151,12 +156,14 @@ for k= 1:length(VWIND)
     [q(:, k+1), dq(:, k+1), ddq]= T1B1cG_mex(q(:, k), dq(:, k), ddq, [VWIND(k), Tgen(k) theta(k)], m_param, ts);
 
     % update control rate inputs for next time step
-    Tgen(k+1)= Tgen(k) + ts*solU(model_syms.u.idx.dTgen, 1);
-    theta(k+1)= theta(k) + ts*solU(model_syms.u.idx.dtheta, 1);
+    Tgen(k+1)= Tgen(k) + ts*solU(model_info.u.idx.dTgen, 1);
+    theta(k+1)= theta(k) + ts*solU(model_info.u.idx.dtheta, 1);
 end
+close(f)
 
 t= (0:n)*ts;
 idx= 1:n+1;
+idx_= 1:n;
 
 clf
 tiledlayout(7, 1)
@@ -166,19 +173,19 @@ grid on
 title('vwind')
 
 nexttile
-plot(t, -theta/pi*180)
-title('pitch')
+plot(t, -theta/pi*180, t(idx_), theta_ref/-pi*180, '.')
+title('pitch', 'set point')
 grid on
 
 nexttile
-plot(t, dq(phi_rot_idx, idx)/pi*30*param.GBRatio, t, t*0+param.rpm_max)
+plot(t, dq(phi_rot_idx, idx)/pi*30*param.GBRatio, t(idx_), om_rot_ref/pi*30*param.GBRatio, '.')
 title('speed')
 legend('gen speed', 'set point')
 grid on
 
 nexttile
 TorqueMax= param.power_max/(param.rpm_max/30*pi);
-plot(t, Tgen/1e3, t, Tgen*0+TorqueMax/1e3)
+plot(t, Tgen/1e3, t(idx_), Tgen_ref/1e3, '.')
 legend('gen trq', 'set point')
 title('torque')
 grid on
