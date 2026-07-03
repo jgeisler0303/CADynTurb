@@ -11,7 +11,7 @@ end
 
 d_in= collectBlades(loadFAST(file_path));
 % load rotor average wind speed
-if strncmp(file, 'impuls', 6)
+if strncmp(file, 'impuls', 6) || strncmp(file, 'ramp', 4) || strncmp(file, 'stairs', 6)
     d_in = add_uniform_wind(d_in, file_path);
 else
     d_in= add_average_wind(d_in, wind_dir, file, R, x_rot);
