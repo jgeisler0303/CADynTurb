@@ -88,4 +88,5 @@ if ~isempty(getenv('ACADOS_INSTALL_DIR'))
     end
 end
 
+setenv('CADYNTURB_DIR', CADynTurb_dir)
 setenv('CADYNTURB_SETUP', 'SUCCESS')
