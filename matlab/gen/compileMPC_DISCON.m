@@ -1,11 +1,26 @@
-function compileMPC_DISCON(ocp_model, ocp_gen_dir, ekf_gen_dir, CADynTurb_dir, win_on_linux)
+function out_name = compileMPC_DISCON(ocp_model, ocp_gen_dir, ekf_gen_dir, CADynTurb_dir, win_on_linux, tracking)
+if ~exist('win_on_linux', 'var')
+    win_on_linux = false; % Default value if not provided
+end
+if ~exist('tracking', 'var')
+    tracking = false; % Default value if not provided
+end
 
+if tracking
+    MPC_source = 'DISCON_tracking_MPC.cpp';
+else
+    MPC_source = 'DISCON_MPC.cpp';
+end    
 sources= {
-    fullfile(CADynTurb_dir, 'simulator', 'DISCON_MPC.cpp')
+    fullfile(CADynTurb_dir, 'simulator', MPC_source)
     fullfile(ocp_gen_dir, 'c_generated_code', ['acados_solver_' ocp_model '_acados.c'])
     };
 
-out_name= ['DISCON_' strrep(ocp_model, '_opt', '') '_MPC.dll'];
+if tracking
+    out_name= ['DISCON_' strrep(ocp_model, '_opt', '') '_tracking_MPC.dll'];
+else
+    out_name= ['DISCON_' strrep(ocp_model, '_opt', '') '_MPC.dll'];
+end
 
 dependencies= {};
 
