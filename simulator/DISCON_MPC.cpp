@@ -183,8 +183,9 @@ void init_MPC(avrSwap_t *avrSwap, int32_t *aviFail, char *accInfile, char *avcOu
 
     // Further Setup
     // TODO: make constraints parameters
-    if(further_ocp_setup(acados_ocp_capsule)) {
-        snprintf(avcMsg, avrSwap->max_msg_char, "Something went wrong during further OCP setup. Terminating.");
+    const char *ocp_setup_err = further_ocp_setup(acados_ocp_capsule);
+    if(ocp_setup_err) {
+        snprintf(avcMsg, avrSwap->max_msg_char, "Further OCP setup failed: %s Terminating.", ocp_setup_err);
         aviFail[0]= 1;
         EXPAND_AND_CONCAT(OPC_PREFIX,_acados_acados_free)(acados_ocp_capsule);
         EXPAND_AND_CONCAT(OPC_PREFIX,_acados_acados_free_capsule)(acados_ocp_capsule);
