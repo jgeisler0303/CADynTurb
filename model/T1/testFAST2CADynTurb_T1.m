@@ -1,10 +1,14 @@
-%%
-clc
-model_dir= fileparts(matlab.desktop.editor.getActiveFilename);
-if isempty(model_dir), model_dir= pwd; end
+%% Demonstration/Test simulation of a model with tower fa and rotational DOF using cpp compiled standalone and mex function versions
 
+%% Setup environment
+% RUN THE ENTIRE SCRIPT ONCE (F5), NOT THE CELL, OTHERWISE mfilename will not work!
+% The rest of this schript is intended to be run cell by cell (Crtl+Enter)
+
+clc
+model_dir= fileparts(mfilename('fullpath'));
 CADynTurb_dir= fullfile(model_dir, '../..');
-run(fullfile(CADynTurb_dir, 'matlab/setupCADynTurb'))
+addpath(fullfile(CADynTurb_dir, 'matlab'))
+setupCADynTurb()
 
 fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
 
@@ -12,6 +16,8 @@ model_name= 'T1';
 gen_dir= fullfile(model_dir, 'generated');
 
 files_to_generate= {'_ode1.hpp', '_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m', 'model_indices_ode1.m', '_descriptor_form.hpp'};
+
+if ~exist('TEST_MODE', 'var') || ~TEST_MODE; return; end
 
 %% calculate parameters
 cd(model_dir)

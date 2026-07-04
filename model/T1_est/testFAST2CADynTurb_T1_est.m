@@ -1,10 +1,12 @@
-%% set configuration variables
-clc
-model_dir= fileparts(matlab.desktop.editor.getActiveFilename);
-if isempty(model_dir), model_dir= pwd; end
+%% Demonstration/Test Extended Kalman Filter with wind estimation model with tower fa and rotational DOF
+%% Setup environment
+% RUN THE ENTIRE SCRIPT ONCE (F5), NOT THE CELL, OTHERWISE mfilename will not work!
+% The rest of this schript is intended to be run cell by cell (Crtl+Enter)
 
-CADynTurb_dir= fullfile(model_dir, '../..');
-run(fullfile(CADynTurb_dir, 'matlab/setupCADynTurb'))
+clc
+model_dir= fileparts(mfilename('fullpath'));
+addpath(fullfile(CADynTurb_dir, 'matlab'))
+setupCADynTurb()
 
 fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
 
@@ -12,6 +14,8 @@ model_name= 'T1_est';
 gen_dir= fullfile(model_dir, 'generated');
 
 files_to_generate= {'_ode1.hpp', '_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m', 'model_indices_ode1.m'};
+
+if ~exist('TEST_MODE', 'var') || ~TEST_MODE; return; end
 
 %% calculate parameters
 cd(model_dir)

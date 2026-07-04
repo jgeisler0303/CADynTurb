@@ -1,3 +1,5 @@
+%% Demonstration/Test Solving a tracking OCP (using acados) based on a model with tower fa and rotational DOF
+
 %% Setup environment
 % RUN THE ENTIRE SCRIPT ONCE (F5), NOT THE CELL, OTHERWISE mfilename will not work!
 % The rest of this schript is intended to be run cell by cell (Crtl+Enter)
@@ -5,7 +7,8 @@
 clc
 model_dir= fileparts(mfilename('fullpath'));
 CADynTurb_dir= fullfile(model_dir, '../..');
-run(fullfile(CADynTurb_dir, 'matlab/setupCADynTurb'))
+addpath(fullfile(CADynTurb_dir, 'matlab'))
+setupCADynTurb(true)
 
 model_name= 'T1_opt';
 gen_dir= fullfile(model_dir, 'generated_tracking_ocp');
