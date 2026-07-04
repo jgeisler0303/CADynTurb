@@ -34,6 +34,7 @@ if acados_wanted
 end
 
 %% Paths must be set before we can use AMPoWS
+addpath(fileparts(mfilename("fullpath")))
 set_path
 
 %% Install OpenFast and make reference simulations
