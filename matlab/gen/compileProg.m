@@ -78,6 +78,7 @@ if ~isempty(libs) && iscell(libs)
     libs= strcat(' -l', libs);
     libs= strcat(libs{:});
 end
+
 if isunix && ~(exist('win_on_linux', 'var') && win_on_linux)
     libs= [libs ' -ldl'];
 end
@@ -90,6 +91,18 @@ if iscell(flags)
     flags= strcat(flags{:});
 end
 
+% MinGW on Windows can hit the COFF section limit for very large generated
+% translation units. Enable bigobj and reduce debug info size by default.
+cpp_cmd= getenv('CPP');
+if (ispc || win_on_linux) && ...
+        (contains(lower(cpp_cmd), 'g++') || contains(lower(cpp_cmd), 'mingw') || contains(lower(cpp_cmd), 'w64-mingw32'))
+    if ~contains(flags, '-Wa,-mbig-obj')
+        flags= [flags ' -Wa,-mbig-obj'];
+    end
+    if contains(flags, '-g') && ~contains(flags, '-g0')
+        flags= [flags ' -g0'];
+    end
+end
 
 fprintf('Compiling standalone simulator "%s"\n', out_name)
 
