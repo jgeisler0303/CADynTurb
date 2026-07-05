@@ -10,6 +10,7 @@
     #include <winbase.h>
     #include <windef.h>
     #include <system_error>
+    #include <sstream>
 #else
     #error Platform not supported
 #endif
@@ -64,32 +65,30 @@ public:
     }
 
     #if _WIN32
-    std::string getLastErrorStr() {
-//     LPVOID lpMsgBuf;
-//     LPVOID lpDisplayBuf;
-//     DWORD dw = GetLastError(); 
-// 
-//     FormatMessage(
-//         FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-//         FORMAT_MESSAGE_FROM_SYSTEM |
-//         FORMAT_MESSAGE_IGNORE_INSERTS,
-//         NULL,
-//         dw,
-//         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-//         (LPTSTR) &lpMsgBuf,
-//         0, NULL );
-// 
-//     // Display the error message and exit the process
-// 
-//     lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT, 
-//         (lstrlen((LPCTSTR)lpMsgBuf) + lstrlen((LPCTSTR)lpszFunction) + 40) * sizeof(TCHAR)); 
-//     StringCchPrintf((LPTSTR)lpDisplayBuf, 
-//         LocalSize(lpDisplayBuf) / sizeof(TCHAR),
-//         TEXT("%s failed with error %d: %s"), 
-//         lpszFunction, dw, lpMsgBuf); 
-//     MessageBox(NULL, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK); 
-        DWORD error = GetLastError();
-        return std::system_category().message(error);
+    std::string getLastErrorStr(DWORD error = GetLastError()) {
+        LPSTR buffer = nullptr;
+        const DWORD size = FormatMessageA(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+            nullptr,
+            error,
+            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            reinterpret_cast<LPSTR>(&buffer),
+            0,
+            nullptr);
+
+        std::ostringstream os;
+        os << "WinError " << error;
+        if (size > 0 && buffer != nullptr) {
+            std::string msg(buffer, size);
+            while (!msg.empty() && (msg.back() == '\r' || msg.back() == '\n' || msg.back() == ' ')) {
+                msg.pop_back();
+            }
+            os << ": " << msg;
+            LocalFree(buffer);
+        } else {
+            os << ": " << std::system_category().message(error);
+        }
+        return os.str();
     }
     #endif
 
@@ -124,9 +123,10 @@ public:
                 throw DISCON_Exception("Error getting DISCON function from dll \"" + dll_name + "\": " + std::string(error));
             }
         #elif _WIN32
-            handle= LoadLibrary(dll_name.c_str());
+            handle = LoadLibraryExA(dll_name.c_str(), nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
             if(!handle) {
-                throw DISCON_Exception("Error opening handle for dll \"" + dll_name + "\": " + getLastErrorStr());
+                DWORD error = GetLastError();
+                throw DISCON_Exception("Error opening handle for dll \"" + dll_name + "\": " + getLastErrorStr(error));
             }
         
             DISCON= (DISCON_t) GetProcAddress(handle, "DISCON");
@@ -134,7 +134,8 @@ public:
                 FreeLibrary(handle);
                 handle= nullptr;
                 
-                throw DISCON_Exception("Error getting DISCON function from dll \"" + dll_name + "\": " + getLastErrorStr());
+                DWORD error = GetLastError();
+                throw DISCON_Exception("Error getting DISCON function from dll \"" + dll_name + "\": " + getLastErrorStr(error));
             }
         #endif        
     }

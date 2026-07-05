@@ -5,7 +5,9 @@
 //   2) Worker executable (build with -DDISCON_SANDBOX_WORKER_MAIN): has main().
 // Compile hint:
 //   - Build MEX: mex -D_USE_MATH_DEFINES DISCON_sandbox_mex.cpp
+//   - Build MEX (MinGW on Windows): mex -D_USE_MATH_DEFINES LINKLIBS="$LINKLIBS -lws2_32" DISCON_sandbox_mex.cpp
 //   - Build worker: g++ -DDISCON_SANDBOX_WORKER_MAIN DISCON_sandbox_mex.cpp -o DISCON_sandbox_worker
+//   - Build worker (MinGW on Windows): g++ -DDISCON_SANDBOX_WORKER_MAIN -D_USE_MATH_DEFINES DISCON_sandbox_mex.cpp -o DISCON_sandbox_worker.exe -lws2_32
 
 #include <math.h>
 #include <stdio.h>
@@ -18,15 +20,6 @@
 #include <stdexcept>
 #include <fstream>
 #include <sstream>
-
-#include "discon_interface.h"
-
-#ifndef DISCON_SANDBOX_WORKER_MAIN
-#include "mex.h"
-#ifndef HAVE_OCTAVE
-#include "matrix.h"
-#endif
-#endif
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -47,6 +40,15 @@ static const SocketHandle kInvalidSocket = INVALID_SOCKET;
 #include <sys/stat.h>
 typedef int SocketHandle;
 static const SocketHandle kInvalidSocket = -1;
+#endif
+
+#include "discon_interface.h"
+
+#ifndef DISCON_SANDBOX_WORKER_MAIN
+#include "mex.h"
+#ifndef HAVE_OCTAVE
+#include "matrix.h"
+#endif
 #endif
 
 enum input_idx1 {
@@ -754,12 +756,51 @@ static std::string quote_cmd_arg(const std::string& s) {
     return out;
 }
 
+#ifdef _WIN32
+enum WorkerWindowMode {
+    worker_window_hidden = 0,
+    worker_window_minimized = 1,
+    worker_window_normal = 2
+};
+
+static WorkerWindowMode get_worker_window_mode() {
+    // Default is hidden to avoid popping up a console from MATLAB/MEX.
+    const char* mode_env = getenv("DISCON_WORKER_WINDOW");
+    if (mode_env == NULL || mode_env[0] == '\0') {
+        return worker_window_hidden;
+    }
+
+    if (_stricmp(mode_env, "normal") == 0) {
+        return worker_window_normal;
+    }
+    if (_stricmp(mode_env, "minimized") == 0 || _stricmp(mode_env, "min") == 0) {
+        return worker_window_minimized;
+    }
+    if (_stricmp(mode_env, "hidden") == 0 || _stricmp(mode_env, "hide") == 0) {
+        return worker_window_hidden;
+    }
+
+    return worker_window_hidden;
+}
+#endif
+
 static bool launch_worker_process(const std::string& worker_path, uint16_t port, const std::string& log_path, std::string& err) {
 #ifdef _WIN32
     STARTUPINFOA si;
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     ZeroMemory(&g_sandbox.pi, sizeof(g_sandbox.pi));
+
+    DWORD creation_flags = 0;
+    WorkerWindowMode window_mode = get_worker_window_mode();
+    if (window_mode == worker_window_hidden) {
+        creation_flags |= CREATE_NO_WINDOW;
+        si.dwFlags |= STARTF_USESHOWWINDOW;
+        si.wShowWindow = SW_HIDE;
+    } else if (window_mode == worker_window_minimized) {
+        si.dwFlags |= STARTF_USESHOWWINDOW;
+        si.wShowWindow = SW_SHOWMINNOACTIVE;
+    }
 
     std::string cmd = quote_cmd_arg(worker_path) + " --worker-port " + std::to_string(port) + " --worker-log " + quote_cmd_arg(log_path);
     std::vector<char> cmd_buf(cmd.begin(), cmd.end());
@@ -771,7 +812,7 @@ static bool launch_worker_process(const std::string& worker_path, uint16_t port,
         NULL,
         NULL,
         FALSE,
-        0,
+        creation_flags,
         NULL,
         NULL,
         &si,
