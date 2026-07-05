@@ -1,6 +1,5 @@
-function d = add_uniform_wind(d, file_path)
+function d = add_uniform_wind(d, uni_wind_file)
 
-uni_wind_file = strrep(file_path, '_maininput.outb', '_uni_wind.wnd');
 wind_tab = readUniformWind(uni_wind_file);
 [wind_time, idx] = unique(wind_tab.Time);
 

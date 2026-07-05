@@ -7,9 +7,9 @@ arguments
     x_rot (:,1) double = []
 end
 
-if strcmp(wind_dir(end-3:end), '.bts')
+if endsWith(wind_dir, '.bts')
     bts_path= wind_dir;
-elseif strcmp(wind_dir(end-3:end), '.wnd')
+elseif endsWith(wind_dir, '.wnd')
     wnd_path= wind_dir;
     bts_path= strrep(wnd_path, '.wnd', '.bts');
 else

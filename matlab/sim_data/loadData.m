@@ -7,12 +7,45 @@ else
     x_rot = [];
 end
 
-[~, file]= fileparts(file_path);
+[~, file, ext]= fileparts(file_path);
+if ext==".fst"
+    % read configuration
+    fst_dir= fileparts(file_path);
+    fstConfig = FAST2Matlab(file_path);
+    inflowConfig = GetFASTPar_Subfile(fstConfig, 'InflowFile', fst_dir);
+    WindType = GetFASTPar(inflowConfig, 'WindType');
+    switch WindType
+        case 2
+            uniform_wind_file = GetFASTPar(inflowConfig, 'Filename_Uni');
+            uniform_wind_file = GetFullFileName(uniform_wind_file, fst_dir);
+        case 3
+            turb_wind_file = GetFASTPar(inflowConfig, 'FileName_BTS');
+            wind_dir = GetFullFileName(turb_wind_file, fst_dir);
+        case 4
+            turb_wind_file = GetFASTPar(inflowConfig, 'FileNameRoot');
+            wind_dir = [GetFullFileName(turb_wind_file, fst_dir) '.wnd'];
+        otherwise
+            error('Currently only WindType 2, 3 and 4 supported.')
+    end
 
+    elastodynConfig = GetFASTPar_Subfile(fstConfig, 'EDFile', fst_dir);
+    R = GetFASTPar(elastodynConfig, 'TipRad');
+    OverHang = GetFASTPar(elastodynConfig, 'OverHang');
+    tilt = GetFASTPar(elastodynConfig, 'ShftTilt')/180*pi;
+    x_rot = -OverHang * cos(tilt);
+    file_path = strrep(file_path, '.fst', '.outb');
+end
+
+if ~exist(file_path, 'file')
+    error('The OpenFAST simulation result file "%s" does not exist. Did you forget to run the simulation?', file_path)
+end
 d_in= collectBlades(loadFAST(file_path));
 % load rotor average wind speed
-if strncmp(file, 'impuls', 6) || strncmp(file, 'ramp', 4) || strncmp(file, 'stairs', 6)
-    d_in = add_uniform_wind(d_in, file_path);
+if strncmp(file, 'impuls', 6) || strncmp(file, 'ramp', 4) || strncmp(file, 'stairs', 6) || exist('uniform_wind_file', 'var')
+    if ~exist('uniform_wind_file', 'var')
+        uniform_wind_file = strrep(file_path, '_maininput.outb', '_uni_wind.wnd');
+    end
+    d_in = add_uniform_wind(d_in, uniform_wind_file);
 else
     d_in= add_average_wind(d_in, wind_dir, file, R, x_rot);
 end
