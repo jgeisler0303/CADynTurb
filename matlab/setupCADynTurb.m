@@ -28,12 +28,14 @@ check_installCompiler(CADynTurb_dir)
 check_installAeroDyn_Driver(CADynTurb_dir)
 check_installEigen3(CADynTurb_dir)
 check_installIECWind(CADynTurb_dir)
+check_installDISCONmex(CADynTurb_dir)
 if acados_wanted
     check_installGit(CADynTurb_dir)
     check_installAcados(CADynTurb_dir)
 end
 
 %% Paths must be set before we can use AMPoWS
+addpath(fileparts(mfilename("fullpath")))
 set_path
 
 %% Install OpenFast and make reference simulations
