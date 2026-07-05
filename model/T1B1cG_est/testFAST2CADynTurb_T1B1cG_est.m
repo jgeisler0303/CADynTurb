@@ -38,14 +38,14 @@ compileModel(model_name, model_dir, gen_dir, files_to_generate)
 sim_dir= fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow');
 wind_dir= fullfile(CADynTurb_dir, 'ref_sim/wind');
 
-ref_sims= get_ref_sims(sim_dir, '1p1*_maininput.outb');
+ref_sims= get_ref_sims(sim_dir, '1p1*_maininput.fst');
 
 %% simulate mex model
 cd(gen_dir)
 
 v= 12;
 for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
-    d_FAST= loadData(ref_sims.files{i}, wind_dir, false, param);
+    d_FAST= loadData(ref_sims.files{i});
 
     d_sim= run_simulation(model_name, d_FAST, param);
     d_sim_RK1= run_simulation([model_name '_RK1'], d_FAST, param);
@@ -71,7 +71,7 @@ param_RK1.fixedQxx= zeros(nx, 1);
 
 v= 12;
 for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
-    d_in= loadData(ref_sims.files{i}, wind_dir, false, param);
+    d_in= loadData(ref_sims.files{i});
 
     ss1= std(d_in.Wind1VelX.Data);
     param.fixedQxx(ix_vwind)= (ss1/200)^2;

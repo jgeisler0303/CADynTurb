@@ -60,9 +60,7 @@ plot_timeseries_multi({d_sim, d_mex, d_mexM}, {'RAWS', 'BlPitchC', 'LSSTipVxa', 
 cd(gen_dir_m)
 fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow/impulse_URef-12_maininput.fst');
 % fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow/impulse_URef-12_maininput.fst');
-wind_dir= '';
-
-d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir, false, param);
+d_FAST= loadData(fast_file);
 
 [~, base_file]= fileparts(fast_file);
 sim_file= fullfile(gen_dir_m, [strrep(base_file, '_maininput', '') '.outb']);

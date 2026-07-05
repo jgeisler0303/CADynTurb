@@ -8,11 +8,11 @@ addpath(sim_model_path)
 % load wind data from FAST simulation
 sim_dir= fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow');
 wind_dir= fullfile(CADynTurb_dir, 'ref_sim/wind');
-ref_sims= get_ref_sims(sim_dir, '1p1*_maininput.outb');
+ref_sims= get_ref_sims(sim_dir, '1p1*_maininput.fst');
 % desired wind speed for simulation
-v= 9;
+v= 12;
 i= find(ref_sims.vv==v & ref_sims.yaw==0)';
-d_FAST= loadData(ref_sims.files{i}, wind_dir, false, param);
+d_FAST= loadData(ref_sims.files{i});
 
 % load simulation model parameters
 cd(sim_model_path)

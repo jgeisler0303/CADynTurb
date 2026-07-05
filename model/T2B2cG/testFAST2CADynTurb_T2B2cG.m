@@ -44,7 +44,7 @@ options= '-a 0.99';
 sim_file= fullfile(gen_dir, [strrep(base_file, '_maininput', '') '.outb']);
 d_sim= sim_standalone(fullfile(gen_dir, ['sim_' model_name]), fast_file, sim_file, options);
 
-d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir, false, param);
+d_FAST= loadData(fast_file);
 
 % plot_timeseries_cmp(d_sim, d_FAST, {'RAWS', 'BlPitchC', 'HSShftV', 'GenTq', 'Q_TFA1', 'Q_TSS1', 'RootMxc', 'RootMyc'}, {}, {}, {}, 30);
 plot_timeseries_cmp(d_sim, d_FAST, {'RAWS', 'BlPitchC', 'HSShftV', 'GenTq', 'Q_TFA1', 'Q_TSS1', 'Q_BF1', 'Q_BE1'});

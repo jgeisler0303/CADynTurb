@@ -1,4 +1,5 @@
 %% Demonstration/Test simulation of a model with tower fa, rotational and individual blade DOF using cpp compiled standalone and mex function versions
+% ATTENTION: Generating this model will take a very long time (hours)
 
 %% Setup environment
 % RUN THE ENTIRE SCRIPT ONCE (F5), NOT THE CELL, OTHERWISE mfilename will not work!
@@ -55,7 +56,7 @@ sim_file= fullfile(gen_dir, [strrep(base_file, '_maininput', '') '.outb']);
 
 d_sim= sim_standalone(fullfile(gen_dir, ['sim_' model_name]), fast_file, sim_file, '-a 0.99');
 
-d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir, 0, param);
+d_FAST= loadData(fast_file);
 
 % plot_timeseries_cmp(d_FAST, d_sim, {'RAWS', 'BlPitchC1', 'LSSTipPxa', 'YawBrTDxp', {'RootMxb1' 'RootMxb2' 'RootMxb3'}, {'RootMyb1' 'RootMyb2' 'RootMyb3'}})
 plot_timeseries_cmp(d_FAST, d_sim, {'RAWS', 'RootMxb1' 'RootMxb2' 'RootMxb3', 'RootMyb1' 'RootMyb2' 'RootMyb3'})

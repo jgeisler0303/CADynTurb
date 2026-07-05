@@ -1,3 +1,5 @@
+%% Demonstration/Test simulation of optimization model with tower fa and rotational DOF and rate inputs for torquw and pitch
+
 %% Setup environment
 % RUN THE ENTIRE SCRIPT ONCE (F5), NOT THE CELL, OTHERWISE mfilename will not work!
 % The rest of this schript is intended to be run cell by cell (Crtl+Enter)
@@ -24,12 +26,14 @@ if exist('./params.mat', 'file')
 else
     [param, ~, tw_sid, bd_sid]= FAST2CADynTurb(fst_file, {[1 -2]}, 1);
 end
+param.cp_lut = param.cp';
 param.vwind= 12;
 param.power_max= 5000e3;
 param.rpm_max= 1200;
 param.rpm_min= 800;
 param.pit_min= 0;
 param.w_cost= zeros(9, 1); % unused, but needed by eco_multi_cost
+[param.vwind_vec, param.theta_full_lut, param.theta_opt_lut, param.lambda_opt] = pitch_ref_lut(param); % unused but needed by ocp
 
 %% Generate and compile all source code
 clc
@@ -46,8 +50,7 @@ acados_model_func= str2func([model_name '_acados']);
 %% Run acados simulation
 cd(gen_dir)
 fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow/impulse_URef-12_maininput.fst');
-wind_dir= '';
-d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir, false, param);
+d_FAST= loadData(fast_file);
 
 d_acados= run_acados_simulation(acados_model_solver, d_FAST, param, model_info);
 plot_timeseries_cmp(d_FAST, d_acados, {'RAWS', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'});

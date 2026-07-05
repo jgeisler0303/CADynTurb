@@ -51,7 +51,7 @@ makeCADynEKFMex([model_name '_RK1'], model_dir, gen_dir_m)
 sim_dir= fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow');
 wind_dir= fullfile(CADynTurb_dir, 'ref_sim/wind');
 
-ref_sims= get_ref_sims(sim_dir, '1p1*_maininput.outb');
+ref_sims= get_ref_sims(sim_dir, '1p1*_maininput.fst');
 
 %% run Kalman filter
 cd(gen_dir_m)
@@ -63,7 +63,7 @@ param.fixedQxx= zeros(length(ekf_config.estimated_states), 1);
 
 v= 12;
 for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
-    d_in= loadData(ref_sims.files{i}, wind_dir, false, param);
+    d_in= loadData(ref_sims.files{i});
 
     ss1= std(d_in.Wind1VelX.Data);
     param.fixedQxx(ix_vwind)= (ss1/200)^2;
@@ -81,7 +81,7 @@ param.fixedQxx= zeros(nx, 1);
 
 v= 12;
 for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
-    d_in= loadData(ref_sims.files{i}, wind_dir, false, param);
+    d_in= loadData(ref_sims.files{i});
 
     ss1= std(d_in.Wind1VelX.Data);
     param.fixedQxx(vwind_idx)= (ss1/200)^2;
@@ -94,7 +94,7 @@ end
 %% compare mex simulations CADyn vs CADynM
 v= 11;
 for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
-    d_FAST= loadData(ref_sims.files{i}, wind_dir, false, param);
+    d_FAST= loadData(ref_sims.files{i});
 
     cd(gen_dir)
     d_sim= run_simulation(model_name, d_FAST, param);
@@ -107,7 +107,7 @@ end
 cd(gen_dir_m)
 v= 11;
 for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
-    d_FAST= loadData(ref_sims.files{i}, wind_dir, false, param);
+    d_FAST= loadData(ref_sims.files{i});
 
     d_sim= run_simulation(model_name, d_FAST, param);
     d_sim_RK1= run_simulation([model_name '_RK1'], d_FAST, param);

@@ -14,12 +14,7 @@ clc
 cd(ocp_path)
 
 tracking = true;
-% copy relevant file to gen_dir
-copyfile(fullfile(model_dir, 'T1_mpc_def.hpp'), gen_dir)
-copyfile(fullfile(model_dir, 'T1_mpc_params.hpp'), gen_dir)
-copyfile(fullfile(model_dir, 'calc_tracking_references.hpp'), gen_dir)
-DISCON_MPC_dll = compileMPC_DISCON(model_name, ocp_path, ekf_path, CADynTurb_dir, false, tracking);
-copyfile(fullfile('./c_generated_code', ['libacados_ocp_solver_' model_name '_acados.so']), ocp_path)
+DISCON_MPC_dll = compileMPC_DISCON(model_name, model_dir, ocp_path, ekf_path, CADynTurb_dir, false, tracking);
 
 % write parameter file with all necessary parameters
 run(fullfile(ocp_path, 'model_parameters.m'))
@@ -34,14 +29,14 @@ DLL_InFile = writeModelParams(param, ocp_path, parameter_names);
 %% Possible OpenFAST simulations as reference and for wind
 sim_dir= fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow');
 wind_dir= fullfile(CADynTurb_dir, 'ref_sim/wind');
-ref_sims= get_ref_sims(sim_dir, '1p1*_maininput.outb');
+ref_sims= get_ref_sims(sim_dir, '1p1*_maininput.fst');
 
 %% Run step-by-step simulation by calling the DISCON via a mex function
 % select wind speed
 v= 12;
 i= find(ref_sims.vv==v & ref_sims.yaw==0)';
 ref_sim_file = ref_sims.files{i};
-d_FAST= loadData(ref_sim_file, wind_dir, false, param);
+d_FAST= loadData(ref_sim_file);
 
 % set DISCON parameters, that are usually set in ServoDyn file
 DISCON_param.comm_interval= 0.01;
@@ -152,6 +147,8 @@ title('tow fa rate')
 grid on
 
 %% Run comparison of MPC and classic DISCON via standalone simulators
+clc
+cd(gen_dir)
 figures_dir = 'Classic_vs_MPC';
 status = mkdir(figures_dir);
 
@@ -161,8 +158,10 @@ for v = VV
     i= find(ref_sims.vv==v & ref_sims.yaw==0)';
     ref_sim_file = ref_sims.files{i};
 
-    d_T1 = sim_standalone(fullfile(sim_model_path, 'sim_T1'), strrep(ref_sim_file, '.outb', '.fst'));
-    d_T1_MPC = sim_standalone(fullfile(sim_model_path, 'sim_T1'), strrep(ref_sim_file, '.outb', '.fst'), '', '', false, fullfile(ocp_path, DISCON_MPC_dll), DLL_InFile);
+    disp('#### Simulating classic DISCON')
+    d_T1 = sim_standalone(fullfile(sim_model_path, 'sim_T1'), ref_sim_file);
+    disp('#### Simulating MPC DISCON')
+    d_T1_MPC = sim_standalone(fullfile(sim_model_path, 'sim_T1'), ref_sim_file, '', '', false, fullfile(ocp_path, DISCON_MPC_dll), DLL_InFile);
     plot_timeseries_cmp(d_T1, d_T1_MPC, {'RAWS', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'})
 
     [~, fig_name] = fileparts(ref_sim_file);

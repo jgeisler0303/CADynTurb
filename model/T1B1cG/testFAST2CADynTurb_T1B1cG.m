@@ -43,7 +43,7 @@ wind_dir= '';
 sim_file= fullfile(gen_dir, [strrep(base_file, '_maininput', '') '.outb']);
 d_sim= sim_standalone(fullfile(gen_dir, ['sim_' model_name]), fast_file, sim_file, '-a 0.99');
 
-d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir, false, param);
+d_FAST= loadData(fast_file);
 
 plot_timeseries_cmp(d_sim, d_FAST, {'RAWS', 'BlPitchC', 'HSShftV', 'Q_DrTr', 'YawBrTDxp', 'Q_BF1'});
 

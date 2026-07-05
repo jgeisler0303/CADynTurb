@@ -48,7 +48,7 @@ fun_f = Function('funf', {model.x, model.u, model.p}, {model.f_descr_expr});
 
 fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow/impulse_URef-12_maininput.fst');
 wind_dir= '';
-d_FAST= loadData(strrep(fast_file, '.fst', '.outb'), wind_dir, false, param);
+d_FAST= loadData(fast_file);
 
 [x_ref, u_ref]= convertFAST_CADyn(d_FAST, param, 0);
 

@@ -1,9 +1,5 @@
 %% Demonstration/Test Extended Kalman Filter with wind estimation and tower fa and ss, rotational, collective flap and edge DOF using cpp compiled standalone simulator
 
-% This model is genereated using the new CADynM tool
-% If you want to use this experimental feature, please clone
-% https://github.com/jgeisler0303/CADynM in a directory parallel to CADynTurb
-
 %% Setup environment
 % RUN THE ENTIRE SCRIPT ONCE (F5), NOT THE CELL, OTHERWISE mfilename will not work!
 % The rest of this schript is intended to be run cell by cell (Crtl+Enter)
@@ -42,7 +38,7 @@ compileModel(model_name, model_dir, gen_dir, files_to_generate)
 sim_dir= fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow');
 wind_dir= fullfile(CADynTurb_dir, 'ref_sim/wind');
 
-ref_sims= get_ref_sims(sim_dir, '1p1*_maininput.outb');
+ref_sims= get_ref_sims(sim_dir, '1p1*_maininput.fst');
 
 %% run Kalman filter
 clc
@@ -62,7 +58,7 @@ param_RK1.fixedQxx= zeros(nx, 1);
 
 v= 12;
 for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
-    d_in= loadData(ref_sims.files{i}, wind_dir, false, param);
+    d_in= loadData(ref_sims.files{i});
 
     ss1= std(d_in.Wind1VelX.Data);
     param.fixedQxx(ix_vwind)= (ss1/200)^2;
