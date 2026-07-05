@@ -86,7 +86,12 @@ end
 
 function compileStandalone(out_name, model_name, includes, dependencies, sim_cpp, win_on_linux)
 defines= {['MODEL_NAME=' model_name]};
-if ~endsWith(model_name, '_est') && recompile([model_name '_mex.' mexext], [dependencies sim_cpp])
+if ispc
+    exeext = '.exe';
+else
+    exeext = '';
+end
+if ~endsWith(model_name, '_est') && recompile([out_name exeext], [dependencies; {sim_cpp}])
     fprintf('Compiling standalone simulator\n')
     compileProg(sim_cpp, out_name, dependencies, defines, includes, {}, {}, {}, win_on_linux)
 else
