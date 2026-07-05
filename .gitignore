@@ -6,6 +6,7 @@ generated*
 simulator/test_eigen
 
 DISCON_sandbox_worker
+downloads
 
 *.mat
 octave-workspace
