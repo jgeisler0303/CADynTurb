@@ -86,6 +86,7 @@ end
 
 function compileStandalone(out_name, model_name, includes, dependencies, sim_cpp, win_on_linux)
 defines= {['MODEL_NAME=' model_name]};
+
 if ispc
     exeext = '.exe';
 else
