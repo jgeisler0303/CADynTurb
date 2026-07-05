@@ -1,6 +1,10 @@
 function makeCADynEKFMex(model_name, model_dir, gen_dir, options)
 if ~exist('options', 'var')
-    options= '-O2 -march=native';
+    if ispc
+        options= '-O2'; % there seems to be a problem with native option in windows
+    else
+        options= '-O2 -march=native';
+    end
 end
 
 CADynTurb_dir= fileparts(fileparts(fileparts(mfilename('fullpath'))));
