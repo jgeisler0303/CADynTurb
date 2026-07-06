@@ -28,7 +28,6 @@ check_installCompiler(CADynTurb_dir)
 check_installAeroDyn_Driver(CADynTurb_dir)
 check_installEigen3(CADynTurb_dir)
 check_installIECWind(CADynTurb_dir)
-check_installDISCONmex(CADynTurb_dir)
 if acados_wanted
     check_installGit(CADynTurb_dir)
     check_installAcados(CADynTurb_dir)
@@ -65,6 +64,8 @@ setenv('cagem_path', fullfile(CADynTurb_dir, '../CADyn/gen/cagem.mac'))
 
 mc = mex.getCompilerConfigurations('C++', 'Selected');
 setenv('CPP', mc.Details.CompilerExecutable)
+% the following call needs CPP environment and full path
+check_installDISCONmex(CADynTurb_dir)
 
 if ~isempty(getenv('ACADOS_INSTALL_DIR'))
     if ~ispc
