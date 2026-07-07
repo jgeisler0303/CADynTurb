@@ -36,15 +36,14 @@ writeModelParams(param, gen_dir);
 
 %% make acados model
 clc
-clear mex
-acados_model_solver= make_acados_sim(param, model_name, gen_dir);
+[acados_model_solver, model_info]= make_acados_sim(param, model_name, gen_dir);
 
 %% run acados simulation
 fast_file= fullfile(CADynTurb_dir, 'ref_sim/sim_no_inflow/impulse_URef-12_maininput.fst');
 d_FAST= loadData(fast_file);
 
 load('params_config.mat')
-d_acados= run_acados_simulation(acados_model_solver, d_FAST, p_);
+d_acados= run_acados_simulation(acados_model_solver, d_FAST, p_, model_info);
 plot_timeseries_cmp(d_acados, d_FAST, {'RAWS', 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'});
 
 %% make acados standalone simulator
