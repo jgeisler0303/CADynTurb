@@ -3,7 +3,12 @@ arguments
     acados_wanted = false;
 end
 
-if strcmp(getenv('CADYNTURB_SETUP'), 'SUCCESS'), return, end
+if acados_wanted
+    already_setup = strcmp(getenv('CADYNTURB_SETUP'), 'SUCCESS_WITH_ACADOS');
+else
+    already_setup = startsWith(getenv('CADYNTURB_SETUP'), 'SUCCESS');
+end
+if already_setup, return, end
 
 %% check path
 CADynTurb_dir= fileparts(fileparts(mfilename('fullpath')));
@@ -92,4 +97,9 @@ if ~isempty(getenv('ACADOS_INSTALL_DIR'))
 end
 
 setenv('CADYNTURB_DIR', CADynTurb_dir)
-setenv('CADYNTURB_SETUP', 'SUCCESS')
+
+if acados_wanted
+    setenv('CADYNTURB_SETUP', 'SUCCESS_WITH_ACADOS')
+else
+    setenv('CADYNTURB_SETUP', 'SUCCESS')
+end
