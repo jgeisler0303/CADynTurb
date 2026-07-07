@@ -1,7 +1,7 @@
 function check_installDISCONmex(CADynTurb_dir)
 old_dir = pwd;
 cd(fullfile(CADynTurb_dir, 'simulator'))
-if ~exist(['DISCON_sandbox_mex' mexext], 'file')
+if ~exist(['DISCON_sandbox_mex.' mexext], 'file')
     if ispc
         mex -D_USE_MATH_DEFINES LINKLIBS="$LINKLIBS -lws2_32" DISCON_sandbox_mex.cpp
     else
