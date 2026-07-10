@@ -65,8 +65,8 @@ for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
     [d_est1, ~, ~, ~, ~, ~, Q, R, x_end_est, P_end]= run_simulation(model_name, d_in, param, [], 0, 2, [], []);
     d_est2                                         = run_simulation(model_name, d_in, param, [], 0, 2, Q, R, [], x_end_est, P_end);
 
-    [d_est_RK1_1, ~, ~, ~, ~, ~, Q, R, x_end_est, P_end]= run_simulation([model_name '_RK1'], d_in, param, [], 0, 2, [], []);
-    d_est_RK1_2                                         = run_simulation([model_name '_RK1'], d_in, param, [], 0, 2, Q, R, [], x_end_est, P_end);
+    [d_est_RK1_1, ~, ~, ~, ~, ~, Q, R, x_end_est, P_end]= run_simulation([model_name '_RK1'], d_in, param_RK1, [], 0, 2, [], []);
+    d_est_RK1_2                                         = run_simulation([model_name '_RK1'], d_in, param_RK1, [], 0, 2, Q, R, [], x_end_est, P_end);
 
     % plot_timeseries_multi({d_in, d_est1, d_est2}, {{'RAWS', 'RAWS'}, 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'})
     plot_timeseries_multi({d_in, d_est2, d_est_RK1_1, d_est_RK1_2}, {{'RAWS'}}, {'FAST', 'Newmark', 'RK1 1', 'RK1 2'})
