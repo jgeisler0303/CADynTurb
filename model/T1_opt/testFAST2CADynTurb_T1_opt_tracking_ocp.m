@@ -255,3 +255,4 @@ for i = 1:length(VW)
 end
 
 legend(sprintfc('v=%d', VW), 'Location','southoutside', 'Orientation','horizontal')
+linkaxes(findobj(gcf, 'Type', 'Axes'), 'x')
