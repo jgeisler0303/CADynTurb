@@ -24,7 +24,7 @@ function [om_rot_ref, Tgen_ref, theta_ref, P_ref] = calc_tracking_references(vwi
     om_rot_ref = max(min(om_rot_opt, param.rpm_max/30*pi/param.GBRatio), param.rpm_min/30*pi/param.GBRatio);
     
     % Calculate tip speed ratio, optimal pitch, and power coefficient at optimal pitch
-    lam = om_rot_ref * param.Rrot / vwind;
+    lam = clip(om_rot_ref * param.Rrot / vwind, param.lambda(1), param.lambda(end));
     theta_opt = interp1(param.lambda, theta_opt_lut, lam, 'linear');
     cp_opt = max(interp2(param.lambda, param.theta, param.cp, lam, theta_opt, 'linear', 0), 0);
     
