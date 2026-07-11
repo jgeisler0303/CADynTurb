@@ -14,20 +14,32 @@ if exist('DISCON_dll', 'var')
     servoConfig = FAST2Matlab(fullfile(fst_dir, ServoFileFile));
 
     % change DISCON
-    servoConfig = SetFASTPar(servoConfig, 'DLL_FileName', DISCON_dll);
-    if exist('DLL_InFile')
-        servoConfig = SetFASTPar(servoConfig, 'DLL_InFile', DLL_InFile);
+    [DISCON_path, DISCON_file, ext] = fileparts(DISCON_dll);
+    mpc_name = strrep(DISCON_file, 'DISCON_', '');
+    DISCON_file = [DISCON_file ext];
+    copyfile(DISCON_dll, fst_dir);
+    ocp_model = [strrep(strrep(mpc_name, '_MPC', ''), '_tracking', ''), '_opt'];
+    if isunix
+        lib_name = ['libacados_ocp_solver_' ocp_model '_acados.so'];
+    else
+        lib_name = ['acados_ocp_solver_' ocp_model '_acados.dll'];
+    end
+    copyfile(fullfile(DISCON_path, lib_name), fst_dir)
+    servoConfig = SetFASTPar(servoConfig, 'DLL_FileName', DISCON_file);
+    if exist('DLL_InFile', 'var')
+        [~, DLL_InFile_file, ext] = fileparts(DLL_InFile);
+        DLL_InFile_file = [DLL_InFile_file ext];
+        copyfile(DLL_InFile, fst_dir);        
+        servoConfig = SetFASTPar(servoConfig, 'DLL_InFile', DLL_InFile_file);
     end
 
     % write ServoFile to temporary file
     [~, ~, ext] = fileparts(ServoFileFile);
-    [~, DISCON_file] = fileparts(DISCON_dll);
-    MPC_ID = strrep(DISCON_file, 'DISCON_', '');
-    ServoFileFile_mpc = strrep(fullfile(fst_dir, ServoFileFile), ext, [MPC_ID ext]);
-    Matlab2FAST(servoConfig, fullfile(fst_dir, ServoFileFile), ServoFileFile_mpc);
+    ServoFileFile_mpc = strrep(ServoFileFile, ext, [mpc_name ext]);
+    Matlab2FAST(servoConfig, fullfile(fst_dir, ServoFileFile), fullfile(fst_dir, ServoFileFile_mpc));
 
     fstConfig = SetFASTPar(fstConfig, 'ServoFile', ServoFileFile_mpc);
-    fast_config_mpc = strrep(fast_config, '.fst', [MPC_ID '.fst']);
+    fast_config_mpc = strrep(fast_config, '.fst', [mpc_name '.fst']);
     Matlab2FAST(fstConfig, fast_config, fast_config_mpc);
     fast_config = fast_config_mpc;
 end
