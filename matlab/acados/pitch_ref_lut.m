@@ -9,7 +9,7 @@ function [VW, theta_full_lut, theta_opt_lut, lambda_opt] = pitch_ref_lut(param)
 
     for i = 1:length(VW)
         cp_target = param.power_max / (param.rho/2.0 * param.Arot * VW(i)^3);
-        lambda_full = om_rot_max * param.Rrot / VW(i);
+        lambda_full = clip(om_rot_max * param.Rrot / VW(i), param.lambda(1), param.lambda(end));
         theta_full_lut(i) = fminbnd(@(theta) (interp2(param.lambda, param.theta, param.cp, lambda_full, theta, 'linear', 0) - cp_target)^2, theta_min, theta_max);
     end
 
