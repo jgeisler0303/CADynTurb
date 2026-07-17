@@ -44,15 +44,11 @@ cd(gen_dir)
 
 param.Tadapt= 30;
 
-% Newmark beta
+% prepare EKF
 model_indices
 ekf_config= T1_est_ekf_config;
 ix_vwind= find(ekf_config.estimated_states==vwind_idx);
 param.fixedQxx= zeros(length(ekf_config.estimated_states), 1);
-% RK1
-param_RK1 = param;
-model_indices_ode1
-param_RK1.fixedQxx= zeros(nx, 1);
 
 v= 12;
 for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
@@ -60,27 +56,10 @@ for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
 
     ss1= std(d_in.Wind1VelX.Data);
     param.fixedQxx(ix_vwind)= (ss1/200)^2;
-    param_RK1.fixedQxx(vwind_idx)= (ss1/200)^2;
 
     [d_est1, ~, ~, ~, ~, ~, Q, R, x_end_est, P_end]= run_simulation(model_name, d_in, param, [], 0, 2, [], []);
     d_est2                                         = run_simulation(model_name, d_in, param, [], 0, 2, Q, R, [], x_end_est, P_end);
 
-    [d_est_RK1_1, ~, ~, ~, ~, ~, Q, R, x_end_est, P_end]= run_simulation([model_name '_RK1'], d_in, param_RK1, [], 0, 2, [], []);
-    d_est_RK1_2                                         = run_simulation([model_name '_RK1'], d_in, param_RK1, [], 0, 2, Q, R, [], x_end_est, P_end);
-
-    % plot_timeseries_multi({d_in, d_est1, d_est2}, {{'RAWS', 'RAWS'}, 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'})
-    plot_timeseries_multi({d_in, d_est2, d_est_RK1_1, d_est_RK1_2}, {{'RAWS'}}, {'FAST', 'Newmark', 'RK1 1', 'RK1 2'})
-end
-
-%% compare mex simulations
-cd(gen_dir)
-
-v= 11;
-for  i= find(ref_sims.vv==v & ref_sims.yaw==0)'
-    d_FAST= loadData(ref_sims.files{i});
-
-    d_sim= run_simulation(model_name, d_FAST, param);
-    d_sim_RK1= run_simulation([model_name '_RK1'], d_FAST, param);
-
-    plot_timeseries_multi({d_FAST, d_sim, d_sim_RK1}, {'RAWS', 'BlPitchC', 'GenTq', 'LSSTipVxa', 'YawBrTDxp'}, {'FAST', 'Newmark', 'RK1'});
+    plot_timeseries_multi({d_in, d_est1, d_est2}, {{'RAWS', 'RAWS'}, 'BlPitchC', 'LSSTipVxa', 'GenTq', 'YawBrTDxp'})
+    % plot_timeseries_multi({d_in, d_est2}, {{'RAWS'}}, {'FAST', 'EKF'})
 end
