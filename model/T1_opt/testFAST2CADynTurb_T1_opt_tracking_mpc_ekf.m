@@ -17,12 +17,13 @@ gen_dir= fullfile(model_dir, 'generated_tracking_ocp');
 
 files_to_generate= {'model_indices.m', 'model_parameters.m', '_acados.m', '_param.hpp'};
 
-sim_model_path= fullfile(model_dir, '../T1/generated');
+sim_model_name = 'T1';
+sim_model_path= fullfile(model_dir, '..', sim_model_name, 'generated');
 addpath(sim_model_path)
 
-ekf_model = 'T1_est';
-ekf_path= fullfile(model_dir, '../T1_est/generated');
-addpath(ekf_path)
+ekf_model_name = 'T1_est';
+ekf_model_path= fullfile(model_dir, '..', ekf_model_name, 'generated');
+addpath(ekf_model_path)
 
 if ~exist('TEST_MODE', 'var') || ~TEST_MODE; return; end
 
@@ -53,6 +54,11 @@ clc
 cd(model_dir)
 genCode([model_name '.mac'], gen_dir, files_to_generate, param, tw_sid, bd_sid, [0 1]);
 copyfile(fullfile(model_dir, 'calc_tracking_references.m'), gen_dir)
+
+% make sure sim model exists
+buildModel(sim_model_name, fileparts(sim_model_path), sim_model_path, {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m'});
+% make sure ekf exists
+buildModel(ekf_model_name, fileparts(ekf_model_path), ekf_model_path, {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m'});
 
 %% make acados OCP
 clc
@@ -150,7 +156,7 @@ phi_rot_idx_sim = phi_rot_idx;
 nq_sim = nq;
 
 %% Prepare EKF
-cd(ekf_path)
+cd(ekf_model_path)
 
 model_indices
 tow_fa_idx_ekf= tow_fa_idx;
@@ -224,8 +230,8 @@ ss1= std(d_FAST.Wind1VelX.Data);
 ekf_param.fixedQxx(ekf_ix_vwind)= (ss1/600)^2;
 
 % run EKF once with FAST simulation to get good initial guess for covariances
-cd(ekf_path)
-[~, ~, ~, ~, ~, ~, Q, R, ~, P]= run_simulation(ekf_model, d_FAST, ekf_param, [], 0, 2, [], []);
+cd(ekf_model_path)
+[~, ~, ~, ~, ~, ~, Q, R, ~, P]= run_simulation(ekf_model_name, d_FAST, ekf_param, [], 0, 2, [], []);
 cd(model_dir)
 
 

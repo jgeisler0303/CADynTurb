@@ -85,7 +85,7 @@ appliedForces():= (
         RMG_IP: applyForceInLocal(unitZ*thrustForceRadius, -sin(theta)*unitY*OoPforce, T0G[i]),
         appliedF[i]: appliedF[i] + RMG_IP[1],
         appliedM[i]: appliedM[i] + RMG_IP[2],
-        print("OoPForce: ", RMG_OoP[1]+RMG_IP[1]),
+        /*print("OoPForce: ", RMG_OoP[1]+RMG_IP[1]),*/
 
 
     /* Torque */

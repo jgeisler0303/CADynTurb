@@ -15,6 +15,10 @@ fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
 model_name= 'T1_opt';
 gen_dir= fullfile(model_dir, 'generated_tracking_ocp');
 
+sim_model_name = 'T1B1cG';
+sim_model_path= fullfile(model_dir, '..', sim_model_name, 'generated');
+addpath(sim_model_path)
+
 files_to_generate= {'model_indices.m', 'model_parameters.m', '_acados.m', '_param.hpp'};
 
 if ~exist('TEST_MODE', 'var') || ~TEST_MODE; return; end
@@ -47,6 +51,9 @@ clear mex
 cd(model_dir)
 genCode([model_name '.mac'], gen_dir, files_to_generate, param, tw_sid, bd_sid, [0 1]);
 copyfile(fullfile(model_dir, 'calc_tracking_references.m'), gen_dir)
+
+% make sure sim model exists
+buildModel(sim_model_name, fileparts(sim_model_path), sim_model_path, {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m'});
 
 %% make acados OCP
 clear mex
@@ -131,9 +138,6 @@ ocp.solver_options.nlp_solver_max_iter = 200; % This value cann not be exceeded 
 ocp_solver = AcadosOcpSolver(ocp);
 
 %% Prepare MPC simulation, use a slightly more detailed model for simulation (T1B1cG), this of course, must be generated first
-sim_model_path= fullfile(model_dir, '../T1B1cG/generated');
-addpath(sim_model_path)
-
 % load wind data from FAST simulation
 sim_dir= fullfile(CADynTurb_dir, 'ref_sim/sim_dyn_inflow');
 ref_sims= get_ref_sims(sim_dir, '1p1*_maininput.fst');
