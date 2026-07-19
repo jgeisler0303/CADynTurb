@@ -5,6 +5,7 @@
 
 clc
 model_dir= fileparts(mfilename('fullpath'));
+CADynTurb_dir= fullfile(model_dir, '../..');
 addpath(fullfile(CADynTurb_dir, 'matlab'))
 setupCADynTurb()
 
@@ -13,7 +14,7 @@ fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
 model_name= 'T1_est';
 gen_dir= fullfile(model_dir, 'generated');
 
-files_to_generate= {'_ode1.hpp', '_param.hpp', 'model_indices.m', 'model_indices_ode1.m'};
+files_to_generate= {'_ode1.hpp', '_param.hpp', 'model_indices.m', 'model_indices_ode1.m', 'model_parameters.m'};
 
 if ~exist('TEST_MODE', 'var') || ~TEST_MODE; return; end
 
