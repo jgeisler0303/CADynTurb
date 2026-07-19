@@ -14,7 +14,7 @@ copyfile(fullfile(model_dir, [model_name '_ekf_config.m']), gen_dir)
 if endsWith(model_name, '_RK1')
     fprintf('Compiling CADynEKF_RK1_mex with options "%s"\n', options)
     makeMex([model_name '_ekf_mex'], ...                                                            % mex name
-        {'.', fullfile(CADynTurb_dir, '../CADyn/src'), fullfile(CADynTurb_dir, 'simulator')}, ...   % includes
+        {'.', fullfile(CADynTurb_dir, '../CADyn/src'), fullfile(CADynTurb_dir, 'simulator'), getenv('EIGEN3')}, ...   % includes
         '', ...                                                                                     % options
         ['$CXXFLAGS -std=c++17 -Wall -fdiagnostics-show-option ' options], ...                      % CXXFLAGS
         ['MBSystem=' model_name(1:end-4)], ...                                                      % define
@@ -24,7 +24,7 @@ else
     
     fprintf('Compiling CADynEKF_mex with options "%s"\n', options)
     makeMex(fullfile(gen_dir, [model_name '_ekf_mex.cpp']), ...
-        {'.', fullfile(CADynTurb_dir, '../CADyn/src'), fullfile(CADynTurb_dir, 'simulator')}, ...
+        {'.', fullfile(CADynTurb_dir, '../CADyn/src'), fullfile(CADynTurb_dir, 'simulator'), getenv('EIGEN3')}, ...
         '', ...
         ['$CXXFLAGS -std=c++17 -Wall -fdiagnostics-show-option ' options]);
 end
