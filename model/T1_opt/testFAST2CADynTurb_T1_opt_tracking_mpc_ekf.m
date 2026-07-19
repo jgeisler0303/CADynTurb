@@ -10,14 +10,17 @@ CADynTurb_dir= fullfile(model_dir, '../..');
 addpath(fullfile(CADynTurb_dir, 'matlab'))
 setupCADynTurb(true)
 
+fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
+
 model_name= 'T1_opt';
 gen_dir= fullfile(model_dir, 'generated_tracking_ocp');
 
 files_to_generate= {'model_indices.m', 'model_parameters.m', '_acados.m', '_param.hpp'};
 
-sim_model_path= fullfile(model_dir, '../T1B1cG/generated');
+sim_model_path= fullfile(model_dir, '../T1/generated');
 addpath(sim_model_path)
 
+ekf_model = 'T1_est';
 ekf_path= fullfile(model_dir, '../T1_est/generated');
 addpath(ekf_path)
 
@@ -53,6 +56,7 @@ copyfile(fullfile(model_dir, 'calc_tracking_references.m'), gen_dir)
 
 %% make acados OCP
 clc
+clear mex
 cd(gen_dir)
 
 % Solver settings
@@ -139,9 +143,9 @@ m_param= load('params_config.mat', 'p_');
 m_param= m_param.p_;
 model_indices
 tow_fa_idx_sim = tow_fa_idx;
-bld_flp_idx_sim = bld_flp_idx;
+% bld_flp_idx_sim = bld_flp_idx;
 phi_rot_idx_sim = phi_rot_idx;
-phi_gen_idx_sim = phi_gen_idx;
+% phi_gen_idx_sim = phi_gen_idx;
 
 nq_sim = nq;
 
@@ -158,7 +162,7 @@ ekf_ix_vwind= find(ekf_config.estimated_states==vwind_idx);
 ekf_param= load('params_config.mat', 'p_');
 ekf_param= ekf_param.p_;
 
-ekf_param.Tadapt= 30;
+ekf_param.Tadapt= 60;
 ekf_param.fixedQxx= zeros(length(ekf_config.estimated_states), 1);
 ekf_param.adaptScale= ones(1, ny);
 ekf_param.fixedRxx= zeros(ny, 1);
@@ -215,13 +219,15 @@ q_est= x_ref(1:nq, :);
 dq_est= x_ref(nq+1:end, :);
 ddq_est= zeros(nq, 1);
 
-P= [];
-Q= [];
-R= [];
-
 % set EKF adaption rate according to mean wind
 ss1= std(d_FAST.Wind1VelX.Data);
-ekf_param.fixedQxx(ekf_ix_vwind)= (ss1/200)^2;
+ekf_param.fixedQxx(ekf_ix_vwind)= (ss1/600)^2;
+
+% run EKF once with FAST simulation to get good initial guess for covariances
+cd(ekf_path)
+[~, ~, ~, ~, ~, ~, Q, R, ~, P]= run_simulation(ekf_model, d_FAST, ekf_param, [], 0, 2, [], []);
+cd(model_dir)
+
 
 VWIND= d_FAST.RAWS.Data(1:n);
 Tgen= nan(1, length(VWIND));
@@ -244,10 +250,10 @@ for k= 1:length(VWIND)
 
     % downsample MPC rate, i.e. only call the MPC every mpc_rate_f samples
     if mod(k-1, mpc_rate_f)==0
-        param.vwind = VWIND(k);
+        param.vwind = q_est(vwind_idx_ekf, k);
 
         % Calculate tracking references for current wind speed
-        [om_rot_ref(k), Tgen_ref(k), theta_ref(k), P_ref(k)] = calc_tracking_references(VWIND(k), param);
+        [om_rot_ref(k), Tgen_ref(k), theta_ref(k), P_ref(k)] = calc_tracking_references(param.vwind, param);
 
         % reset solver and prepare with parameters and initial conditions
         ocp_solver.reset();
@@ -271,15 +277,15 @@ for k= 1:length(VWIND)
         % set simulation initial state
         if k==1
             q(tow_fa_idx_sim, k) = 0.15;
-            q(bld_flp_idx_sim, k) = 0;
+            % q(bld_flp_idx_sim, k) = 0;
             q(phi_rot_idx_sim, k) = 0;
-            q(phi_gen_idx_sim, k) = 0;
+            % q(phi_gen_idx_sim, k) = 0;
             dq(tow_fa_idx_sim, k) = 0;
-            dq(bld_flp_idx_sim, k) = 0;
-            dq(phi_rot_idx_sim, k) = om_rot_ref(k);
-            dq(phi_gen_idx_sim, k) = om_rot_ref(k)*param.GBRatio;
-            Tgen(k)= Tgen_ref(k);
-            theta(k)= theta_ref(k);
+            % dq(bld_flp_idx_sim, k) = 0;
+            dq(phi_rot_idx_sim, k) = om_rot_ref(1);
+            % dq(phi_gen_idx_sim, k) = om_rot_ref(1)*param.GBRatio;
+            Tgen(k)= Tgen_ref(1);
+            theta(k)= theta_ref(1);
         end
 
         % set mpc initial state
@@ -290,9 +296,6 @@ for k= 1:length(VWIND)
         x0(idx_name.idx.phi_rot_d)= dq_est(phi_rot_idx_ekf, k);
 
         if k==1
-            Tgen(1)= Tgen_ref(k);
-            theta(1)= theta_ref(k);
-
             x_traj_init= repmat(x0, 1, N+1);
             u_traj_init= zeros(2, N);
         elseif use_shifting
@@ -324,14 +327,14 @@ for k= 1:length(VWIND)
     end
 
     % simulate one time step with the current control input
-    [q(:, k+1), dq(:, k+1), ddq, y]= T1B1cG_mex(q(:, k), dq(:, k), ddq, [VWIND(k), Tgen(k) theta(k)], m_param, ts);
+    [q(:, k+1), dq(:, k+1), ddq, y]= T1_mex(q(:, k), dq(:, k), ddq, [VWIND(k), Tgen(k) theta(k)], m_param, ts);
 
     % update control rate inputs for next time step
     Tgen(k+1)= Tgen(k) + ts*solU(model_info.u.idx.dTgen, 1);
     theta(k+1)= theta(k) + ts*solU(model_info.u.idx.dtheta, 1);
 
-    % run EKF
-    [q_est_, dq_est_, ddq_est_, ~, Q, R, ~, ~, ~, ~, ~, P]= T1_est_ekf_mex(q_est(:, k), dq_est(:, k), [0 Tgen(k) theta(k); 0 0 0]', [[0; 0] y], ekf_param, ts, ekf_config.x_ul, ekf_config.x_ll, Q, R, ekf_param.Tadapt, ekf_param.adaptScale, ekf_param.fixedQxx, ekf_param.fixedRxx, opts, P, ddq_est);
+    % run EKF (use EKF simulator and only perform one step)
+    [q_est_, dq_est_, ddq_est_, ~, Q, R, ~, ~, ~, ~, ~, P]= T1_est_ekf_mex(q_est(:, k), dq_est(:, k), [0 Tgen(k) theta(k); 0 0 0]', [[0; 0] y(1:2)], ekf_param, ts, ekf_config.x_ul, ekf_config.x_ll, Q, R, ekf_param.Tadapt, ekf_param.adaptScale, ekf_param.fixedQxx, ekf_param.fixedRxx, opts, P, ddq_est);
     q_est(:, k+1)= q_est_(:, 2);
     dq_est(:, k+1)= dq_est_(:, 2);
     ddq_est= ddq_est_(:, 2);    

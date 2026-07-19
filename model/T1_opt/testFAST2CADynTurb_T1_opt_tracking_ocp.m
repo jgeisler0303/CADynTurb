@@ -10,6 +10,8 @@ CADynTurb_dir= fullfile(model_dir, '../..');
 addpath(fullfile(CADynTurb_dir, 'matlab'))
 setupCADynTurb(true)
 
+fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
+
 model_name= 'T1_opt';
 gen_dir= fullfile(model_dir, 'generated_tracking_ocp');
 
@@ -19,6 +21,7 @@ if ~exist('TEST_MODE', 'var') || ~TEST_MODE; return; end
 
 %% calculate parameters
 clc
+clear mex
 cd(model_dir)
 if exist('./params.mat', 'file')
     load('params.mat')

@@ -10,6 +10,8 @@ CADynTurb_dir= fullfile(model_dir, '../..');
 addpath(fullfile(CADynTurb_dir, 'matlab'))
 setupCADynTurb(true)
 
+fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
+
 model_name= 'T1_opt';
 gen_dir= fullfile(model_dir, 'generated_tracking_ocp');
 
@@ -41,11 +43,13 @@ param.w_cost= zeros(1, 9); % just some values, not needed here
 
 %% generate and compile all source code
 clc
+clear mex
 cd(model_dir)
 genCode([model_name '.mac'], gen_dir, files_to_generate, param, tw_sid, bd_sid, [0 1]);
 copyfile(fullfile(model_dir, 'calc_tracking_references.m'), gen_dir)
 
 %% make acados OCP
+clear mex
 clc
 cd(gen_dir)
 
@@ -234,10 +238,10 @@ for k= 1:length(VWIND)
             q(phi_gen_idx, k) = 0;
             dq(tow_fa_idx, k) = 0;
             dq(bld_flp_idx, k) = 0;
-            dq(phi_rot_idx, k) = om_rot_ref(k);
-            dq(phi_gen_idx, k) = om_rot_ref(k)*param.GBRatio;
-            Tgen(k)= Tgen_ref(k);
-            theta(k)= theta_ref(k);
+            dq(phi_rot_idx, k) = om_rot_ref(1);
+            dq(phi_gen_idx, k) = om_rot_ref(1)*param.GBRatio;
+            Tgen(k)= Tgen_ref(1);
+            theta(k)= theta_ref(1);
         end
 
         % set mpc initial state
@@ -248,9 +252,6 @@ for k= 1:length(VWIND)
         x0(idx_name.idx.phi_rot_d)= dq(phi_rot_idx, k);
 
         if k==1
-            Tgen(1)= Tgen_ref(k);
-            theta(1)= theta_ref(k);
-
             x_traj_init= repmat(x0, 1, N+1);
             u_traj_init= zeros(2, N);
         elseif use_shifting
@@ -285,7 +286,7 @@ for k= 1:length(VWIND)
     theta(k+1)= theta(k) + ts*solU(model_info.u.idx.dtheta, 1);
 end
 close(f)
-%%
+
 t= (0:n)*ts;
 idx= 1:n+1;
 idx_= 1:n;
@@ -299,7 +300,6 @@ title('vwind')
 
 nexttile
 plot(t, -theta/pi*180, t(idx_), theta_ref/-pi*180, '.')
-hold on, for i= 1:10:length(solX), plot(((i-1)*10+(1:size(solX{i}, 2))-1)*T/N, solX{i}(3, :)/-pi*180,'c.-'), end
 title('pitch', 'set point')
 grid on
 

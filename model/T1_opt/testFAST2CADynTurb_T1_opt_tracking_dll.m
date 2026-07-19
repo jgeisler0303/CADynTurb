@@ -10,6 +10,8 @@ CADynTurb_dir= fullfile(model_dir, '../..');
 addpath(fullfile(CADynTurb_dir, 'matlab'))
 setupCADynTurb(true)
 
+fst_file= fullfile(CADynTurb_dir, '5MW_Baseline/5MW_Land_DLL_WTurb.fst');
+
 model_name= 'T1_opt';
 gen_dir= fullfile(model_dir, 'generated_tracking_ocp');
 
@@ -46,7 +48,6 @@ param.max_pit_rate= 7/180*pi;
 param.w_cost= zeros(1, 9); % just some values, not needed here
 [param.vwind_vec, param.theta_full_lut, param.theta_opt_lut, param.lambda_opt] = pitch_ref_lut(param);
 
-
 %% generate and compile all source code
 clc
 cd(model_dir)
@@ -55,6 +56,7 @@ copyfile(fullfile(model_dir, 'calc_tracking_references.m'), gen_dir)
 
 %% make acados OCP
 clc
+clear mex
 cd(gen_dir)
 
 % Solver settings
