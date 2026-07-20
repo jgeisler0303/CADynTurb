@@ -1,4 +1,4 @@
-function param = buildModel(model_name, model_dir, gen_dir, files_to_generate, compile)
+function param = buildModel(model_name, model_dir, gen_dir, files_to_generate, fst_file, compile)
 if ~exist('compile', 'var')
     compile = true;
 end

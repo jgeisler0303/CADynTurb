@@ -53,7 +53,7 @@ genCode([model_name '.mac'], gen_dir, files_to_generate, param, tw_sid, bd_sid, 
 copyfile(fullfile(model_dir, 'calc_tracking_references.m'), gen_dir)
 
 % make sure sim model exists
-buildModel(sim_model_name, fileparts(sim_model_path), sim_model_path, {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m'});
+buildModel(sim_model_name, fileparts(sim_model_path), sim_model_path, {'_direct.hpp', '_param.hpp', 'model_indices.m', 'model_parameters.m'}, fst_file);
 
 %% make acados OCP
 clear mex
