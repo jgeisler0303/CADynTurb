@@ -59,7 +59,7 @@ if isempty(acados_dir)
                     fprintf('The path "%s" doesn''t seem to point to a valid acados library inluding CasADi.\n', acados_dir)
                 end
             end
-            pathname = uigetfile('', 'Please choose the location of the acados library.');
+            pathname = uigetdir('', 'Please choose the location of the acados repo.');
             if isequal(pathname, 0)
                 tf_install = false;
                 tf_choose = false;

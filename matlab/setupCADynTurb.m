@@ -39,6 +39,14 @@ end
 
 %% Paths must be set before we can use AMPoWS
 addpath(fileparts(mfilename("fullpath")))
+%% reload the now hopefully complete environment variables
+try
+    my_configCADynTurb
+catch e
+end
+setenv('cagem_path', fullfile(CADynTurb_dir, '../CADyn/gen/cagem.mac'))
+mc = mex.getCompilerConfigurations('C++', 'Selected');
+setenv('CPP', mc.Details.CompilerExecutable)
 set_path
 
 %% Install OpenFast and make reference simulations
@@ -59,17 +67,6 @@ if ~strcmp(getenv('NO_REF_SIM'), 'true')
 end
 
 setMexCompiler
-
-%% reload the now hopefully complete environment variables
-try
-    my_configCADynTurb
-catch e
-end
-
-setenv('cagem_path', fullfile(CADynTurb_dir, '../CADyn/gen/cagem.mac'))
-
-mc = mex.getCompilerConfigurations('C++', 'Selected');
-setenv('CPP', mc.Details.CompilerExecutable)
 
 % the following call needs CPP environment and full path
 check_installDISCONmex(CADynTurb_dir)

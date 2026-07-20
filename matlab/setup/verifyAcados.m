@@ -37,7 +37,7 @@ if isunix
 else
     acadoslib= fullfile(acados_dir, 'lib/acados.lib');
 end
-acados_casadi= fullfile(getenv('ACADOS_INSTALL_DIR'), ['external/casadi-matlab/casadiMEX.' mexext]);
+acados_casadi= fullfile(acados_dir, ['external/casadi-matlab/casadiMEX.' mexext]);
 
 correct = acados_fully_cloned && exist(acadoslib, 'file') && (exist(acados_casadi, 'file') || is_casadi_available());
 
