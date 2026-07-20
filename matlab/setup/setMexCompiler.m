@@ -2,7 +2,7 @@ function setMexCompiler
 if isunix
     compiler_name = {'gcc', 'g++'};
 else
-    compiler_name = 'MinGW';
+    compiler_name = {'MinGW', 'MinGW'};
 end
 
 langs = {'C','C++'};

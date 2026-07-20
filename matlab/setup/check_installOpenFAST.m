@@ -1,9 +1,9 @@
 function openfast_path = check_installOpenFAST(CADynTurb_dir)
+openfast_path = '';
 if ~isempty(getenv('OPENFAST'))
     openfast_path = getenv('OPENFAST');
     if ~verifyOpenFAST(openfast_path)
         fprintf('The environment variable "OPENFAST" but doesn''t seem to point to a valid OpenFAST v3.3.0 executable.\n')
-        openfast_path = '';
         % TODO: remove the faulty setenv
         setenv('OPENFAST', '')
     end

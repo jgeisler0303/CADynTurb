@@ -1,9 +1,9 @@
 function check_installEigen3(CADynTurb_dir)
+eigen3_dir = '';
 if ~isempty(getenv('EIGEN3'))
     eigen3_dir = getenv('EIGEN3');
     if ~verifyEigen3(eigen3_dir)
         fprintf('The environment variable "EIGEN3" but doesn''t seem to point to a valid Eigen3 veroin 3.3.9 library folder.\n')
-        eigen3_dir = '';
         % TODO: remove the faulty setenv
         setenv('EIGEN3', '')
     end
@@ -36,7 +36,7 @@ if isempty(getenv('EIGEN3'))
                     fprintf('The path "%s" doesn''t seem to be a eigen3 version 3.3.9 library.\n', eigen3_dir)
                 end
             end
-            pathname = uigetfile('', 'Please choose the location of the eigen3 library.');
+            pathname = uigetdir('', 'Please choose the location of the eigen3 library.');
             if isequal(pathname, 0)
                 tf_install = false;
                 tf_choose = false;
