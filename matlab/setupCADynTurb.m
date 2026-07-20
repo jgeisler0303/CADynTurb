@@ -32,7 +32,6 @@ check_installMaxima(CADynTurb_dir)
 check_installCompiler(CADynTurb_dir)
 check_installAeroDyn_Driver(CADynTurb_dir)
 check_installEigen3(CADynTurb_dir)
-check_installIECWind(CADynTurb_dir)
 if acados_wanted
     check_installGit(CADynTurb_dir)
     check_installAcados(CADynTurb_dir)
@@ -59,6 +58,8 @@ if ~strcmp(getenv('NO_REF_SIM'), 'true')
     end
 end
 
+setMexCompiler
+
 %% reload the now hopefully complete environment variables
 try
     my_configCADynTurb
@@ -69,6 +70,7 @@ setenv('cagem_path', fullfile(CADynTurb_dir, '../CADyn/gen/cagem.mac'))
 
 mc = mex.getCompilerConfigurations('C++', 'Selected');
 setenv('CPP', mc.Details.CompilerExecutable)
+
 % the following call needs CPP environment and full path
 check_installDISCONmex(CADynTurb_dir)
 

@@ -2,15 +2,10 @@ function check_installCompiler(CADynTurb_dir)
 if ispc
     addons = matlab.addons.installedAddons;
     if ~ismember("ML_MINGW", addons.Identifier)
-        tf_install = askYesNo('You need to install the MinGW64 Compiler MATLAB Add-On. Do you want to do that automatically?', true);
-        if tf_install
-            fprintf('Please follow the instructions in the dialog.')
-            matlab.internal.addons.installAddonFromSidePanel('', [], 'ML_MINGW', 'support_package', '')
-            error('This is not an error. The setup had to stop to let the Compiler installation run. When the installation is finished, please rerun the setup.')
-        else
-            error(['Please install the MinGW64 Compiler via MATLAB Add-Ons manually.' newline ...
-                'Use of CADynTurb cannot continue before this requirement is met.'])
-        end
+        error(['Please install the MinGW64 Compiler via MATLAB Add-Ons manually.' newline ...
+            'Open the Add-On Manager, search for "MinGW", select the first item and install it.' newline ...
+            'Once you have successfully installed MinGW. Rerun the setup.' newline ...
+            'Use of CADynTurb cannot continue before this requirement is met.'])
     end
 else
     [res, msg] = system('g++ -v');
